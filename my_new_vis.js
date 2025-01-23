@@ -1,74 +1,81 @@
 looker.plugins.visualizations.add({
-  // Required: Called once when the visualization is initialized
-  create: function (element, config) {
-    // Add a container for the visualization
-    this.container = element.appendChild(document.createElement("div"));
-    this.container.className = "custom-vis";
-  },
-
-  // Required: Called whenever the visualization is updated (data or settings change)
-  updateAsync: function (data, element, config, queryResponse, details, doneRendering) {
-    // Clear any errors from previous render
-    this.clearErrors();
-
-    // Validate that the visualization has the required data structure
-    if (queryResponse.fields.dimensions.length === 0) {
-      this.addError({
-        title: "No Dimensions Found",
-        message: "This visualization requires at least one dimension.",
-      });
-      doneRendering();
-      return;
-    }
-
-    // Retrieve the first dimension's name
-    const dimension = queryResponse.fields.dimensions[0].name;
-
-    // Generate HTML content from the data
-    let html = `<table>`;
-    data.forEach((row) => {
-      const cell = row[dimension];
-      html += `<tr><td>${LookerCharts.Utils.htmlForCell(cell)}</td></tr>`;
-    });
-    html += `</table>`;
-
-    // Update the container with the new content
-    this.container.innerHTML = html;
-
-    // Notify Looker that rendering is complete
-    doneRendering();
-  },
-
-  // Optional: Configuration options exposed in the UI
+  id: "sum_and_trend_viz",
+  label: "Sum and Trend Visualization",
   options: {
     color: {
       type: "string",
-      label: "Text Color",
-      display: "color",
-      default: "#000000",
-    },
-    font_size: {
-      type: "number",
-      label: "Font Size",
-      default: 12,
-      display: "range",
-      min: 8,
-      max: 48,
-    },
+      label: "Chart Color",
+      default: "#5A9BD4"
+    }
   },
+  create: function (element, config) {
+    // Clear existing content
+    element.innerHTML = `
+      <div id="value-display" style="font-size: 36px; font-weight: bold; margin-bottom: 10px;"></div>
+      <canvas id="trend-chart"></canvas>
+    `;
+  },
+  updateAsync: function (data, element, config, queryResponse, details, done) {
+    // Validate data structure
+    if (!queryResponse || !queryResponse.fields.dimensions.length) {
+      this.addError({ title: "No Data", message: "This visualization requires data." });
+      return;
+    }
 
-  // Optional: Dynamically register additional options (Looker 5.24+)
-  registerOptions: function (queryResponse) {
-    const options = {};
-    queryResponse.fields.measure_like.forEach((field) => {
-      options[`color_${field.name}`] = {
-        label: `${field.label_short} Color`,
-        default: "#FF0000",
-        section: "Style",
-        type: "string",
-        display: "color",
-      };
+    // Extract dimension and measure
+    const dimension = queryResponse.fields.dimensions[0].name;
+    const measure = queryResponse.fields.measures[0].name;
+
+    // Prepare data for chart and sum calculation
+    const labels = [];
+    const values = [];
+    let totalSum = 0;
+
+    data.forEach((row) => {
+      const label = row[dimension]?.value || "Unknown";
+      const value = row[measure]?.value || 0;
+      labels.push(label);
+      values.push(value);
+      totalSum += value; // Sum the measure values
     });
-    this.trigger("registerOptions", options);
-  },
+
+    // Display the total value
+    const valueDisplay = document.getElementById("value-display");
+    valueDisplay.innerHTML = `Total: ${totalSum.toLocaleString()}`;
+
+    // Render the area chart
+    const ctx = document.getElementById("trend-chart").getContext("2d");
+    if (this.chart) {
+      this.chart.destroy(); // Clear existing chart
+    }
+    this.chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Trend",
+            data: values,
+            backgroundColor: config.color + "33", // Transparent color for the area
+            borderColor: config.color,
+            borderWidth: 2,
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: { title: { display: true, text: "Month" } },
+          y: { title: { display: true, text: "Orders Count" } }
+        }
+      }
+    });
+
+    done();
+  }
 });

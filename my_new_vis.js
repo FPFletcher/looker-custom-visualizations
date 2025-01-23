@@ -11,8 +11,14 @@ looker.plugins.visualizations.add({
   create: function (element, config) {
     // Clear existing content
     element.innerHTML = `
-      <div id="value-display" style="font-size: 36px; font-weight: bold; margin-bottom: 10px;"></div>
-      <canvas id="trend-chart"></canvas>
+      <div id="value-display" style="
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 72px; /* 2x bigger */
+        font-weight: bold;
+      "></div>
+      <canvas id="trend-chart" style="margin-top: 80px;"></canvas>
     `;
 
     // Load Chart.js if not already loaded
@@ -65,7 +71,7 @@ looker.plugins.visualizations.add({
 
       // Display the total value
       const valueDisplay = document.getElementById("value-display");
-      valueDisplay.innerHTML = `Total: ${totalSum.toLocaleString()}`;
+      valueDisplay.innerHTML = totalSum.toLocaleString(); // Display only the value
 
       // Render the area chart
       const ctx = document.getElementById("trend-chart").getContext("2d");

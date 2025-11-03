@@ -40,6 +40,15 @@ visualization: {
 
 }
 
+visualization: {
+  id: "scorecard_sparkline_viz"
+  label: "Scorecard with Sparkline"
+  file: "scorecard_sparkline.js"
+
+  # No external dependencies needed
+  dependencies: []
+}
+
 
 # project_name: "looker_dashboard_sandbox"
 

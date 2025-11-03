@@ -8,88 +8,169 @@ looker.plugins.visualizations.add({
   id: "water_drop_viz",
   label: "Water Drop Visualization",
   options: {
-    // Image settings
-    primary_image_url: {
+    // ========== PLOT SECTION ==========
+    background_color: {
       type: "string",
-      label: "Primary Drop Image URL",
-      default: "https://static.vecteezy.com/system/resources/thumbnails/044/570/540/small_2x/single-water-drop-on-transparent-background-free-png.png",
-      section: "Images"
+      label: "Background Color",
+      default: "#5C6BC0",
+      display: "color",
+      section: "Plot"
     },
-    secondary_image_url: {
+    background_image_url: {
       type: "string",
-      label: "Secondary Drop Image URL",
-      default: "https://static.vecteezy.com/system/resources/thumbnails/044/570/540/small_2x/single-water-drop-on-transparent-background-free-png.png",
-      section: "Images"
+      label: "Background Image URL (optional)",
+      placeholder: "https://example.com/background.jpg",
+      section: "Plot"
     },
-    primary_image_opacity: {
+    background_image_opacity: {
       type: "number",
-      label: "Primary Drop Opacity",
+      label: "Background Image Opacity",
       default: 1.0,
       display: "range",
       min: 0,
       max: 1,
       step: 0.1,
-      section: "Images"
+      section: "Plot"
+    },
+    primary_x_position: {
+      type: "number",
+      label: "Primary Drop X Position",
+      default: 280,
+      section: "Plot"
+    },
+    primary_y_position: {
+      type: "number",
+      label: "Primary Drop Y Position",
+      default: 350,
+      section: "Plot"
+    },
+    secondary_x_position: {
+      type: "number",
+      label: "Secondary Drop X Position",
+      default: 520,
+      section: "Plot"
+    },
+    secondary_y_position: {
+      type: "number",
+      label: "Secondary Drop Y Position",
+      default: 250,
+      section: "Plot"
+    },
+
+    // Images subsection (under Plot)
+    primary_image_url: {
+      type: "string",
+      label: "Primary Drop Image URL",
+      default: "https://static.vecteezy.com/system/resources/thumbnails/044/570/540/small_2x/single-water-drop-on-transparent-background-free-png.png",
+      section: "Plot"
+    },
+    secondary_image_url: {
+      type: "string",
+      label: "Secondary Drop Image URL",
+      default: "https://static.vecteezy.com/system/resources/thumbnails/044/570/540/small_2x/single-water-drop-on-transparent-background-free-png.png",
+      section: "Plot"
+    },
+    primary_image_opacity: {
+      type: "number",
+      label: "Primary Drop Image Opacity",
+      default: 1.0,
+      display: "range",
+      min: 0,
+      max: 1,
+      step: 0.1,
+      section: "Plot"
     },
     secondary_image_opacity: {
       type: "number",
-      label: "Secondary Drop Opacity",
+      label: "Secondary Drop Image Opacity",
       default: 0.9,
       display: "range",
       min: 0,
       max: 1,
       step: 0.1,
-      section: "Images"
+      section: "Plot"
     },
 
-    // Primary drop settings
+    // ========== FONT SECTION ==========
+    font_size_primary_value: {
+      type: "number",
+      label: "Primary Value Font Size",
+      default: 52,
+      section: "Font"
+    },
+    font_size_primary_label: {
+      type: "number",
+      label: "Primary Label Font Size",
+      default: 18,
+      section: "Font"
+    },
+    font_size_secondary_value: {
+      type: "number",
+      label: "Secondary Value Font Size",
+      default: 44,
+      section: "Font"
+    },
+    font_size_secondary_label: {
+      type: "number",
+      label: "Secondary Label Font Size",
+      default: 16,
+      section: "Font"
+    },
+    font_size_percentage: {
+      type: "number",
+      label: "Percentage Font Size",
+      default: 28,
+      section: "Font"
+    },
+
+    // ========== PRIMARY SECTION ==========
     primary_label: {
       type: "string",
       label: "Primary Drop Label",
       default: "Send By WTCO",
-      section: "Primary Drop"
+      section: "Primary"
     },
     primary_text_color: {
       type: "string",
       label: "Primary Text Color",
       default: "#FFFFFF",
       display: "color",
-      section: "Primary Drop"
+      section: "Primary"
     },
     primary_drop_size: {
       type: "number",
       label: "Primary Drop Size",
       default: 240,
-      section: "Primary Drop"
+      section: "Primary"
     },
 
-    // Secondary drop settings
+    // ========== SECONDARY SECTION ==========
     secondary_label: {
       type: "string",
       label: "Secondary Drop Label",
       default: "Distribution Variance",
-      section: "Secondary Drop"
+      section: "Secondary"
     },
     secondary_text_color: {
       type: "string",
       label: "Secondary Text Color",
       default: "#E53935",
       display: "color",
-      section: "Secondary Drop"
+      section: "Secondary"
     },
     secondary_drop_size: {
       type: "number",
       label: "Secondary Drop Size",
       default: 190,
-      section: "Secondary Drop"
+      section: "Secondary"
     },
 
-    // Percentage settings
+    // Percentage settings (now under Secondary)
     show_percentage: {
       type: "boolean",
       label: "Show Percentage",
       default: true,
-      section: "Percentage"
+      section: "Secondary"
     },
     percentage_calculation: {
       type: "string",
@@ -97,92 +178,24 @@ looker.plugins.visualizations.add({
       display: "select",
       values: [
         {"Secondary / Primary": "secondary_over_primary"},
-        {"Use 3rd Measure": "use_third_measure"},
-        {"(Secondary / Primary) * 100": "secondary_over_primary_times_100"}
+        {"Use 3rd Measure": "use_third_measure"}
       ],
       default: "secondary_over_primary",
-      section: "Percentage"
+      section: "Secondary"
     },
     percentage_color: {
       type: "string",
       label: "Percentage Color",
       default: "#E53935",
       display: "color",
-      section: "Percentage"
+      section: "Secondary"
     },
     percentage_decimals: {
       type: "number",
       label: "Percentage Decimals",
       default: 1,
       display: "number",
-      section: "Percentage"
-    },
-
-    // Background
-    background_color: {
-      type: "string",
-      label: "Background Color",
-      default: "#5C6BC0",
-      display: "color",
-      section: "Style"
-    },
-
-    // Font settings
-    font_size_primary_value: {
-      type: "number",
-      label: "Primary Value Font Size",
-      default: 52,
-      section: "Font Sizes"
-    },
-    font_size_primary_label: {
-      type: "number",
-      label: "Primary Label Font Size",
-      default: 18,
-      section: "Font Sizes"
-    },
-    font_size_secondary_value: {
-      type: "number",
-      label: "Secondary Value Font Size",
-      default: 44,
-      section: "Font Sizes"
-    },
-    font_size_secondary_label: {
-      type: "number",
-      label: "Secondary Label Font Size",
-      default: 16,
-      section: "Font Sizes"
-    },
-    font_size_percentage: {
-      type: "number",
-      label: "Percentage Font Size",
-      default: 28,
-      section: "Font Sizes"
-    },
-
-    // Advanced positioning
-    primary_x_position: {
-      type: "number",
-      label: "Primary Drop X Position",
-      default: 280,
-      section: "Advanced"
-    },
-    primary_y_position: {
-      type: "number",
-      label: "Primary Drop Y Position",
-      default: 350,
-      section: "Advanced"
-    },
-    secondary_x_position: {
-      type: "number",
-      label: "Secondary Drop X Position",
-      default: 520,
-      section: "Advanced"
-    },
-    secondary_y_position: {
-      type: "number",
-      label: "Secondary Drop Y Position",
-      default: 250,
-      section: "Advanced"
+      section: "Secondary"
     }
   },
 
@@ -202,6 +215,9 @@ looker.plugins.visualizations.add({
         font-family: 'Open Sans', 'Noto Sans JP', 'Noto Sans', 'Noto Sans CJK KR', Helvetica, Arial, sans-serif;
         position: relative;
         overflow: hidden;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
       }
 
       .water-drop-svg {
@@ -209,6 +225,17 @@ looker.plugins.visualizations.add({
         height: 100%;
         max-width: 800px;
         max-height: 600px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .background-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
       }
 
       .drop-value {
@@ -309,6 +336,14 @@ looker.plugins.visualizations.add({
     // Set background color
     this._container.style.backgroundColor = config.background_color || '#5C6BC0';
 
+    // Set background image if provided
+    if (config.background_image_url && config.background_image_url.trim() !== '') {
+      const bgOpacity = config.background_image_opacity !== undefined ? config.background_image_opacity : 1.0;
+      this._container.style.backgroundImage = `linear-gradient(rgba(255, 255, 255, ${1 - bgOpacity}), rgba(255, 255, 255, ${1 - bgOpacity})), url('${config.background_image_url}')`;
+    } else {
+      this._container.style.backgroundImage = 'none';
+    }
+
     // Validate data
     if (!queryResponse || !data || data.length === 0) {
       this.showError('No data available');
@@ -341,9 +376,6 @@ looker.plugins.visualizations.add({
     if (percentageCalc === "use_third_measure" && percentageField) {
       // Use the third measure directly
       percentageValue = row[percentageField].value;
-    } else if (percentageCalc === "secondary_over_primary_times_100") {
-      // Calculate (secondary / primary) * 100 - for when you want the percentage as a number
-      percentageValue = primaryValue !== 0 ? ((secondaryValue / primaryValue) * 100) : 0;
     } else {
       // Default: secondary / primary (will be multiplied by 100 in formatting)
       percentageValue = primaryValue !== 0 ? (secondaryValue / primaryValue) : 0;
@@ -417,7 +449,7 @@ looker.plugins.visualizations.add({
     let percentage;
 
     // Determine if value is already in percentage format or decimal format
-    if (calculationMethod === "secondary_over_primary_times_100" || calculationMethod === "use_third_measure") {
+    if (calculationMethod === "use_third_measure") {
       // Value is already a percentage number (e.g., 46.93 or -46.93)
       percentage = value;
     } else {

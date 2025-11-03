@@ -1,13 +1,47 @@
 /**
  * Water Drop Visualization for Looker
  * Combined JavaScript file with embedded HTML and CSS
- * Displays two values in water drop shapes with a percentage indicator
+ * Displays two values in water drop images with a percentage indicator
  */
 
 looker.plugins.visualizations.add({
   id: "water_drop_viz",
   label: "Water Drop Visualization",
   options: {
+    // Image settings
+    primary_image_url: {
+      type: "string",
+      label: "Primary Drop Image URL",
+      default: "https://png.pngtree.com/png-clipart/20241208/original/pngtree-blue-water-drops-png-image_17736037.png",
+      section: "Images"
+    },
+    secondary_image_url: {
+      type: "string",
+      label: "Secondary Drop Image URL",
+      default: "https://png.pngtree.com/png-clipart/20241208/original/pngtree-blue-water-drops-png-image_17736037.png",
+      section: "Images"
+    },
+    primary_image_opacity: {
+      type: "number",
+      label: "Primary Drop Opacity",
+      default: 1.0,
+      display: "range",
+      min: 0,
+      max: 1,
+      step: 0.1,
+      section: "Images"
+    },
+    secondary_image_opacity: {
+      type: "number",
+      label: "Secondary Drop Opacity",
+      default: 0.9,
+      display: "range",
+      min: 0,
+      max: 1,
+      step: 0.1,
+      section: "Images"
+    },
+
     // Primary drop settings
     primary_label: {
       type: "string",
@@ -15,18 +49,17 @@ looker.plugins.visualizations.add({
       default: "Send By WTCO",
       section: "Primary Drop"
     },
-    primary_color: {
-      type: "string",
-      label: "Primary Drop Color",
-      default: "#4DD0E1",
-      display: "color",
-      section: "Primary Drop"
-    },
     primary_text_color: {
       type: "string",
       label: "Primary Text Color",
       default: "#FFFFFF",
       display: "color",
+      section: "Primary Drop"
+    },
+    primary_drop_size: {
+      type: "number",
+      label: "Primary Drop Size",
+      default: 240,
       section: "Primary Drop"
     },
 
@@ -37,18 +70,17 @@ looker.plugins.visualizations.add({
       default: "Distribution Variance",
       section: "Secondary Drop"
     },
-    secondary_color: {
-      type: "string",
-      label: "Secondary Drop Color",
-      default: "#B3E5FC",
-      display: "color",
-      section: "Secondary Drop"
-    },
     secondary_text_color: {
       type: "string",
       label: "Secondary Text Color",
       default: "#E53935",
       display: "color",
+      section: "Secondary Drop"
+    },
+    secondary_drop_size: {
+      type: "number",
+      label: "Secondary Drop Size",
+      default: 190,
       section: "Secondary Drop"
     },
 
@@ -66,21 +98,12 @@ looker.plugins.visualizations.add({
       display: "color",
       section: "Percentage"
     },
-
-    // Format settings
-    value_format: {
-      type: "string",
-      label: "Value Format",
-      default: "0.00a",
-      placeholder: "0.00a",
-      section: "Format"
-    },
     percentage_decimals: {
       type: "number",
       label: "Percentage Decimals",
       default: 1,
       display: "number",
-      section: "Format"
+      section: "Percentage"
     },
 
     // Background
@@ -93,23 +116,61 @@ looker.plugins.visualizations.add({
     },
 
     // Font settings
-    font_size_primary: {
+    font_size_primary_value: {
       type: "number",
       label: "Primary Value Font Size",
       default: 52,
-      section: "Style"
+      section: "Font Sizes"
     },
-    font_size_secondary: {
+    font_size_primary_label: {
+      type: "number",
+      label: "Primary Label Font Size",
+      default: 18,
+      section: "Font Sizes"
+    },
+    font_size_secondary_value: {
       type: "number",
       label: "Secondary Value Font Size",
       default: 44,
-      section: "Style"
+      section: "Font Sizes"
+    },
+    font_size_secondary_label: {
+      type: "number",
+      label: "Secondary Label Font Size",
+      default: 16,
+      section: "Font Sizes"
     },
     font_size_percentage: {
       type: "number",
       label: "Percentage Font Size",
       default: 28,
-      section: "Style"
+      section: "Font Sizes"
+    },
+
+    // Advanced positioning
+    primary_x_position: {
+      type: "number",
+      label: "Primary Drop X Position",
+      default: 280,
+      section: "Advanced"
+    },
+    primary_y_position: {
+      type: "number",
+      label: "Primary Drop Y Position",
+      default: 350,
+      section: "Advanced"
+    },
+    secondary_x_position: {
+      type: "number",
+      label: "Secondary Drop X Position",
+      default: 520,
+      section: "Advanced"
+    },
+    secondary_y_position: {
+      type: "number",
+      label: "Secondary Drop Y Position",
+      default: 250,
+      section: "Advanced"
     }
   },
 
@@ -143,6 +204,7 @@ looker.plugins.visualizations.add({
         text-anchor: middle;
         dominant-baseline: middle;
         user-select: none;
+        text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.15);
       }
 
       .drop-label {
@@ -150,6 +212,7 @@ looker.plugins.visualizations.add({
         text-anchor: middle;
         dominant-baseline: middle;
         user-select: none;
+        text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
       }
 
       .percentage-indicator {
@@ -157,15 +220,16 @@ looker.plugins.visualizations.add({
         text-anchor: middle;
         dominant-baseline: middle;
         user-select: none;
+        text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
       }
 
-      .water-drop {
-        filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.2));
+      .water-drop-image {
+        filter: drop-shadow(0px 4px 12px rgba(0, 0, 0, 0.25));
         transition: all 0.3s ease;
       }
 
-      .water-drop:hover {
-        filter: drop-shadow(0px 6px 12px rgba(0, 0, 0, 0.3));
+      .water-drop-image:hover {
+        filter: drop-shadow(0px 6px 16px rgba(0, 0, 0, 0.35));
       }
 
       .error-message {
@@ -177,6 +241,21 @@ looker.plugins.visualizations.add({
         color: #666;
         font-size: 14px;
         font-family: 'Open Sans', Arial, sans-serif;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .water-drop-image {
+        animation: fadeIn 0.5s ease-out;
       }
     `;
 
@@ -208,6 +287,7 @@ looker.plugins.visualizations.add({
 
     if (!this._svg || !this._container) {
       this.addError({title: "Initialization Error", message: "Visualization not properly initialized"});
+      done();
       return;
     }
 
@@ -313,101 +393,81 @@ looker.plugins.visualizations.add({
   },
 
   /**
-   * Draw the water drop shapes and text
+   * Draw the water drop images and text
    */
   drawWaterDrops: function(primaryValue, secondaryValue, percentage, primaryLabel, secondaryLabel, config) {
     const svg = this._svg;
     const svgNS = "http://www.w3.org/2000/svg";
 
-    // Create gradient definitions
+    // Get configuration values
+    const primaryX = config.primary_x_position || 280;
+    const primaryY = config.primary_y_position || 350;
+    const secondaryX = config.secondary_x_position || 520;
+    const secondaryY = config.secondary_y_position || 250;
+
+    const primarySize = config.primary_drop_size || 240;
+    const secondarySize = config.secondary_drop_size || 190;
+
+    const primaryImageUrl = config.primary_image_url || "https://png.pngtree.com/png-clipart/20241208/original/pngtree-blue-water-drops-png-image_17736037.png";
+    const secondaryImageUrl = config.secondary_image_url || "https://png.pngtree.com/png-clipart/20241208/original/pngtree-blue-water-drops-png-image_17736037.png";
+
+    const primaryOpacity = config.primary_image_opacity !== undefined ? config.primary_image_opacity : 1.0;
+    const secondaryOpacity = config.secondary_image_opacity !== undefined ? config.secondary_image_opacity : 0.9;
+
+    // Create defs for filters if needed
     const defs = document.createElementNS(svgNS, 'defs');
-
-    // Primary drop gradient
-    const primaryGradient = document.createElementNS(svgNS, 'linearGradient');
-    primaryGradient.setAttribute('id', 'primaryGradient');
-    primaryGradient.setAttribute('x1', '0%');
-    primaryGradient.setAttribute('y1', '0%');
-    primaryGradient.setAttribute('x2', '0%');
-    primaryGradient.setAttribute('y2', '100%');
-
-    const primaryStop1 = document.createElementNS(svgNS, 'stop');
-    primaryStop1.setAttribute('offset', '0%');
-    primaryStop1.setAttribute('stop-color', this.lightenColor(config.primary_color || '#4DD0E1', 20));
-    primaryStop1.setAttribute('stop-opacity', '0.95');
-
-    const primaryStop2 = document.createElementNS(svgNS, 'stop');
-    primaryStop2.setAttribute('offset', '100%');
-    primaryStop2.setAttribute('stop-color', config.primary_color || '#4DD0E1');
-    primaryStop2.setAttribute('stop-opacity', '1');
-
-    primaryGradient.appendChild(primaryStop1);
-    primaryGradient.appendChild(primaryStop2);
-    defs.appendChild(primaryGradient);
-
-    // Secondary drop gradient
-    const secondaryGradient = document.createElementNS(svgNS, 'linearGradient');
-    secondaryGradient.setAttribute('id', 'secondaryGradient');
-    secondaryGradient.setAttribute('x1', '0%');
-    secondaryGradient.setAttribute('y1', '0%');
-    secondaryGradient.setAttribute('x2', '0%');
-    secondaryGradient.setAttribute('y2', '100%');
-
-    const secondaryStop1 = document.createElementNS(svgNS, 'stop');
-    secondaryStop1.setAttribute('offset', '0%');
-    secondaryStop1.setAttribute('stop-color', '#FFFFFF');
-    secondaryStop1.setAttribute('stop-opacity', '0.9');
-
-    const secondaryStop2 = document.createElementNS(svgNS, 'stop');
-    secondaryStop2.setAttribute('offset', '50%');
-    secondaryStop2.setAttribute('stop-color', this.lightenColor(config.secondary_color || '#B3E5FC', 10));
-    secondaryStop2.setAttribute('stop-opacity', '0.85');
-
-    const secondaryStop3 = document.createElementNS(svgNS, 'stop');
-    secondaryStop3.setAttribute('offset', '100%');
-    secondaryStop3.setAttribute('stop-color', config.secondary_color || '#B3E5FC');
-    secondaryStop3.setAttribute('stop-opacity', '0.8');
-
-    secondaryGradient.appendChild(secondaryStop1);
-    secondaryGradient.appendChild(secondaryStop2);
-    secondaryGradient.appendChild(secondaryStop3);
-    defs.appendChild(secondaryGradient);
-
     svg.appendChild(defs);
 
-    // Primary water drop (left/bottom) - larger drop
-    const primaryDrop = this.createWaterDrop(280, 350, 180, 'primaryGradient');
-    svg.appendChild(primaryDrop);
+    // PRIMARY DROP IMAGE (larger, bottom-left)
+    const primaryImage = document.createElementNS(svgNS, 'image');
+    primaryImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', primaryImageUrl);
+    primaryImage.setAttribute('x', primaryX - primarySize / 2);
+    primaryImage.setAttribute('y', primaryY - primarySize / 2);
+    primaryImage.setAttribute('width', primarySize);
+    primaryImage.setAttribute('height', primarySize);
+    primaryImage.setAttribute('class', 'water-drop-image');
+    primaryImage.setAttribute('opacity', primaryOpacity);
+    primaryImage.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    svg.appendChild(primaryImage);
 
     // Primary value text
     const primaryValueText = document.createElementNS(svgNS, 'text');
-    primaryValueText.setAttribute('x', '280');
-    primaryValueText.setAttribute('y', '330');
+    primaryValueText.setAttribute('x', primaryX);
+    primaryValueText.setAttribute('y', primaryY - 10);
     primaryValueText.setAttribute('class', 'drop-value');
     primaryValueText.setAttribute('fill', config.primary_text_color || '#FFFFFF');
-    primaryValueText.setAttribute('font-size', config.font_size_primary || '52');
+    primaryValueText.setAttribute('font-size', config.font_size_primary_value || '52');
     primaryValueText.textContent = primaryValue;
     svg.appendChild(primaryValueText);
 
     // Primary label text
     const primaryLabelText = document.createElementNS(svgNS, 'text');
-    primaryLabelText.setAttribute('x', '280');
-    primaryLabelText.setAttribute('y', '390');
+    primaryLabelText.setAttribute('x', primaryX);
+    primaryLabelText.setAttribute('y', primaryY + 50);
     primaryLabelText.setAttribute('class', 'drop-label');
     primaryLabelText.setAttribute('fill', config.primary_text_color || '#FFFFFF');
-    primaryLabelText.setAttribute('font-size', '18');
-    primaryLabelText.setAttribute('opacity', '0.9');
+    primaryLabelText.setAttribute('font-size', config.font_size_primary_label || '18');
+    primaryLabelText.setAttribute('opacity', '0.95');
     primaryLabelText.textContent = primaryLabel;
     svg.appendChild(primaryLabelText);
 
-    // Secondary water drop (right/top) - smaller drop
-    const secondaryDrop = this.createWaterDrop(520, 250, 140, 'secondaryGradient');
-    svg.appendChild(secondaryDrop);
+    // SECONDARY DROP IMAGE (smaller, top-right)
+    const secondaryImage = document.createElementNS(svgNS, 'image');
+    secondaryImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', secondaryImageUrl);
+    secondaryImage.setAttribute('x', secondaryX - secondarySize / 2);
+    secondaryImage.setAttribute('y', secondaryY - secondarySize / 2);
+    secondaryImage.setAttribute('width', secondarySize);
+    secondaryImage.setAttribute('height', secondarySize);
+    secondaryImage.setAttribute('class', 'water-drop-image');
+    secondaryImage.setAttribute('opacity', secondaryOpacity);
+    secondaryImage.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    svg.appendChild(secondaryImage);
 
     // Percentage indicator (at top of secondary drop)
     if (config.show_percentage !== false) {
       const percentageText = document.createElementNS(svgNS, 'text');
-      percentageText.setAttribute('x', '520');
-      percentageText.setAttribute('y', '175');
+      percentageText.setAttribute('x', secondaryX);
+      percentageText.setAttribute('y', secondaryY - 65);
       percentageText.setAttribute('class', 'percentage-indicator');
       percentageText.setAttribute('fill', config.percentage_color || '#E53935');
       percentageText.setAttribute('font-size', config.font_size_percentage || '28');
@@ -417,85 +477,23 @@ looker.plugins.visualizations.add({
 
     // Secondary value text
     const secondaryValueText = document.createElementNS(svgNS, 'text');
-    secondaryValueText.setAttribute('x', '520');
-    secondaryValueText.setAttribute('y', '235');
+    secondaryValueText.setAttribute('x', secondaryX);
+    secondaryValueText.setAttribute('y', secondaryY - 5);
     secondaryValueText.setAttribute('class', 'drop-value');
     secondaryValueText.setAttribute('fill', config.secondary_text_color || '#E53935');
-    secondaryValueText.setAttribute('font-size', config.font_size_secondary || '44');
+    secondaryValueText.setAttribute('font-size', config.font_size_secondary_value || '44');
     secondaryValueText.textContent = secondaryValue;
     svg.appendChild(secondaryValueText);
 
     // Secondary label text
     const secondaryLabelText = document.createElementNS(svgNS, 'text');
-    secondaryLabelText.setAttribute('x', '520');
-    secondaryLabelText.setAttribute('y', '285');
+    secondaryLabelText.setAttribute('x', secondaryX);
+    secondaryLabelText.setAttribute('y', secondaryY + 45);
     secondaryLabelText.setAttribute('class', 'drop-label');
     secondaryLabelText.setAttribute('fill', config.secondary_text_color || '#666666');
-    secondaryLabelText.setAttribute('font-size', '16');
-    secondaryLabelText.setAttribute('opacity', '0.85');
+    secondaryLabelText.setAttribute('font-size', config.font_size_secondary_label || '16');
+    secondaryLabelText.setAttribute('opacity', '0.9');
     secondaryLabelText.textContent = secondaryLabel;
     svg.appendChild(secondaryLabelText);
-  },
-
-  /**
-   * Create a water drop SVG path
-   */
-  createWaterDrop: function(cx, cy, size, gradientId) {
-    const svgNS = "http://www.w3.org/2000/svg";
-    const path = document.createElementNS(svgNS, 'path');
-
-    // Water drop shape using bezier curves
-    const width = size;
-    const height = size * 1.3;
-
-    const x = cx - width / 2;
-    const y = cy - height / 2;
-
-    // Create smooth water drop shape
-    const d = `
-      M ${cx} ${y}
-      C ${x + width * 0.15} ${y + height * 0.15},
-        ${x - width * 0.05} ${y + height * 0.45},
-        ${x} ${y + height * 0.68}
-      C ${x} ${y + height * 0.92},
-        ${x + width * 0.25} ${y + height * 1.02},
-        ${cx} ${y + height}
-      C ${x + width * 0.75} ${y + height * 1.02},
-        ${x + width} ${y + height * 0.92},
-        ${x + width} ${y + height * 0.68}
-      C ${x + width * 1.05} ${y + height * 0.45},
-        ${x + width * 0.85} ${y + height * 0.15},
-        ${cx} ${y}
-      Z
-    `;
-
-    path.setAttribute('d', d);
-    path.setAttribute('fill', `url(#${gradientId})`);
-    path.setAttribute('class', 'water-drop');
-
-    return path;
-  },
-
-  /**
-   * Lighten a color by a percentage
-   */
-  lightenColor: function(color, percent) {
-    // Handle undefined or invalid colors
-    if (!color || typeof color !== 'string') {
-      return '#CCCCCC';
-    }
-
-    // Remove # if present
-    color = color.replace("#", "");
-
-    // Convert to RGB
-    const num = parseInt(color, 16);
-    const amt = Math.round(2.55 * percent);
-
-    const R = Math.min(255, Math.max(0, (num >> 16) + amt));
-    const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
-    const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
-
-    return "#" + (0x1000000 + (R * 0x10000) + (G * 0x100) + B).toString(16).slice(1).toUpperCase();
   }
 });

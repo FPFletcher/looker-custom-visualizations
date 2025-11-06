@@ -4,12 +4,11 @@
  * Displays a single value with a sparkline trend chart
  */
 
-
 looker.plugins.visualizations.add({
   id: "scorecard_sparkline_viz",
   label: "Scorecard with Sparkline",
   options: {
-    // ========== CONTENT SECTION ==========
+    // ========== CONTENT SECTION (includes Font settings) ==========
     title_text: {
       type: "string",
       label: "Title",
@@ -20,6 +19,12 @@ looker.plugins.visualizations.add({
       type: "boolean",
       label: "Show Title",
       default: true,
+      section: "Content"
+    },
+    title_font_size: {
+      type: "number",
+      label: "Title Font Size",
+      default: 14,
       section: "Content"
     },
     value_prefix: {
@@ -52,6 +57,29 @@ looker.plugins.visualizations.add({
       type: "number",
       label: "Decimal Places",
       default: 2,
+      section: "Content"
+    },
+    value_font_size: {
+      type: "number",
+      label: "Value Font Size",
+      default: 48,
+      section: "Content"
+    },
+    font_family: {
+      type: "string",
+      label: "Font Family",
+      default: "Roboto, Arial, sans-serif",
+      section: "Content"
+    },
+    calculation_mode: {
+      type: "string",
+      label: "Calculation Mode",
+      display: "select",
+      values: [
+        {"Use Totals (Recommended)": "use_totals"},
+        {"Sum Visible Rows": "sum_visible_rows"}
+      ],
+      default: "use_totals",
       section: "Content"
     },
 
@@ -144,26 +172,6 @@ looker.plugins.visualizations.add({
       label: "Border Radius (px)",
       default: 8,
       section: "Style"
-    },
-
-    // ========== FONT SECTION ==========
-    title_font_size: {
-      type: "number",
-      label: "Title Font Size",
-      default: 14,
-      section: "Font"
-    },
-    value_font_size: {
-      type: "number",
-      label: "Value Font Size",
-      default: 48,
-      section: "Font"
-    },
-    font_family: {
-      type: "string",
-      label: "Font Family",
-      default: "Roboto, Arial, sans-serif",
-      section: "Font"
     }
   },
 
@@ -330,6 +338,9 @@ looker.plugins.visualizations.add({
     // Get the primary measure for the main value
     const primaryMeasure = measures[0].name;
 
+    // Get calculation mode
+    const calculationMode = config.calculation_mode || 'use_totals';
+
     // ============================================
     // ENHANCED TOTALS DETECTION
     // ============================================
@@ -339,6 +350,7 @@ looker.plugins.visualizations.add({
 
     // Enhanced debugging - log everything about details
     console.log('=== TOTALS DEBUG INFO ===');
+    console.log('Calculation Mode:', calculationMode);
     console.log('Details object:', details);
     console.log('Details type:', typeof details);
     console.log('Has totals_data?', details && 'totals_data' in details);
@@ -352,80 +364,88 @@ looker.plugins.visualizations.add({
       }
     }
 
-    // METHOD 1: Check details.totals_data (most reliable when totals are enabled)
-    if (details && details.totals_data) {
-      console.log('Checking totals_data for measure:', primaryMeasure);
+    // Only attempt to use totals if in "use_totals" mode
+    if (calculationMode === 'use_totals') {
+      // METHOD 1: Check details.totals_data (most reliable when totals are enabled)
+      if (details && details.totals_data) {
+        console.log('Checking totals_data for measure:', primaryMeasure);
 
-      // Try to get the total value from totals_data
-      if (details.totals_data[primaryMeasure]) {
-        console.log('Found measure in totals_data:', details.totals_data[primaryMeasure]);
+        // Try to get the total value from totals_data
+        if (details.totals_data[primaryMeasure]) {
+          console.log('Found measure in totals_data:', details.totals_data[primaryMeasure]);
 
-        // The value might be directly available or in a nested structure
-        if (typeof details.totals_data[primaryMeasure] === 'object') {
-          if (details.totals_data[primaryMeasure].value !== undefined) {
-            totalValue = details.totals_data[primaryMeasure].value;
+          // The value might be directly available or in a nested structure
+          if (typeof details.totals_data[primaryMeasure] === 'object') {
+            if (details.totals_data[primaryMeasure].value !== undefined) {
+              totalValue = details.totals_data[primaryMeasure].value;
+              usingTotals = true;
+              totalsMethod = 'totals_data.value';
+            } else if (details.totals_data[primaryMeasure].rendered !== undefined) {
+              // Sometimes only rendered value is available - try to parse it
+              totalValue = this.parseRenderedValue(details.totals_data[primaryMeasure].rendered);
+              usingTotals = true;
+              totalsMethod = 'totals_data.rendered';
+            }
+          } else if (typeof details.totals_data[primaryMeasure] === 'number') {
+            // Sometimes it's just a direct number
+            totalValue = details.totals_data[primaryMeasure];
             usingTotals = true;
-            totalsMethod = 'totals_data.value';
-          } else if (details.totals_data[primaryMeasure].rendered !== undefined) {
-            // Sometimes only rendered value is available - try to parse it
-            totalValue = this.parseRenderedValue(details.totals_data[primaryMeasure].rendered);
-            usingTotals = true;
-            totalsMethod = 'totals_data.rendered';
+            totalsMethod = 'totals_data.direct';
           }
-        } else if (typeof details.totals_data[primaryMeasure] === 'number') {
-          // Sometimes it's just a direct number
-          totalValue = details.totals_data[primaryMeasure];
+        }
+      }
+
+      // METHOD 2: Check if query_response has totals (alternative structure)
+      if (!usingTotals && queryResponse && queryResponse.totals_data) {
+        console.log('Checking queryResponse.totals_data');
+        if (queryResponse.totals_data[primaryMeasure]) {
+          if (typeof queryResponse.totals_data[primaryMeasure] === 'object') {
+            totalValue = queryResponse.totals_data[primaryMeasure].value || 0;
+          } else {
+            totalValue = queryResponse.totals_data[primaryMeasure];
+          }
           usingTotals = true;
-          totalsMethod = 'totals_data.direct';
+          totalsMethod = 'queryResponse.totals_data';
+        }
+      }
+
+      // METHOD 3: Check data object for totals row (some Looker versions add a totals row)
+      if (!usingTotals && data && data.length > 0) {
+        const lastRow = data[data.length - 1];
+        console.log('Checking last row for totals marker:', lastRow);
+
+        // Check if last row is a totals row (Looker sometimes adds this)
+        if (lastRow.$$$_row_total_$$$ ||
+            (dimensions.length > 0 && lastRow[dimensions[0].name]?.value === 'Totals')) {
+          console.log('Found totals row in data');
+          totalValue = lastRow[primaryMeasure]?.value || 0;
+          usingTotals = true;
+          totalsMethod = 'data.totals_row';
+          // Remove the totals row from sparkline data
+          data = data.slice(0, -1);
         }
       }
     }
 
-    // METHOD 2: Check if query_response has totals (alternative structure)
-    if (!usingTotals && queryResponse && queryResponse.totals_data) {
-      console.log('Checking queryResponse.totals_data');
-      if (queryResponse.totals_data[primaryMeasure]) {
-        if (typeof queryResponse.totals_data[primaryMeasure] === 'object') {
-          totalValue = queryResponse.totals_data[primaryMeasure].value || 0;
-        } else {
-          totalValue = queryResponse.totals_data[primaryMeasure];
-        }
-        usingTotals = true;
-        totalsMethod = 'queryResponse.totals_data';
-      }
-    }
-
-    // METHOD 3: Check data object for totals row (some Looker versions add a totals row)
-    if (!usingTotals && data && data.length > 0) {
-      const lastRow = data[data.length - 1];
-      console.log('Checking last row for totals marker:', lastRow);
-
-      // Check if last row is a totals row (Looker sometimes adds this)
-      if (lastRow.$$$_row_total_$$$ ||
-          (dimensions.length > 0 && lastRow[dimensions[0].name]?.value === 'Totals')) {
-        console.log('Found totals row in data');
-        totalValue = lastRow[primaryMeasure]?.value || 0;
-        usingTotals = true;
-        totalsMethod = 'data.totals_row';
-        // Remove the totals row from sparkline data
-        data = data.slice(0, -1);
-      }
-    }
-
-    // FALLBACK: Calculate from visible rows if totals not available
+    // FALLBACK: Calculate from visible rows if totals not available OR if in sum_visible_rows mode
     if (!usingTotals) {
-      console.log('No totals found, calculating from visible rows');
+      console.log('Calculating from visible rows (mode:', calculationMode, ')');
       data.forEach(row => {
         const value = row[primaryMeasure]?.value || 0;
         totalValue += value;
       });
       totalsMethod = 'calculated_from_rows';
 
-      // Show warning if row limit might be affecting results
-      if (data.length >= 500) {
-        this.showWarning('⚠️ Row limit reached. Click "Totals" in the Data menu for accurate results.');
-      } else if (data.length >= 100) {
-        this.showWarning('⚠️ Showing sum of visible rows. Enable "Totals" for accurate aggregate.');
+      // Show warning only if in "use_totals" mode and row limit might be affecting results
+      if (calculationMode === 'use_totals') {
+        if (data.length >= 500) {
+          this.showWarning('⚠️ Row limit reached. Click "Totals" in Data menu for accurate results.');
+        } else if (data.length >= 100) {
+          this.showWarning('⚠️ Showing sum of visible rows. Enable "Totals" for accurate aggregate.');
+        }
+      } else {
+        // In sum_visible_rows mode, never show warning
+        this.hideWarning();
       }
     } else {
       // Hide warning if we have totals

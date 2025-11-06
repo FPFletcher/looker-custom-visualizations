@@ -76,7 +76,7 @@ looker.plugins.visualizations.add({
     },
     calculation_mode: {
       type: "string",
-      label: "Calculation Mode ⓘ Use Totals for accurate aggregates (may have minor rounding with large datasets). Sparkline always shows visible rows trend.",
+      label: "Calculation Mode",
       display: "select",
       values: [
         {"Use Totals (Recommended)": "use_totals"},
@@ -84,6 +84,14 @@ looker.plugins.visualizations.add({
       ],
       default: "use_totals",
       section: "Content"
+    },
+    calculation_mode_info: {
+      type: "string",
+      label: "",
+      display: "text",
+      placeholder: "ℹ️ Use Totals mode: Accurate aggregates (minor rounding possible with large datasets). Sparkline always shows visible rows trend only.",
+      section: "Content",
+      default: ""
     },
 
     // ========== SPARKLINE SECTION ==========
@@ -175,7 +183,7 @@ looker.plugins.visualizations.add({
       label: "Border Radius (px)",
       default: 8,
       section: "Style"
-    }
+    },
   },
 
   /**
@@ -218,6 +226,15 @@ looker.plugins.visualizations.add({
       .scorecard-sparkline-svg {
         width: 100%;
         height: 100%;
+      }
+
+      .vis-option-label:has(+ [placeholder*="ℹ️"]) + input {
+        font-size: 11px !important;
+        font-style: italic !important;
+        color: #5F6368 !important;
+        background-color: transparent !important;
+        border: none !important;
+        pointer-events: none !important;
       }
 
       .sparkline-path {
@@ -344,9 +361,11 @@ looker.plugins.visualizations.add({
     // Get calculation mode
     const calculationMode = config.calculation_mode || 'use_totals';
 
-    // Detect if row limit was reached (common limits: 500, 5000, 50000)
+    // Detect if row limit was reached
+    // Check against common row limits: 10, 50, 100, 500, 5000, 50000
+    const commonRowLimits = [10, 50, 100, 500, 5000, 50000];
     const rowLimit = queryResponse.row_limit || 500;
-    const rowLimitReached = data.length >= rowLimit;
+    const rowLimitReached = commonRowLimits.includes(data.length) || data.length >= rowLimit;
 
     // ============================================
     // ENHANCED TOTALS DETECTION
@@ -446,20 +465,25 @@ looker.plugins.visualizations.add({
       });
       totalsMethod = 'calculated_from_rows';
 
-      // Show warning ONLY if:
-      // 1. We're in "use_totals" mode
-      // 2. AND the row limit was actually reached (not just because we have many rows)
-      if (calculationMode === 'use_totals' && rowLimitReached) {
-        this.showWarning('⚠️ Row limit reached. Enable "Totals" in Data menu for accurate results.');
+      // Show warning if in "use_totals" mode but totals not available
+      if (calculationMode === 'use_totals') {
+        if (rowLimitReached) {
+          this.showWarning('⚠️ Row limit reached. Enable "Totals" in Data menu for accurate results.');
+        } else {
+          // Even if limit not reached, if using use_totals mode without actual totals, give gentle reminder
+          this.showWarning('ℹ️ Enable "Totals" in Data menu for accurate aggregates across all data.');
+        }
       } else {
-        // Don't show warning if:
-        // - We're in sum_visible_rows mode
-        // - OR we have all the data (row limit not reached)
+        // In sum_visible_rows mode, never show warning
         this.hideWarning();
       }
     } else {
-      // Hide warning if we successfully got totals
-      this.hideWarning();
+      // Got totals successfully, but check if sparkline is incomplete
+      if (rowLimitReached) {
+        this.showWarning('ℹ️ Metric uses totals (accurate). Sparkline shows visible rows only.');
+      } else {
+        this.hideWarning();
+      }
     }
 
     console.log('=== FINAL TOTALS RESULT ===');

@@ -238,19 +238,6 @@ looker.plugins.visualizations.add({
         padding: 20px;
       }
 
-      .warning-message {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 8px 12px;
-        margin-bottom: 12px;
-        background-color: #FFF4E5;
-        border: 1px solid #FFE0B2;
-        border-radius: 4px;
-        color: #E65100;
-        font-size: 12px;
-      }
-
       @keyframes fadeIn {
         from {
           opacity: 0;
@@ -274,7 +261,6 @@ looker.plugins.visualizations.add({
     // Create HTML structure
     element.innerHTML = `
       <div class="scorecard-container" id="scorecard-container-${Date.now()}">
-        <div class="scorecard-warning" style="display: none;"></div>
         <div class="scorecard-title"></div>
         <div class="scorecard-value"></div>
         <div class="scorecard-sparkline-container">
@@ -286,7 +272,6 @@ looker.plugins.visualizations.add({
 
     // Store references
     this._container = element.querySelector('.scorecard-container');
-    this._warning = element.querySelector('.scorecard-warning');
     this._title = element.querySelector('.scorecard-title');
     this._value = element.querySelector('.scorecard-value');
     this._sparklineContainer = element.querySelector('.scorecard-sparkline-container');
@@ -329,37 +314,13 @@ looker.plugins.visualizations.add({
     // Get the primary measure for the main value
     const primaryMeasure = measures[0].name;
 
-    // CRITICAL FIX: Check if totals_data is available (true total regardless of row limit)
+    // Calculate the aggregated value (sum of all rows for the measure)
     let totalValue = 0;
-    let usingTotals = false;
+    data.forEach(row => {
+      totalValue += (row[primaryMeasure].value || 0);
+    });
 
-    if (details && details.totals_data && Object.keys(details.totals_data).length > 0) {
-      // Use the totals data - this is the TRUE total
-      if (details.totals_data[primaryMeasure] && details.totals_data[primaryMeasure].value !== undefined) {
-        totalValue = details.totals_data[primaryMeasure].value;
-        usingTotals = true;
-        console.log('Using totals_data for accurate total:', totalValue);
-      }
-    }
-
-    // Fallback: Calculate from visible rows if totals not available
-    if (!usingTotals) {
-      data.forEach(row => {
-        totalValue += (row[primaryMeasure].value || 0);
-      });
-
-      // Show warning if row limit might be affecting results
-      if (data.length >= 500) {
-        this.showWarning('Row limit reached. Enable "Totals" in your query for accurate results.');
-      }
-
-      console.log('Calculated from visible rows:', totalValue, '(', data.length, 'rows)');
-    } else {
-      // Hide warning if we have totals
-      this.hideWarning();
-    }
-
-    // For sparkline, we use the row-level data (trend over time)
+    // For sparkline, we need dimension + measure data
     const sparklineData = [];
     if (dimensions.length > 0) {
       const dimension = dimensions[0].name;
@@ -398,10 +359,8 @@ looker.plugins.visualizations.add({
 
     // Debug logging
     console.log('Scorecard Debug Info:');
-    console.log('Using Totals:', usingTotals);
     console.log('Total Value:', totalValue, '→', formattedValue);
     console.log('Sparkline Data Points:', sparklineData.length);
-    console.log('Row Count:', data.length);
 
     done();
   },
@@ -436,22 +395,6 @@ looker.plugins.visualizations.add({
     // Sparkline container height
     const sparklineHeight = config.sparkline_height || 40;
     this._sparklineContainer.style.height = sparklineHeight + '%';
-  },
-
-  /**
-   * Show warning message
-   */
-  showWarning: function(message) {
-    this._warning.textContent = '⚠️ ' + message;
-    this._warning.className = 'warning-message';
-    this._warning.style.display = 'block';
-  },
-
-  /**
-   * Hide warning message
-   */
-  hideWarning: function() {
-    this._warning.style.display = 'none';
   },
 
   /**

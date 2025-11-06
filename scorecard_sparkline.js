@@ -2,6 +2,9 @@
  * Scorecard with Sparkline Visualization for Looker
  * Combined JavaScript file with embedded HTML and CSS
  * Displays a single value with a sparkline trend chart
+ *
+ * NOTE: Sparkline always displays visible rows only. The main metric value
+ * respects the Calculation Mode setting (Totals vs Visible Rows).
  */
 
 looker.plugins.visualizations.add({
@@ -73,11 +76,11 @@ looker.plugins.visualizations.add({
     },
     calculation_mode: {
       type: "string",
-      label: "Calculation Mode",
+      label: "Calculation Mode ⓘ Use Totals for accurate aggregates (may have minor rounding with large datasets). Sparkline always shows visible rows trend.",
       display: "select",
       values: [
         {"Use Totals (Recommended)": "use_totals"},
-        {"Sum Visible Rows": "sum_visible_rows"}
+        {"Sum Visible Rows Only": "sum_visible_rows"}
       ],
       default: "use_totals",
       section: "Content"
@@ -341,6 +344,10 @@ looker.plugins.visualizations.add({
     // Get calculation mode
     const calculationMode = config.calculation_mode || 'use_totals';
 
+    // Detect if row limit was reached (common limits: 500, 5000, 50000)
+    const rowLimit = queryResponse.row_limit || 500;
+    const rowLimitReached = data.length >= rowLimit;
+
     // ============================================
     // ENHANCED TOTALS DETECTION
     // ============================================
@@ -351,6 +358,9 @@ looker.plugins.visualizations.add({
     // Enhanced debugging - log everything about details
     console.log('=== TOTALS DEBUG INFO ===');
     console.log('Calculation Mode:', calculationMode);
+    console.log('Row Limit:', rowLimit);
+    console.log('Row Count:', data.length);
+    console.log('Row Limit Reached:', rowLimitReached);
     console.log('Details object:', details);
     console.log('Details type:', typeof details);
     console.log('Has totals_data?', details && 'totals_data' in details);
@@ -436,19 +446,19 @@ looker.plugins.visualizations.add({
       });
       totalsMethod = 'calculated_from_rows';
 
-      // Show warning only if in "use_totals" mode and row limit might be affecting results
-      if (calculationMode === 'use_totals') {
-        if (data.length >= 500) {
-          this.showWarning('⚠️ Row limit reached. Click "Totals" in Data menu for accurate results.');
-        } else if (data.length >= 100) {
-          this.showWarning('⚠️ Showing sum of visible rows. Enable "Totals" for accurate aggregate.');
-        }
+      // Show warning ONLY if:
+      // 1. We're in "use_totals" mode
+      // 2. AND the row limit was actually reached (not just because we have many rows)
+      if (calculationMode === 'use_totals' && rowLimitReached) {
+        this.showWarning('⚠️ Row limit reached. Enable "Totals" in Data menu for accurate results.');
       } else {
-        // In sum_visible_rows mode, never show warning
+        // Don't show warning if:
+        // - We're in sum_visible_rows mode
+        // - OR we have all the data (row limit not reached)
         this.hideWarning();
       }
     } else {
-      // Hide warning if we have totals
+      // Hide warning if we successfully got totals
       this.hideWarning();
     }
 
@@ -456,10 +466,10 @@ looker.plugins.visualizations.add({
     console.log('Using Totals:', usingTotals);
     console.log('Totals Method:', totalsMethod);
     console.log('Total Value:', totalValue);
-    console.log('Row Count:', data.length);
     console.log('========================');
 
     // For sparkline, we use the row-level data (trend over time)
+    // NOTE: Sparkline ALWAYS uses visible rows, regardless of calculation mode
     const sparklineData = [];
     if (dimensions.length > 0) {
       const dimension = dimensions[0].name;

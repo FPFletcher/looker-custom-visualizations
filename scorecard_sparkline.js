@@ -84,14 +84,15 @@ looker.plugins.visualizations.add({
       ],
       default: "use_totals",
       section: "Content"
+      order: 1
     },
-    calculation_mode_info: {
+    calculation_mode_help: {
       type: "string",
-      label: "",
+      label: "ℹ️ Use Totals: Accurate across all data (requires Totals enabled in Data menu). May have minor rounding with large datasets. Note: Sparkline always shows visible rows trend only.",
       display: "text",
-      placeholder: "ℹ️ Use Totals mode: Accurate aggregates (minor rounding possible with large datasets). Sparkline always shows visible rows trend only.",
       section: "Content",
-      default: ""
+      default: "",
+      order: 2
     },
 
     // ========== SPARKLINE SECTION ==========
@@ -202,6 +203,11 @@ looker.plugins.visualizations.add({
         box-sizing: border-box;
         position: relative;
         overflow: hidden;
+      }
+
+      /* Hide the input field for help text, show only label */
+      input[type="text"][value=""]:read-only {
+        display: none;
       }
 
       .scorecard-title {
@@ -468,7 +474,7 @@ looker.plugins.visualizations.add({
       // Show warning if in "use_totals" mode but totals not available
       if (calculationMode === 'use_totals') {
         if (rowLimitReached) {
-          this.showWarning('⚠️ Row limit reached. Enable "Totals" in Data menu for accurate results.');
+          this.showWarning('⚠️ Row limit reached. Enable "Totals" in Data menu or switch to "Sum Visible Rows" mode.');
         } else {
           // Even if limit not reached, if using use_totals mode without actual totals, give gentle reminder
           this.showWarning('ℹ️ Enable "Totals" in Data menu for accurate aggregates across all data.');
@@ -478,10 +484,6 @@ looker.plugins.visualizations.add({
         this.hideWarning();
       }
     } else {
-      // Got totals successfully, but check if sparkline is incomplete
-      if (rowLimitReached) {
-        this.showWarning('ℹ️ Metric uses totals (accurate). Sparkline shows visible rows only.');
-      } else {
         this.hideWarning();
       }
     }

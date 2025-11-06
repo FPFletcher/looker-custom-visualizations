@@ -4,6 +4,7 @@
  * Displays a single value with a sparkline trend chart
  */
 
+
 looker.plugins.visualizations.add({
   id: "scorecard_sparkline_viz",
   label: "Scorecard with Sparkline",

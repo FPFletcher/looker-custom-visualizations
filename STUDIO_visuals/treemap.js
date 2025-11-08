@@ -146,14 +146,6 @@ looker.plugins.visualizations.add({
     const style = document.createElement('style');
     style.innerHTML = `
 
-      # .treemap-container {
-      #   width: 100%;
-      #   height: 100%;
-      #   position: relative;
-      #   font-family: 'Roboto', Arial, sans-serif;
-      #   overflow: hidden;
-      # }
-
       .treemap-container {
         width: 100%;
         height: 100%;
@@ -429,66 +421,6 @@ looker.plugins.visualizations.add({
       this._svg.appendChild(g);
     });
   },
-
-  # addLabels: function(g, item, config, svgNS) {
-  #   const padding = 6;
-  #   const centerX = item.x + item.width / 2;
-  #   const centerY = item.y + item.height / 2;
-
-  #   const labelFontSize = config.label_font_size || 12;
-  #   const valueFontSize = config.value_font_size || 11;
-
-  #   // Estimate text sizes
-  #   const labelText = item.name.toString();
-  #   const valueText = config.show_values !== false ? this.formatValue(item.rawValue) : '';
-
-  #   const labelWidth = this.estimateTextWidth(labelText, labelFontSize);
-  #   const valueWidth = this.estimateTextWidth(valueText, valueFontSize);
-
-  #   const availableWidth = item.width - (padding * 2);
-  #   const availableHeight = item.height - (padding * 2);
-
-  #   const totalTextHeight = (config.show_labels ? labelFontSize : 0) +
-  #                         (config.show_values ? valueFontSize + 4 : 0);
-
-  #   // Only show if fits
-  #   if (availableWidth < 30 || availableHeight < totalTextHeight) return;
-
-  #   let yOffset = centerY - totalTextHeight / 2;
-
-  #   // Label
-  #   if (config.show_labels !== false) {
-  #     const wrappedLabel = config.wrap_labels !== false ?
-  #       this.wrapText(labelText, availableWidth, labelFontSize) : [labelText];
-
-  #     wrappedLabel.forEach((line, idx) => {
-  #       const label = document.createElementNS(svgNS, 'text');
-  #       label.setAttribute('x', centerX);
-  #       label.setAttribute('y', yOffset + labelFontSize + (idx * (labelFontSize + 2)));
-  #       label.setAttribute('text-anchor', 'middle');
-  #       label.setAttribute('fill', config.label_color || '#000000');
-  #       label.setAttribute('font-size', labelFontSize);
-  #       label.setAttribute('class', 'treemap-label');
-  #       label.textContent = line;
-  #       g.appendChild(label);
-  #     });
-
-  #     yOffset += labelFontSize * wrappedLabel.length + 6;
-  #   }
-
-  #   // Value
-  #   if (config.show_values !== false && valueText && availableWidth >= valueWidth) {
-  #     const value = document.createElementNS(svgNS, 'text');
-  #     value.setAttribute('x', centerX);
-  #     value.setAttribute('y', yOffset + valueFontSize);
-  #     value.setAttribute('text-anchor', 'middle');
-  #     value.setAttribute('fill', config.value_color || '#000000');
-  #     value.setAttribute('font-size', valueFontSize);
-  #     value.setAttribute('class', 'treemap-value');
-  #     value.textContent = valueText;
-  #     g.appendChild(value);
-  #   }
-  # },
 
   addLabels: function(g, item, config, svgNS) {
     const padding = 4;

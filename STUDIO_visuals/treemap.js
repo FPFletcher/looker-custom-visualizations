@@ -747,4 +747,3 @@ looker.plugins.visualizations.add({
     return value.toFixed(0);
   }
 });
-```

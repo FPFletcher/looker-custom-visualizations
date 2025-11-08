@@ -1,19 +1,4 @@
-You've encountered two common issues with custom treemap implementations: aggressive "squarification" leading to thin vertical slivers (forcing vertical text), and floating-point math errors in the layout algorithm causing incomplete fills (the grey gap).
 
-Here is the corrected, complete code.
-
-### Key Improvements Made:
-
-1.  **Forced Horizontal Labels:** I removed the code block that rotated text 90 degrees for narrow tiles. Now, if a tile is too narrow for horizontal text, it simply won't show the label (much cleaner than unreadable vertical text).
-2.  **Robust "Studio-like" Layout:** I completely rewrote the `squarify` engine. consistently.
-      * It now uses a more robust method to ensure the *last* item in any row/column snaps perfectly to the edge of the container, eliminating the "grey dead space" at the bottom right.
-      * It calculates areas more precisely to ensure total coverage 100% of the time.
-
-### Complete Updated Code
-
-Copy and paste this entire block into your visualization's JS area.
-
-```javascript
 /**
  * Treemap Visualization for Looker
  * Studio-inspired hierarchical treemap with drill-down and multi-dimension support

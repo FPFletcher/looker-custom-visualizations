@@ -16,31 +16,31 @@ looker.plugins.visualizations.add({
       type: "string",
       label: "Title",
       default: "Metric Title",
-      section: "Content"
+      section: "Plot"
     },
     show_title: {
       type: "boolean",
       label: "Show Title",
       default: true,
-      section: "Content"
+      section: "Plot"
     },
     title_font_size: {
       type: "number",
       label: "Title Font Size",
       default: 14,
-      section: "Content"
+      section: "Plot"
     },
     value_prefix: {
       type: "string",
       label: "Value Prefix",
       placeholder: "$",
-      section: "Content"
+      section: "Plot"
     },
     value_suffix: {
       type: "string",
       label: "Value Suffix",
       placeholder: "",
-      section: "Content"
+      section: "Plot"
     },
     value_format: {
       type: "string",
@@ -54,25 +54,25 @@ looker.plugins.visualizations.add({
         {"Currency ($1,234.56)": "currency"}
       ],
       default: "auto",
-      section: "Content"
+      section: "Plot"
     },
     decimal_places: {
       type: "number",
       label: "Decimal Places",
       default: 2,
-      section: "Content"
+      section: "Plot"
     },
     value_font_size: {
       type: "number",
       label: "Value Font Size",
       default: 48,
-      section: "Content"
+      section: "Plot"
     },
     font_family: {
       type: "string",
       label: "Font Family",
       default: "Roboto, Arial, sans-serif",
-      section: "Content"
+      section: "Plot"
     },
     calculation_mode: {
       type: "string",
@@ -83,14 +83,14 @@ looker.plugins.visualizations.add({
         {"Sum Visible Rows Only": "sum_visible_rows"}
       ],
       default: "use_totals",
-      section: "Content",
+      section: "Plot",
       order: 1
     },
     calculation_mode_help: {
       type: "string",
       label: "ℹ️ Use Totals: Accurate across all data (requires Totals enabled in Data menu). May have minor rounding with large datasets. Note: Sparkline always shows visible rows trend only.",
       display: "divider",
-      section: "Content",
+      section: "Plot",
       default: "",
       order: 2
     },
@@ -150,40 +150,40 @@ looker.plugins.visualizations.add({
       label: "Background Color",
       default: "#FFFFFF",
       display: "color",
-      section: "Style"
+      section: "Formatting"
     },
     title_color: {
       type: "string",
       label: "Title Color",
       default: "#5F6368",
       display: "color",
-      section: "Style"
+      section: "Formatting"
     },
     value_color: {
       type: "string",
       label: "Value Color",
       default: "#202124",
       display: "color",
-      section: "Style"
+      section: "Formatting"
     },
     border_enabled: {
       type: "boolean",
       label: "Show Border",
       default: false,
-      section: "Style"
+      section: "Formatting"
     },
     border_color: {
       type: "string",
       label: "Border Color",
       default: "#DADCE0",
       display: "color",
-      section: "Style"
+      section: "Formatting"
     },
     border_radius: {
       type: "number",
       label: "Border Radius (px)",
       default: 8,
-      section: "Style"
+      section: "Formatting"
     },
   },
 

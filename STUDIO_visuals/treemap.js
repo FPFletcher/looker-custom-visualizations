@@ -327,39 +327,41 @@ const colorChanged = this._lastColorBy !== config.color_by ||
     const dimensions = queryResponse.fields.dimension_like;
     const measures = queryResponse.fields.measure_like;
     const currentLevel = this._drillStack.length;
-    const dimension = dimensions[Math.min(currentLevel, dimensions.length - 1)].name;
-    const measure = measures[0].name;
 
-    let treemapData;
-    // Build hierarchical or flat data based on drill level
-    if (dimensions.length > 1 && currentLevel < dimensions.length) {
-      treemapData = this.buildHierarchicalData(data, dimensions, measure, currentLevel);
-    } else {
-      treemapData = data.map(row => ({
-        name: row[dimension].value,
-        value: Math.max(0, row[measure].value || 0),
-        rawValue: row[measure].value || 0,
-        dimension: dimension,
-        level: currentLevel,
-        children: null
-      })).filter(d => d.value > 0);
+    // 1. Determine Active Data
+    // If 'data' is passed (e.g., from "Others" expansion), use it.
+    // Otherwise, filter FRESH from the global dataset based on the drill stack.
+    let activeData = data;
+    if (!activeData) {
+      activeData = this._allData;
+      for (let i = 0; i < currentLevel; i++) {
+        const dimName = dimensions[i].name;
+        const filterVal = this._drillStack[i];
+        activeData = activeData.filter(row => row[dimName].value === filterVal);
+      }
     }
 
+    // 2. Determine Active Dimension
+    // Stay on the last dimension if we are deep in the drill stack
+    const dimIndex = Math.min(currentLevel, dimensions.length - 1);
+    const dimension = dimensions[dimIndex].name;
+    const measure = measures[0].name;
+
+    // 3. Group Data for this level
+    // We use a new, simpler grouper that doesn't rely on pre-built children
+    let treemapData = this.groupData(activeData, dimension, measure, currentLevel, dimensions.length);
+
     // --- GROUPING LOGIC ---
-    // Only group if toggle is ON and there are enough items to justify it
     if (config.others_toggle && treemapData.length > 5) {
-      // Convert percentage input (e.g., 0.5) to decimal (0.005)
       const threshold = (config.others_threshold || 0.5) / 100;
       treemapData = this.groupSmallItems(treemapData, threshold);
     }
 
     // --- SORTING LOGIC ---
-    // Sort descending (b.value - a.value) so largest items are top-left.
-    // Explicitly force the "Others" node to the end of the list so it renders bottom-right.
     treemapData.sort((a, b) => {
-      if (a.isOthers) return 1;  // 'a' is Others, push it to the end
-      if (b.isOthers) return -1; // 'b' is Others, keep it at the end
-      return b.value - a.value;  // Standard descending sort for the rest
+      if (a.isOthers) return 1;
+      if (b.isOthers) return -1;
+      return b.value - a.value;
     });
 
     this.updateBreadcrumb();
@@ -398,10 +400,9 @@ const colorChanged = this._lastColorBy !== config.color_by ||
     return data;
   },
 
-  buildHierarchicalData: function(data, dimensions, measure, currentLevel) {
-    const dimension = dimensions[currentLevel].name;
+  // REPLACES buildHierarchicalData
+  groupData: function(data, dimension, measure, level, maxDepth) {
     const grouped = {};
-
     data.forEach(row => {
       const key = row[dimension].value;
       const safeKey = "k_" + key;
@@ -410,17 +411,16 @@ const colorChanged = this._lastColorBy !== config.color_by ||
           name: key,
           value: 0,
           rawValue: 0,
-          children: [],
-          level: currentLevel
+          children: [], // Still needed for "Others" later
+          level: level,
+          isDrillable: level < maxDepth - 1
         };
       }
       const val = row[measure].value || 0;
       grouped[safeKey].value += Math.max(0, val);
       grouped[safeKey].rawValue += val;
-
-      if (dimensions[currentLevel + 1]) {
-        grouped[safeKey].children.push(row);
-      }
+      // We keep all matching rows for potential "Others" grouping later
+      grouped[safeKey].children.push(row);
     });
 
     return Object.values(grouped).filter(d => d.value > 0);
@@ -501,43 +501,20 @@ const colorChanged = this._lastColorBy !== config.color_by ||
       rect.setAttribute('stroke-width', config.border_width);
       rect.setAttribute('class', 'treemap-rect');
 
-      if (config.enable_drill_down && item.children && item.children.length > 0) {
-  rect.addEventListener('click', () => {
-    this._drillStack.push(item.name);
-
-    let childData = item.children;
-
-    // CRITICAL FIX: For non-Others nodes, children are raw rows that need processing
-    if (!item.isOthers) {
-      const currentLevel = this._drillStack.length;
-      const dimensions = this._queryResponse.fields.dimension_like;
-
-      // If there's a next dimension, build hierarchy from filtered children
-      if (currentLevel < dimensions.length) {
-        childData = this.buildHierarchicalData(
-          childData,
-          dimensions,
-          this._queryResponse.fields.measure_like[0].name,
-          currentLevel
-        );
+      if (config.enable_drill_down && (item.isDrillable || item.isOthers)) {
+        rect.addEventListener('click', () => {
+          if (item.isOthers) {
+             // For "Others", just show its contents without changing drill stack level
+             this.drawTreemap(item.children, config, this._queryResponse);
+          } else {
+             // For normal nodes, push to stack and PASS NULL data
+             // to force drawTreemap to re-filter from global data.
+             this._drillStack.push(item.name);
+             this.drawTreemap(null, config, this._queryResponse);
+          }
+        });
       }
-    } else {
-      // Others node: children are already processed
-      const currentLevel = this._drillStack.length;
-      const dimensions = this._queryResponse.fields.dimension_like;
-      if (currentLevel < dimensions.length) {
-        childData = this.buildHierarchicalData(
-          childData,
-          dimensions,
-          this._queryResponse.fields.measure_like[0].name,
-          currentLevel
-        );
-      }
-    }
 
-    this.drawTreemap(childData, this._config, this._queryResponse);
-  });
-}
       rect.addEventListener('mouseenter', () => {
         const pct = ((item.value / totalValue) * 100).toFixed(1);
         this._tooltip.innerHTML = `

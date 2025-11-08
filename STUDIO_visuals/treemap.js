@@ -279,6 +279,16 @@ looker.plugins.visualizations.add({
     this._config = config;
     this._allData = data;
 
+    // FIX: Reset drill if Others toggle or threshold changed
+    const othersChanged = this._lastOthersToggle !== config.others_toggle ||
+    this._lastOthersThreshold !== config.others_threshold;
+
+    if (othersChanged) {
+      this._drillStack = [];
+      this._lastOthersToggle = config.others_toggle;
+      this._lastOthersThreshold = config.others_threshold;
+    }
+
     if (this._lastDimensionCount !== dimensions.length) {
       this._drillStack = [];
       this._lastDimensionCount = dimensions.length;
@@ -428,9 +438,7 @@ looker.plugins.visualizations.add({
 
       // --- UPDATED COLOR LOGIC FOR OTHERS ---
       let fillColor;
-      if (item.isOthers) {
-          fillColor = "#E0E0E0"; // Distinct grey for "Others"
-      } else if (config.color_by === 'metric' && config.use_gradient) {
+      if (config.color_by === 'metric' && config.use_gradient) {
          const allValues = data.filter(d => !d.isOthers).map(d => d.value);
          const min = Math.min(...allValues);
          const max = Math.max(...allValues);
@@ -476,10 +484,10 @@ looker.plugins.visualizations.add({
       rect.addEventListener('mouseenter', () => {
          const pct = ((item.value / totalValue) * 100).toFixed(1);
          this._tooltip.innerHTML = `
-           <div style="font-weight:600; margin-bottom:2px">${item.name}</div>
-           <div>${this.formatValue(item.rawValue)} (${pct}%)</div>
-           ${item.isOthers ? '<div style="font-size:10px; opacity:0.8">(Click to expand)</div>' : ''}
-         `;
+          <div style="font-weight:600; margin-bottom:2px">${item.name}</div>
+          <div>${this.formatValue(item.rawValue)} (${pct}%)</div>
+          ${item.children && item.children.length > 0 ? '<div style="font-size:10px; opacity:0.8">(Click to drill down)</div>' : ''}
+        `;
          this._tooltip.style.display = 'block';
       });
       rect.addEventListener('mousemove', (e) => {
@@ -656,7 +664,7 @@ looker.plugins.visualizations.add({
        labelEl.setAttribute('y', canFitStacked ? currentY - (valueFontSize / 2) : currentY + (labelFontSize/3));
        labelEl.setAttribute('text-anchor', 'middle');
        // Force black labels for "Others" node for readability against grey background
-       labelEl.setAttribute('fill', item.isOthers ? '#000000' : config.label_color);
+       labelEl.setAttribute('fill', config.label_color);
        labelEl.setAttribute('font-size', labelFontSize);
        labelEl.setAttribute('class', 'treemap-label');
 
@@ -675,7 +683,7 @@ looker.plugins.visualizations.add({
        valEl.setAttribute('x', item.x + (item.width / 2));
        valEl.setAttribute('y', canFitStacked ? currentY + valueFontSize + 2 : currentY + (valueFontSize/3));
        valEl.setAttribute('text-anchor', 'middle');
-       valEl.setAttribute('fill', item.isOthers ? '#000000' : config.value_color);
+       valEl.setAttribute('fill', config.value_color);
        valEl.setAttribute('font-size', valueFontSize);
        valEl.setAttribute('class', 'treemap-value');
        valEl.textContent = valueText;

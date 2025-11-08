@@ -333,34 +333,34 @@ looker.plugins.visualizations.add({
 
   // --- NEW GROUPING FUNCTION ---
   groupSmallItems: function(data, threshold) {
-      const total = data.reduce((sum, d) => sum + d.value, 0);
-      const visible = [];
-      const others = [];
+    const total = data.reduce((sum, d) => sum + d.value, 0);
+    const visible = [];
+    const others = [];
 
-      data.forEach(d => {
-          // If it's ALREADY an "Others" node (from a previous drill-up), keep it visible
-          if (d.isOthers || (d.value / total) >= threshold) {
-              visible.push(d);
-          } else {
-              others.push(d);
-          }
-      });
-
-      // Only group if we have enough items to make it worthwhile
-      if (others.length > 1) {
-          const othersNode = {
-              name: "Others",
-              value: others.reduce((s, d) => s + d.value, 0),
-              rawValue: others.reduce((s, d) => s + d.rawValue, 0),
-              children: others, // This enables the drill-down!
-              isOthers: true,   // Flag for coloring
-              level: others[0].level
-          };
-          visible.push(othersNode);
-          return visible;
+    data.forEach(d => {
+      if (d.isOthers || (d.value / total) >= threshold) {
+        visible.push(d);
+      } else {
+        others.push(d);
       }
+    });
 
-      return data;
+    if (others.length > 1) {
+      // FIX: Ensure children maintain full hierarchical structure
+      const othersNode = {
+        name: "Others",
+        value: others.reduce((s, d) => s + d.value, 0),
+        rawValue: others.reduce((s, d) => s + d.rawValue, 0),
+        children: others.map(o => ({...o})), // Clone children properly
+        isOthers: true,
+        level: others[0].level,
+        dimension: others[0].dimension
+      };
+      visible.push(othersNode);
+      return visible;
+    }
+
+    return data;
   },
 
   buildHierarchicalData: function(data, dimensions, measure, currentLevel) {
@@ -448,13 +448,30 @@ looker.plugins.visualizations.add({
       rect.setAttribute('class', 'treemap-rect');
 
       // Drill down works for "Others" too because it has children!
+      // At the drill-down click handler, add safety check:
       if (config.enable_drill_down && item.children && item.children.length > 0) {
         rect.addEventListener('click', () => {
           this._drillStack.push(item.name);
-          this.drawTreemap(item.children, config, this._queryResponse);
+
+          // FIX: For Others node, ensure children are re-processed
+          let childData = item.children;
+          if (item.isOthers) {
+            // Re-run through buildHierarchicalData if needed
+            const currentLevel = this._drillStack.length;
+            const dimensions = this._queryResponse.fields.dimension_like;
+            if (currentLevel < dimensions.length) {
+              childData = this.buildHierarchicalData(
+                childData,
+                dimensions,
+                this._queryResponse.fields.measure_like[0].name,
+                currentLevel
+              );
+            }
+          }
+
+          this.drawTreemap(childData, config, this._queryResponse);
         });
       }
-
       // Tooltips
       rect.addEventListener('mouseenter', () => {
          const pct = ((item.value / totalValue) * 100).toFixed(1);
@@ -572,34 +589,43 @@ looker.plugins.visualizations.add({
   },
 
   layoutLastRow: function(row, container, results) {
-     const useWidth = container.width < container.height;
-     if (useWidth) {
-        let runningX = container.x;
-        const totalArea = row.reduce((sum,n) => sum + n.area, 0);
-        row.forEach((node, i) => {
-           let nodeWidth;
-           if (i === row.length - 1) {
-              nodeWidth = Math.max(0, (container.x + container.width) - runningX);
-           } else {
-              nodeWidth = (node.area / totalArea) * container.width;
-           }
-           results.push({ ...node, x: runningX, y: container.y, width: nodeWidth, height: container.height });
-           runningX += nodeWidth;
+    const useWidth = container.width < container.height;
+
+    if (useWidth) {
+      let runningX = container.x;
+      row.forEach((node, i) => {
+        // Last item fills exactly to edge
+        const nodeWidth = (i === row.length - 1)
+        ? Math.max(1, container.x + container.width - runningX)
+        : node.area / container.height;
+
+        results.push({
+          ...node,
+          x: runningX,
+          y: container.y,
+          width: nodeWidth,
+          height: container.height
         });
-     } else {
-        let runningY = container.y;
-        const totalArea = row.reduce((sum,n) => sum + n.area, 0);
-        row.forEach((node, i) => {
-           let nodeHeight;
-           if (i === row.length - 1) {
-               nodeHeight = Math.max(0, (container.y + container.height) - runningY);
-           } else {
-               nodeHeight = (node.area / totalArea) * container.height;
-           }
-           results.push({ ...node, x: container.x, y: runningY, width: container.width, height: nodeHeight });
-           runningY += nodeHeight;
+        runningX += nodeWidth;
+      });
+    } else {
+      let runningY = container.y;
+      row.forEach((node, i) => {
+        // Last item fills exactly to edge
+        const nodeHeight = (i === row.length - 1)
+        ? Math.max(1, container.y + container.height - runningY)
+        : node.area / container.width;
+
+        results.push({
+          ...node,
+          x: container.x,
+          y: runningY,
+          width: container.width,
+          height: nodeHeight
         });
-     }
+        runningY += nodeHeight;
+      });
+    }
   },
 
   addLabels: function(g, item, config, svgNS) {

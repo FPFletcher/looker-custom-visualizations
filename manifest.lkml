@@ -13,7 +13,7 @@ visualization: {
 
 visualization: {
   id: "water_drop_viz"
-  label: "Water Drop Visualization"
+  label: "Water Drop"
   file: "CUSTOM_visuals/water_drop.js"
 
   dependencies: [
@@ -28,8 +28,17 @@ visualization: {
 visualization: {
   id: "scorecard_sparkline_viz"
   label: "Scorecard"
-  file: "scorecard_sparkline.js"
+  file: "STUDIO_visuals/scorecard_sparkline.js"
 
   # No external dependencies needed
+  dependencies: []
+}
+
+project_name: "conditional_bar_visualization"
+
+visualization: {
+  id: "conditional_bar_viz"
+  label: "Bar Chart (Conditional formatting)"
+  file: "STUDIO_visuals/conditional_bar_chart.js"
   dependencies: []
 }

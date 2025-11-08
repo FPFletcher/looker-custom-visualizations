@@ -253,7 +253,7 @@ looker.plugins.visualizations.add({
     this.clearErrors();
 
     if (!data || data.length === 0) {
-      this._svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#999">No data</text>';
+      this._svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#999">No data to display</text>';
       done();
       return;
     }
@@ -262,7 +262,7 @@ looker.plugins.visualizations.add({
     const measures = queryResponse.fields.measure_like;
 
     if (dimensions.length === 0 || measures.length === 0) {
-      this._svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#999">Need 1 dimension and 1 measure</text>';
+      this._svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#999">Treemap requires 1 Dimension and 1 Measure</text>';
       done();
       return;
     }
@@ -272,8 +272,9 @@ looker.plugins.visualizations.add({
     this._config = config;
     this._allData = data;
 
+    // Reset drill if Others toggle or threshold changed
     const othersChanged = this._lastOthersToggle !== config.others_toggle ||
-                         this._lastOthersThreshold !== config.others_threshold;
+    this._lastOthersThreshold !== config.others_threshold;
 
     if (othersChanged) {
       this._drillStack = [];
@@ -281,6 +282,7 @@ looker.plugins.visualizations.add({
       this._lastOthersThreshold = config.others_threshold;
     }
 
+    // Reset drill if dimensions changed
     if (this._lastDimensionCount !== dimensions.length) {
       this._drillStack = [];
       this._lastDimensionCount = dimensions.length;
@@ -298,6 +300,7 @@ looker.plugins.visualizations.add({
     const measure = measures[0].name;
 
     let treemapData;
+    // Build hierarchical or flat data based on drill level
     if (dimensions.length > 1 && currentLevel < dimensions.length) {
       treemapData = this.buildHierarchicalData(data, dimensions, measure, currentLevel);
     } else {
@@ -311,15 +314,21 @@ looker.plugins.visualizations.add({
       })).filter(d => d.value > 0);
     }
 
+    // --- GROUPING LOGIC ---
+    // Only group if toggle is ON and there are enough items to justify it
     if (config.others_toggle && treemapData.length > 5) {
+      // Convert percentage input (e.g., 0.5) to decimal (0.005)
       const threshold = (config.others_threshold || 0.5) / 100;
       treemapData = this.groupSmallItems(treemapData, threshold);
     }
 
+    // --- SORTING LOGIC ---
+    // Sort descending (b.value - a.value) so largest items are top-left.
+    // Explicitly force the "Others" node to the end of the list so it renders bottom-right.
     treemapData.sort((a, b) => {
-      if (a.isOthers) return 1;
-      if (b.isOthers) return -1;
-      return b.value - a.value;
+      if (a.isOthers) return 1;  // 'a' is Others, push it to the end
+      if (b.isOthers) return -1; // 'b' is Others, keep it at the end
+      return b.value - a.value;  // Standard descending sort for the rest
     });
 
     this.updateBreadcrumb();

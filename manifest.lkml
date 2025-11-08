@@ -34,10 +34,15 @@ visualization: {
   dependencies: []
 }
 
-project_name: "conditional_bar_visualization"
+visualization: {
+  id: "treemap_studio_viz"
+  label: "Treemap (Studio)"
+  file: "STUDIO_visuals/treemap.js"
+  dependencies: []
+}
 
 visualization: {
-  id: "conditional_bar_viz"
+  id: "bar_chart_conditional_formatting_viz"
   label: "Bar Chart (Conditional formatting)"
   file: "STUDIO_visuals/conditional_bar_chart.js"
   dependencies: []

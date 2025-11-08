@@ -263,7 +263,7 @@ looker.plugins.visualizations.add({
   },
 
   updateAsync: function(data, element, config, queryResponse, details, done) {
-    console.log("[INIT] updateAsync called. Rows:", data.length);
+    // console.log("[INIT] updateAsync called. Rows:", data.length);
     this.clearErrors();
 
     if (!data || data.length === 0) {
@@ -325,8 +325,8 @@ const colorChanged = this._lastColorBy !== config.color_by ||
   },
 
   drawTreemap: function(data, config, queryResponse) {
-    console.log("[DRAW] drawTreemap called. DrillStack:", JSON.stringify(this._drillStack));
-    console.log("[DRAW] Incoming data is:", data ? `Array(${data.length})` : "NULL (will re-filter)");
+    // console.log("[DRAW] drawTreemap called. DrillStack:", JSON.stringify(this._drillStack));
+    // console.log("[DRAW] Incoming data is:", data ? `Array(${data.length})` : "NULL (will re-filter)");
 
     const dimensions = queryResponse.fields.dimension_like;
     const measures = queryResponse.fields.measure_like;
@@ -344,7 +344,7 @@ const colorChanged = this._lastColorBy !== config.color_by ||
         activeData = activeData.filter(row => row[dimName].value === filterVal);
       }
     }
-    console.log("[DRAW] activeData after filtering:", activeData.length, "rows");
+    // console.log("[DRAW] activeData after filtering:", activeData.length, "rows");
 
     // Rest of the function...
     const dimIndex = Math.min(currentLevel, dimensions.length - 1);
@@ -503,7 +503,7 @@ const colorChanged = this._lastColorBy !== config.color_by ||
 
           if (config.enable_drill_down && (item.isDrillable || item.isOthers)) {
         rect.addEventListener('click', () => {
-          console.log("[CLICK] Node clicked:", item.name, "| isOthers:", item.isOthers);
+          // console.log("[CLICK] Node clicked:", item.name, "| isOthers:", item.isOthers);
           if (item.isOthers) {
              // For "Others", just show its contents without changing drill stack level
              this.drawTreemap(item.children, config, this._queryResponse);

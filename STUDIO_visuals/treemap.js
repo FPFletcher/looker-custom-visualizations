@@ -263,6 +263,7 @@ looker.plugins.visualizations.add({
   },
 
   updateAsync: function(data, element, config, queryResponse, details, done) {
+    console.log("[INIT] updateAsync called. Rows:", data.length);
     this.clearErrors();
 
     if (!data || data.length === 0) {
@@ -324,40 +325,39 @@ const colorChanged = this._lastColorBy !== config.color_by ||
   },
 
   drawTreemap: function(data, config, queryResponse) {
+    console.log("[DRAW] drawTreemap called. DrillStack:", JSON.stringify(this._drillStack));
+    console.log("[DRAW] Incoming data is:", data ? `Array(${data.length})` : "NULL (will re-filter)");
+
     const dimensions = queryResponse.fields.dimension_like;
     const measures = queryResponse.fields.measure_like;
     const currentLevel = this._drillStack.length;
 
     // 1. Determine Active Data
-    // If 'data' is passed (e.g., from "Others" expansion), use it.
-    // Otherwise, filter FRESH from the global dataset based on the drill stack.
+    // If data is null (from breadcrumb click), re-filter from global _allData
     let activeData = data;
     if (!activeData) {
       activeData = this._allData;
+      // Re-apply all filters up to the current level
       for (let i = 0; i < currentLevel; i++) {
         const dimName = dimensions[i].name;
         const filterVal = this._drillStack[i];
         activeData = activeData.filter(row => row[dimName].value === filterVal);
       }
     }
+    console.log("[DRAW] activeData after filtering:", activeData.length, "rows");
 
-    // 2. Determine Active Dimension
-    // Stay on the last dimension if we are deep in the drill stack
+    // Rest of the function...
     const dimIndex = Math.min(currentLevel, dimensions.length - 1);
     const dimension = dimensions[dimIndex].name;
     const measure = measures[0].name;
 
-    // 3. Group Data for this level
-    // We use a new, simpler grouper that doesn't rely on pre-built children
     let treemapData = this.groupData(activeData, dimension, measure, currentLevel, dimensions.length);
 
-    // --- GROUPING LOGIC ---
     if (config.others_toggle && treemapData.length > 5) {
       const threshold = (config.others_threshold || 0.5) / 100;
       treemapData = this.groupSmallItems(treemapData, threshold);
     }
 
-    // --- SORTING LOGIC ---
     treemapData.sort((a, b) => {
       if (a.isOthers) return 1;
       if (b.isOthers) return -1;
@@ -501,8 +501,9 @@ const colorChanged = this._lastColorBy !== config.color_by ||
       rect.setAttribute('stroke-width', config.border_width);
       rect.setAttribute('class', 'treemap-rect');
 
-      if (config.enable_drill_down && (item.isDrillable || item.isOthers)) {
+          if (config.enable_drill_down && (item.isDrillable || item.isOthers)) {
         rect.addEventListener('click', () => {
+          console.log("[CLICK] Node clicked:", item.name, "| isOthers:", item.isOthers);
           if (item.isOthers) {
              // For "Others", just show its contents without changing drill stack level
              this.drawTreemap(item.children, config, this._queryResponse);
@@ -765,8 +766,10 @@ const colorChanged = this._lastColorBy !== config.color_by ||
     this._breadcrumb.querySelectorAll('.breadcrumb-item').forEach(elem => {
       elem.addEventListener('click', (e) => {
         const level = parseInt(e.target.getAttribute('data-level'));
+        // Slice stack to go back to the clicked level
         this._drillStack = (level === -1) ? [] : this._drillStack.slice(0, level + 1);
-        this.drawTreemap(this._allData, this._config, this._queryResponse);
+        // CRITICAL FIX: Pass 'null' as data to force re-filtering based on new stack
+        this.drawTreemap(null, this._config, this._queryResponse);
       });
     });
   },

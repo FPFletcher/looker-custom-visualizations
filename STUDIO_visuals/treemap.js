@@ -285,7 +285,7 @@ looker.plugins.visualizations.add({
     this._config = config;
     this._allData = data;
 
-    // FIX: Reset drill if Others toggle or threshold changed
+    // Reset drill if Others toggle or threshold changed
     const othersChanged = this._lastOthersToggle !== config.others_toggle ||
     this._lastOthersThreshold !== config.others_threshold;
 
@@ -295,6 +295,7 @@ looker.plugins.visualizations.add({
       this._lastOthersThreshold = config.others_threshold;
     }
 
+    // Reset drill if dimensions changed
     if (this._lastDimensionCount !== dimensions.length) {
       this._drillStack = [];
       this._lastDimensionCount = dimensions.length;
@@ -407,15 +408,15 @@ looker.plugins.visualizations.add({
     return Object.values(grouped).filter(d => d.value > 0);
   },
 
-// This is the most important function by far as it dictates the treemap shaping logic
+// This is the most important function by far as it dictates the treemap shaping logic. We made it "deterministic" for a cleaner output yet it could use a more flexible sizing if so desired
   renderTreemap: function(data, config) {
     const svgNS = "http://www.w3.org/2000/svg";
     this._svg.innerHTML = '';
 
     const rect = this._container.getBoundingClientRect();
     const breadcrumbHeight = this._drillStack.length > 0 ? 36 : 0;
-    const width = Math.floor(rect.width);  // Force integer
-    const height = Math.floor(rect.height - breadcrumbHeight);  // Force integer
+    const width = Math.floor(rect.width);
+    const height = Math.floor(rect.height - breadcrumbHeight);
 
     if (width <= 0 || height <= 0) return;
 
@@ -431,18 +432,27 @@ looker.plugins.visualizations.add({
       area: (d.value / totalValue) * rootArea
     }));
 
-    const layout = this.squarify(nodes, 0, 0, width, height);
+    let layout = this.squarify(nodes, 0, 0, width, height);
+
+    // CRITICAL FIX: Force last item to fill to edges
+    if (layout.length > 0) {
+      const lastItem = layout[layout.length - 1];
+      lastItem.width = width - lastItem.x;
+      lastItem.height = height - lastItem.y;
+    }
+
     const colors = this.getColors(data, config);
 
     layout.forEach((item, i) => {
       const g = document.createElementNS(svgNS, 'g');
       const rect = document.createElementNS(svgNS, 'rect');
 
-      // Round to pixel boundaries to prevent sub-pixel gaps
+      // Round coordinates but keep last item forced to edge
+      const isLast = (i === layout.length - 1);
       const x = Math.round(item.x);
       const y = Math.round(item.y);
-      const w = Math.round(item.x + item.width) - x;
-      const h = Math.round(item.y + item.height) - y;
+      const w = isLast ? (width - x) : (Math.round(item.x + item.width) - x);
+      const h = isLast ? (height - y) : (Math.round(item.y + item.height) - y);
 
       rect.setAttribute('x', x);
       rect.setAttribute('y', y);
@@ -451,7 +461,7 @@ looker.plugins.visualizations.add({
 
       let fillColor;
       if (config.color_by === 'metric' && config.use_gradient) {
-        const allValues = data.filter(d => !d.isOthers).map(d => d.value);
+        const allValues = data.map(d => d.value);
         const min = Math.min(...allValues);
         const max = Math.max(...allValues);
         const ratio = (max === min) ? 0.5 : (item.value - min) / (max - min);
@@ -491,7 +501,7 @@ looker.plugins.visualizations.add({
             }
           }
 
-          this.drawTreemap(childData, config, this._queryResponse);
+          this.drawTreemap(childData, this._config, this._queryResponse);
         });
       }
 
@@ -763,20 +773,18 @@ looker.plugins.visualizations.add({
 
         let palette = palettes[config.color_palette] || palettes.green_scale;
 
-      // Reverse if requested
       if (config.reverse_palette) {
         palette = [...palette].reverse();
       }
 
-      // Generate gradient across all items
-      const nonOthersData = data.filter(d => !d.isOthers);
-      const itemCount = nonOthersData.length;
+      // FIX: Use ALL data length, don't filter
+      const itemCount = data.length;
 
       if (itemCount <= palette.length) {
         return palette.slice(0, itemCount);
       }
 
-      // Interpolate to create smooth gradient for many items
+      // Interpolate for many items
       const colors = [];
       for (let i = 0; i < itemCount; i++) {
         const position = i / Math.max(1, itemCount - 1);

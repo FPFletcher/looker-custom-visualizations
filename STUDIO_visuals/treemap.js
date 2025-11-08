@@ -352,7 +352,24 @@ looker.plugins.visualizations.add({
       rect.setAttribute('y', item.y);
       rect.setAttribute('width', item.width);
       rect.setAttribute('height', item.height);
-      rect.setAttribute('fill', colors[i % colors.length]);
+
+      // Recalculate color based on actual value for gradient
+      let fillColor;
+      if (config.color_by === 'metric' && config.use_gradient !== false) {
+        const allValues = layout.map(d => d.value);
+        const min = Math.min(...allValues);
+        const max = Math.max(...allValues);
+        const ratio = (item.value - min) / (max - min || 1);
+        fillColor = this.interpolateColor(
+          config.gradient_start_color || '#F1F8E9',
+          config.gradient_end_color || '#33691E',
+          ratio
+        );
+      } else {
+        fillColor = colors[i % colors.length];
+      }
+
+      rect.setAttribute('fill', fillColor);
       rect.setAttribute('stroke', config.border_color || '#FFFFFF');
       rect.setAttribute('stroke-width', config.border_width || 2);
       rect.setAttribute('class', 'treemap-rect');

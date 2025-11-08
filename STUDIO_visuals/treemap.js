@@ -502,27 +502,42 @@ const colorChanged = this._lastColorBy !== config.color_by ||
       rect.setAttribute('class', 'treemap-rect');
 
       if (config.enable_drill_down && item.children && item.children.length > 0) {
-        rect.addEventListener('click', () => {
-          this._drillStack.push(item.name);
+  rect.addEventListener('click', () => {
+    this._drillStack.push(item.name);
 
-          let childData = item.children;
-          if (item.isOthers) {
-            const currentLevel = this._drillStack.length;
-            const dimensions = this._queryResponse.fields.dimension_like;
-            if (currentLevel < dimensions.length) {
-              childData = this.buildHierarchicalData(
-              childData,
-              dimensions,
-              this._queryResponse.fields.measure_like[0].name,
-              currentLevel
-              );
-            }
-          }
+    let childData = item.children;
 
-          this.drawTreemap(childData, this._config, this._queryResponse);
-        });
+    // CRITICAL FIX: For non-Others nodes, children are raw rows that need processing
+    if (!item.isOthers) {
+      const currentLevel = this._drillStack.length;
+      const dimensions = this._queryResponse.fields.dimension_like;
+
+      // If there's a next dimension, build hierarchy from filtered children
+      if (currentLevel < dimensions.length) {
+        childData = this.buildHierarchicalData(
+          childData,
+          dimensions,
+          this._queryResponse.fields.measure_like[0].name,
+          currentLevel
+        );
       }
+    } else {
+      // Others node: children are already processed
+      const currentLevel = this._drillStack.length;
+      const dimensions = this._queryResponse.fields.dimension_like;
+      if (currentLevel < dimensions.length) {
+        childData = this.buildHierarchicalData(
+          childData,
+          dimensions,
+          this._queryResponse.fields.measure_like[0].name,
+          currentLevel
+        );
+      }
+    }
 
+    this.drawTreemap(childData, this._config, this._queryResponse);
+  });
+}
       rect.addEventListener('mouseenter', () => {
         const pct = ((item.value / totalValue) * 100).toFixed(1);
         this._tooltip.innerHTML = `

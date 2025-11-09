@@ -14,7 +14,7 @@ visualization: {
 visualization: {
   id: "water_drop_viz"
   label: "Water Drop"
-  file: "CUSTOM_visuals/water_drop.js"
+  file: "08_CUSTOM_visuals/water_drop.js"
 
   dependencies: [
   ]
@@ -28,7 +28,7 @@ visualization: {
 visualization: {
   id: "scorecard_sparkline_viz"
   label: "Scorecard"
-  file: "STUDIO_visuals/scorecard_sparkline.js"
+  file: "01_STUDIO_visuals/scorecard_sparkline.js"
 
   # No external dependencies needed
   dependencies: []
@@ -37,13 +37,13 @@ visualization: {
 visualization: {
   id: "treemap_studio_viz"
   label: "Treemap (Studio)"
-  file: "STUDIO_visuals/treemap.js"
+  file: "01_STUDIO_visuals/treemap.js"
   dependencies: []
 }
 
 visualization: {
   id: "bar_chart_conditional_formatting_viz"
   label: "Bar Chart (Conditional formatting)"
-  file: "STUDIO_visuals/conditional_bar_chart.js"
+  file: "01_STUDIO_visuals/conditional_bar_chart.js"
   dependencies: []
 }

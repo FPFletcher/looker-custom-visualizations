@@ -1,37 +1,101 @@
 /**
  * Conditional Bar Chart for Looker
- * Studio-inspired bar chart with rule-based conditional formatting
+ * Advanced column chart with conditional formatting and gradient options
  */
 
 looker.plugins.visualizations.add({
-  id: "conditional_bar_viz",
-  label: "Conditional Bar Chart",
+  id: "conditional_column_chart",
+  label: "Conditional Column Chart",
   options: {
-    // ========== CHART SECTION ==========
-    orientation: {
+    // ========== PLOT SECTION ==========
+    chart_type: {
       type: "string",
-      label: "Orientation",
+      label: "Chart Type",
       display: "select",
       values: [
-        {"Vertical": "vertical"},
-        {"Horizontal": "horizontal"}
+        {"Column": "column"},
+        {"Bar": "bar"}
       ],
-      default: "vertical",
-      section: "Chart"
+      default: "column",
+      section: "Plot",
+      order: 1
     },
-    bar_width: {
+    stacking: {
+      type: "string",
+      label: "Stacking",
+      display: "select",
+      values: [
+        {"None": "none"},
+        {"Normal": "normal"},
+        {"Percent": "percent"}
+      ],
+      default: "none",
+      section: "Plot",
+      order: 2
+    },
+    group_padding: {
       type: "number",
-      label: "Bar Width (%)",
-      default: 80,
-      section: "Chart"
+      label: "Group Padding",
+      default: 0.1,
+      min: 0,
+      max: 0.5,
+      step: 0.05,
+      section: "Plot",
+      order: 3
     },
-    show_values: {
+    point_padding: {
+      type: "number",
+      label: "Point Padding",
+      default: 0.1,
+      min: 0,
+      max: 0.5,
+      step: 0.05,
+      section: "Plot",
+      order: 4
+    },
+
+    // ========== SERIES SECTION ==========
+    color_collection: {
+      type: "string",
+      label: "Color Collection",
+      display: "select",
+      values: [
+        {"Google": "google"},
+        {"Looker Classic": "looker"},
+        {"Green Scale": "green_scale"},
+        {"Blue Scale": "blue_scale"},
+        {"Viridis": "viridis"},
+        {"Warm": "warm"},
+        {"Cool": "cool"}
+      ],
+      default: "google",
+      section: "Series",
+      order: 1
+    },
+    series_colors: {
+      type: "string",
+      label: "Series Colors Override (comma-separated hex)",
+      placeholder: "#4285F4,#EA4335,#FBBC04",
+      section: "Series",
+      order: 2
+    },
+    series_labels: {
+      type: "string",
+      label: "Series Labels Override (comma-separated)",
+      placeholder: "Sales,Returns,Profit",
+      section: "Series",
+      order: 3
+    },
+
+    // ========== VALUES SECTION ==========
+    show_labels: {
       type: "boolean",
-      label: "Show Data Labels",
-      default: false,
-      section: "Chart"
+      label: "Show Value Labels",
+      default: true,
+      section: "Values",
+      order: 1
     },
-    value_position: {
+    label_position: {
       type: "string",
       label: "Label Position",
       display: "select",
@@ -41,560 +105,650 @@ looker.plugins.visualizations.add({
         {"Center": "center"}
       ],
       default: "outside",
-      section: "Chart"
+      section: "Values",
+      order: 2
     },
-
-    // ========== CONDITIONAL FORMATTING ==========
-    enable_conditional: {
-      type: "boolean",
-      label: "Enable Conditional Formatting",
-      default: true,
-      section: "Conditional"
-    },
-    rule_count: {
+    label_rotation: {
       type: "number",
-      label: "Number of Rules",
-      default: 3,
-      section: "Conditional"
+      label: "Label Rotation (degrees)",
+      default: 0,
+      min: -90,
+      max: 90,
+      step: 15,
+      section: "Values",
+      order: 3
     },
-
-    // Rule 1
-    rule1_condition: {
+    label_font_size: {
+      type: "number",
+      label: "Label Font Size",
+      default: 11,
+      min: 8,
+      max: 24,
+      section: "Values",
+      order: 4
+    },
+    label_color: {
       type: "string",
-      label: "Rule 1: Condition",
+      label: "Label Color",
+      default: "#000000",
+      display: "color",
+      section: "Values",
+      order: 5
+    },
+    value_format: {
+      type: "string",
+      label: "Value Format",
       display: "select",
       values: [
-        {"Greater than": "gt"},
-        {"Less than": "lt"},
-        {"Between": "between"},
+        {"Auto": "auto"},
+        {"Number": "number"},
+        {"Currency": "currency"},
+        {"Percent": "percent"},
+        {"Decimal (1)": "decimal1"},
+        {"Decimal (2)": "decimal2"}
+      ],
+      default: "auto",
+      section: "Values",
+      order: 6
+    },
+
+    // ========== FORMATTING SECTION ==========
+    conditional_formatting_enabled: {
+      type: "boolean",
+      label: "Enable Conditional Formatting",
+      default: false,
+      section: "Formatting",
+      order: 1
+    },
+    conditional_type: {
+      type: "string",
+      label: "Formatting Type",
+      display: "select",
+      values: [
+        {"Color Gradient": "gradient"},
+        {"Rules Based": "rules"},
         {"Top N": "topn"},
         {"Bottom N": "bottomn"}
       ],
+      default: "gradient",
+      section: "Formatting",
+      order: 2
+    },
+    // Gradient options
+    gradient_start_color: {
+      type: "string",
+      label: "Gradient Start Color",
+      default: "#F1F8E9",
+      display: "color",
+      section: "Formatting",
+      order: 3
+    },
+    gradient_end_color: {
+      type: "string",
+      label: "Gradient End Color",
+      default: "#33691E",
+      display: "color",
+      section: "Formatting",
+      order: 4
+    },
+    // Top/Bottom N options
+    topbottom_n: {
+      type: "number",
+      label: "N Value",
+      default: 5,
+      min: 1,
+      max: 50,
+      section: "Formatting",
+      order: 5
+    },
+    topn_color: {
+      type: "string",
+      label: "Top N Color",
+      default: "#34A853",
+      display: "color",
+      section: "Formatting",
+      order: 6
+    },
+    bottomn_color: {
+      type: "string",
+      label: "Bottom N Color",
+      default: "#EA4335",
+      display: "color",
+      section: "Formatting",
+      order: 7
+    },
+    other_color: {
+      type: "string",
+      label: "Other Values Color",
+      default: "#9AA0A6",
+      display: "color",
+      section: "Formatting",
+      order: 8
+    },
+    // Rules based
+    num_rules: {
+      type: "number",
+      label: "Number of Rules",
+      default: 1,
+      min: 1,
+      max: 5,
+      section: "Formatting",
+      order: 9
+    },
+    rule1_operator: {
+      type: "string",
+      label: "Rule 1: Operator",
+      display: "select",
+      values: [
+        {"Greater Than": "gt"},
+        {"Less Than": "lt"},
+        {"Equal To": "eq"},
+        {"Between": "between"}
+      ],
       default: "gt",
-      section: "Conditional"
+      section: "Formatting",
+      order: 10
     },
     rule1_value: {
       type: "number",
       label: "Rule 1: Value",
-      default: 100000,
-      section: "Conditional"
+      default: 0,
+      section: "Formatting",
+      order: 11
     },
     rule1_value2: {
       type: "number",
       label: "Rule 1: Value 2 (for Between)",
-      default: 200000,
-      section: "Conditional"
+      default: 100,
+      section: "Formatting",
+      order: 12
     },
     rule1_color: {
       type: "string",
       label: "Rule 1: Color",
-      default: "#34A853",
-      display: "color",
-      section: "Conditional"
-    },
-    rule1_apply_to: {
-      type: "string",
-      label: "Rule 1: Apply To",
-      display: "select",
-      values: [
-        {"Bar": "bar"},
-        {"Label": "label"},
-        {"Both": "both"}
-      ],
-      default: "bar",
-      section: "Conditional"
-    },
-
-    // Rule 2
-    rule2_condition: {
-      type: "string",
-      label: "Rule 2: Condition",
-      display: "select",
-      values: [
-        {"Greater than": "gt"},
-        {"Less than": "lt"},
-        {"Between": "between"},
-        {"Top N": "topn"},
-        {"Bottom N": "bottomn"}
-      ],
-      default: "lt",
-      section: "Conditional"
-    },
-    rule2_value: {
-      type: "number",
-      label: "Rule 2: Value",
-      default: 50000,
-      section: "Conditional"
-    },
-    rule2_value2: {
-      type: "number",
-      label: "Rule 2: Value 2 (for Between)",
-      default: 100000,
-      section: "Conditional"
-    },
-    rule2_color: {
-      type: "string",
-      label: "Rule 2: Color",
       default: "#EA4335",
       display: "color",
-      section: "Conditional"
+      section: "Formatting",
+      order: 13
     },
-    rule2_apply_to: {
-      type: "string",
-      label: "Rule 2: Apply To",
-      display: "select",
-      values: [
-        {"Bar": "bar"},
-        {"Label": "label"},
-        {"Both": "both"}
-      ],
-      default: "bar",
-      section: "Conditional"
-    },
-
-    // Rule 3
-    rule3_condition: {
-      type: "string",
-      label: "Rule 3: Condition",
-      display: "select",
-      values: [
-        {"Greater than": "gt"},
-        {"Less than": "lt"},
-        {"Between": "between"},
-        {"Top N": "topn"},
-        {"Bottom N": "bottomn"}
-      ],
-      default: "between",
-      section: "Conditional"
-    },
-    rule3_value: {
-      type: "number",
-      label: "Rule 3: Value",
-      default: 50000,
-      section: "Conditional"
-    },
-    rule3_value2: {
-      type: "number",
-      label: "Rule 3: Value 2 (for Between)",
-      default: 100000,
-      section: "Conditional"
-    },
-    rule3_color: {
-      type: "string",
-      label: "Rule 3: Color",
-      default: "#FBBC04",
-      display: "color",
-      section: "Conditional"
-    },
-    rule3_apply_to: {
-      type: "string",
-      label: "Rule 3: Apply To",
-      display: "select",
-      values: [
-        {"Bar": "bar"},
-        {"Label": "label"},
-        {"Both": "both"}
-      ],
-      default: "bar",
-      section: "Conditional"
-    },
-
-    // ========== STYLE SECTION ==========
-    default_bar_color: {
-      type: "string",
-      label: "Default Bar Color",
-      default: "#4285F4",
-      display: "color",
-      section: "Style"
-    },
-    bar_gradient: {
+    // Background formatting
+    background_enabled: {
       type: "boolean",
-      label: "Enable Bar Gradient",
+      label: "Enable Background Formatting",
       default: false,
-      section: "Style"
+      section: "Formatting",
+      order: 20
     },
     background_color: {
       type: "string",
       label: "Background Color",
       default: "#FFFFFF",
       display: "color",
-      section: "Style"
+      section: "Formatting",
+      order: 21
     },
-    label_color: {
+    border_enabled: {
+      type: "boolean",
+      label: "Enable Border",
+      default: false,
+      section: "Formatting",
+      order: 22
+    },
+    border_color: {
       type: "string",
-      label: "Default Label Color",
-      default: "#202124",
+      label: "Border Color",
+      default: "#E0E0E0",
       display: "color",
-      section: "Style"
+      section: "Formatting",
+      order: 23
     },
-    label_font_size: {
+    border_width: {
       type: "number",
-      label: "Label Font Size",
-      default: 12,
-      section: "Style"
+      label: "Border Width",
+      default: 1,
+      min: 0,
+      max: 10,
+      section: "Formatting",
+      order: 24
     },
-    axis_label_color: {
+
+    // ========== AXIS SECTION ==========
+    // X Axis
+    show_x_axis: {
+      type: "boolean",
+      label: "Show X Axis",
+      default: true,
+      section: "Axis",
+      order: 1
+    },
+    x_axis_label: {
       type: "string",
-      label: "Axis Label Color",
-      default: "#5F6368",
+      label: "X Axis Title",
+      placeholder: "Category",
+      section: "Axis",
+      order: 2
+    },
+    x_axis_label_rotation: {
+      type: "number",
+      label: "X Axis Label Rotation",
+      default: 0,
+      min: -90,
+      max: 90,
+      step: 15,
+      section: "Axis",
+      order: 3
+    },
+    show_x_gridlines: {
+      type: "boolean",
+      label: "Show X Gridlines",
+      default: false,
+      section: "Axis",
+      order: 4
+    },
+    // Y Axis
+    show_y_axis: {
+      type: "boolean",
+      label: "Show Y Axis",
+      default: true,
+      section: "Axis",
+      order: 5
+    },
+    y_axis_label: {
+      type: "string",
+      label: "Y Axis Title",
+      placeholder: "Value",
+      section: "Axis",
+      order: 6
+    },
+    y_axis_min: {
+      type: "number",
+      label: "Y Axis Min",
+      placeholder: "auto",
+      section: "Axis",
+      order: 7
+    },
+    y_axis_max: {
+      type: "number",
+      label: "Y Axis Max",
+      placeholder: "auto",
+      section: "Axis",
+      order: 8
+    },
+    show_y_gridlines: {
+      type: "boolean",
+      label: "Show Y Gridlines",
+      default: true,
+      section: "Axis",
+      order: 9
+    },
+    y_axis_scale: {
+      type: "string",
+      label: "Y Axis Scale",
+      display: "select",
+      values: [
+        {"Linear": "linear"},
+        {"Logarithmic": "logarithmic"}
+      ],
+      default: "linear",
+      section: "Axis",
+      order: 10
+    },
+    // Reference Lines
+    show_reference_line: {
+      type: "boolean",
+      label: "Show Reference Line",
+      default: false,
+      section: "Axis",
+      order: 11
+    },
+    reference_line_value: {
+      type: "number",
+      label: "Reference Line Value",
+      default: 0,
+      section: "Axis",
+      order: 12
+    },
+    reference_line_label: {
+      type: "string",
+      label: "Reference Line Label",
+      placeholder: "Target",
+      section: "Axis",
+      order: 13
+    },
+    reference_line_color: {
+      type: "string",
+      label: "Reference Line Color",
+      default: "#EA4335",
       display: "color",
-      section: "Style"
+      section: "Axis",
+      order: 14
+    },
+    // Trend Line
+    show_trend_line: {
+      type: "boolean",
+      label: "Show Trend Line",
+      default: false,
+      section: "Axis",
+      order: 15
+    },
+    trend_line_type: {
+      type: "string",
+      label: "Trend Line Type",
+      display: "select",
+      values: [
+        {"Linear": "linear"},
+        {"Polynomial": "polynomial"},
+        {"Exponential": "exponential"}
+      ],
+      default: "linear",
+      section: "Axis",
+      order: 16
+    },
+    trend_line_color: {
+      type: "string",
+      label: "Trend Line Color",
+      default: "#4285F4",
+      display: "color",
+      section: "Axis",
+      order: 17
     }
   },
 
   create: function(element, config) {
     const style = document.createElement('style');
     style.innerHTML = `
-      .conditional-bar-container {
+      .conditional-chart-container {
         width: 100%;
         height: 100%;
         position: relative;
         font-family: 'Roboto', Arial, sans-serif;
       }
-
-      .conditional-bar-svg {
+      #chart-container {
         width: 100%;
         height: 100%;
       }
-
-      .bar-rect {
-        transition: opacity 0.2s ease;
-      }
-
-      .bar-rect:hover {
-        opacity: 0.8;
-      }
-
-      .bar-label {
-        font-weight: 500;
-        user-select: none;
-      }
-
-      .axis-label {
-        font-weight: 400;
-        user-select: none;
-      }
     `;
 
-    if (!document.getElementById('conditional-bar-styles')) {
-      style.id = 'conditional-bar-styles';
+    if (!document.getElementById('conditional-chart-styles')) {
+      style.id = 'conditional-chart-styles';
       document.head.appendChild(style);
     }
 
     element.innerHTML = `
-      <div class="conditional-bar-container">
-        <svg class="conditional-bar-svg"></svg>
+      <div class="conditional-chart-container">
+        <div id="chart-container"></div>
       </div>
     `;
 
-    this._container = element.querySelector('.conditional-bar-container');
-    this._svg = element.querySelector('.conditional-bar-svg');
+    this.chart = null;
   },
 
   updateAsync: function(data, element, config, queryResponse, details, done) {
     this.clearErrors();
 
-    if (!data || data.length === 0) {
-      this._svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#666">No data</text>';
+    if (!queryResponse || queryResponse.fields.dimensions.length < 1 || queryResponse.fields.measures.length < 1) {
+      this.addError({
+        title: 'Invalid Data',
+        message: 'This chart requires at least 1 dimension and 1 measure.'
+      });
       done();
       return;
     }
 
-    const dimensions = queryResponse.fields.dimension_like;
-    const measures = queryResponse.fields.measure_like;
+    // Extract data
+    const dimension = queryResponse.fields.dimensions[0].name;
+    const measure = queryResponse.fields.measures[0].name;
+    const categories = data.map(row => row[dimension].value);
+    const values = data.map(row => row[measure].value);
 
-    if (dimensions.length === 0 || measures.length === 0) {
-      this._svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#666">Need 1 dimension and 1 measure</text>';
-      done();
-      return;
-    }
+    // Color palettes
+    const palettes = {
+      google: ['#4285F4', '#EA4335', '#FBBC04', '#34A853', '#FF6D00', '#46BDC6', '#AB47BC'],
+      looker: ['#7FCDAE', '#7ED09C', '#7DD389', '#85D67C', '#9AD97B', '#B1DB7A'],
+      green_scale: ['#F1F8E9', '#DCEDC8', '#C5E1A5', '#AED581', '#9CCC65', '#8BC34A', '#7CB342', '#689F38', '#558B2F', '#33691E'],
+      blue_scale: ['#E3F2FD', '#BBDEFB', '#90CAF9', '#64B5F6', '#42A5F5', '#2196F3', '#1E88E5', '#1976D2', '#1565C0', '#0D47A1'],
+      viridis: ['#440154', '#482475', '#414487', '#355F8D', '#2A788E', '#21908C', '#22A884', '#42BE71', '#7AD151', '#BDDF26', '#FDE725'],
+      warm: ['#FFF5EB', '#FEE6CE', '#FDD0A2', '#FDAE6B', '#FD8D3C', '#F16913', '#E6550D', '#D94801', '#A63603', '#7F2704'],
+      cool: ['#F0F9FF', '#DEEBF7', '#C6DBEF', '#9ECAE1', '#6BAED6', '#4292C6', '#2171B5', '#08519C', '#08306B', '#041E42']
+    };
 
-    this._container.style.backgroundColor = config.background_color || '#FFFFFF';
+    // Get colors based on conditional formatting
+    const getColors = () => {
+      if (!config.conditional_formatting_enabled) {
+        // Use series colors
+        const basePalette = palettes[config.color_collection] || palettes.google;
+        if (config.series_colors) {
+          const customColors = config.series_colors.split(',').map(c => c.trim());
+          return values.map((v, i) => customColors[i % customColors.length]);
+        }
+        return values.map((v, i) => basePalette[i % basePalette.length]);
+      }
 
-    const dimension = dimensions[0].name;
-    const measure = measures[0].name;
+      const type = config.conditional_type;
 
-    const chartData = data.map(row => ({
-      label: row[dimension].value,
-      value: row[measure].value || 0
+      if (type === 'gradient') {
+        // Color gradient
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        return values.map(v => {
+          const ratio = (max === min) ? 0.5 : (v - min) / (max - min);
+          return this.interpolateColor(
+            config.gradient_start_color || '#F1F8E9',
+            config.gradient_end_color || '#33691E',
+            ratio
+          );
+        });
+      } else if (type === 'topn') {
+        // Top N
+        const n = config.topbottom_n || 5;
+        const sorted = [...values].sort((a, b) => b - a);
+        const threshold = sorted[Math.min(n - 1, sorted.length - 1)];
+        return values.map(v => v >= threshold ? (config.topn_color || '#34A853') : (config.other_color || '#9AA0A6'));
+      } else if (type === 'bottomn') {
+        // Bottom N
+        const n = config.topbottom_n || 5;
+        const sorted = [...values].sort((a, b) => a - b);
+        const threshold = sorted[Math.min(n - 1, sorted.length - 1)];
+        return values.map(v => v <= threshold ? (config.bottomn_color || '#EA4335') : (config.other_color || '#9AA0A6'));
+      } else if (type === 'rules') {
+        // Rules based
+        return values.map(v => {
+          const operator = config.rule1_operator;
+          const value1 = config.rule1_value || 0;
+          const value2 = config.rule1_value2 || 100;
+
+          let match = false;
+          if (operator === 'gt') match = v > value1;
+          else if (operator === 'lt') match = v < value1;
+          else if (operator === 'eq') match = v === value1;
+          else if (operator === 'between') match = v >= value1 && v <= value2;
+
+          return match ? (config.rule1_color || '#EA4335') : (config.other_color || '#9AA0A6');
+        });
+      }
+
+      return palettes.google;
+    };
+
+    // Format value
+    const formatValue = (value) => {
+      const format = config.value_format || 'auto';
+      if (format === 'currency') {
+        return '$' + (value >= 1000 ? (value/1000).toFixed(1) + 'K' : value.toFixed(0));
+      } else if (format === 'percent') {
+        return (value * 100).toFixed(1) + '%';
+      } else if (format === 'decimal1') {
+        return value.toFixed(1);
+      } else if (format === 'decimal2') {
+        return value.toFixed(2);
+      } else if (format === 'number') {
+        return value.toFixed(0);
+      }
+      // Auto
+      if (value >= 1e9) return (value / 1e9).toFixed(1) + 'B';
+      if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
+      if (value >= 1e3) return (value / 1e3).toFixed(1) + 'K';
+      return value.toFixed(0);
+    };
+
+    const colors = getColors();
+    const seriesData = values.map((v, i) => ({
+      y: v,
+      color: colors[i]
     }));
 
-    this.drawBarChart(chartData, config);
+    // Chart options
+    const chartOptions = {
+      chart: {
+        type: config.chart_type === 'bar' ? 'bar' : 'column',
+        backgroundColor: config.background_enabled ? config.background_color : null,
+        borderColor: config.border_enabled ? config.border_color : null,
+        borderWidth: config.border_enabled ? (config.border_width || 0) : 0,
+        reflow: true
+      },
+      title: { text: null },
+      xAxis: {
+        categories: categories,
+        visible: config.show_x_axis !== false,
+        title: {
+          text: config.x_axis_label || null
+        },
+        labels: {
+          rotation: config.x_axis_label_rotation || 0
+        },
+        gridLineWidth: config.show_x_gridlines ? 1 : 0
+      },
+      yAxis: {
+        visible: config.show_y_axis !== false,
+        title: {
+          text: config.y_axis_label || null
+        },
+        min: config.y_axis_min !== undefined ? config.y_axis_min : undefined,
+        max: config.y_axis_max !== undefined ? config.y_axis_max : undefined,
+        type: config.y_axis_scale === 'logarithmic' ? 'logarithmic' : 'linear',
+        gridLineWidth: config.show_y_gridlines !== false ? 1 : 0,
+        plotLines: config.show_reference_line ? [{
+          value: config.reference_line_value || 0,
+          color: config.reference_line_color || '#EA4335',
+          width: 2,
+          label: {
+            text: config.reference_line_label || '',
+            align: 'right'
+          }
+        }] : []
+      },
+      plotOptions: {
+        column: {
+          stacking: config.stacking === 'none' ? undefined : config.stacking,
+          groupPadding: config.group_padding !== undefined ? config.group_padding : 0.1,
+          pointPadding: config.point_padding !== undefined ? config.point_padding : 0.1,
+          colorByPoint: true,
+          dataLabels: {
+            enabled: config.show_labels !== false,
+            rotation: config.label_rotation || 0,
+            style: {
+              fontSize: (config.label_font_size || 11) + 'px',
+              color: config.label_color || '#000000',
+              fontWeight: 'normal'
+            },
+            formatter: function() {
+              return formatValue(this.y);
+            }
+          }
+        },
+        bar: {
+          stacking: config.stacking === 'none' ? undefined : config.stacking,
+          groupPadding: config.group_padding !== undefined ? config.group_padding : 0.1,
+          pointPadding: config.point_padding !== undefined ? config.point_padding : 0.1,
+          colorByPoint: true,
+          dataLabels: {
+            enabled: config.show_labels !== false,
+            rotation: config.label_rotation || 0,
+            style: {
+              fontSize: (config.label_font_size || 11) + 'px',
+              color: config.label_color || '#000000',
+              fontWeight: 'normal'
+            },
+            formatter: function() {
+              return formatValue(this.y);
+            }
+          }
+        }
+      },
+      legend: { enabled: false },
+      tooltip: {
+        formatter: function() {
+          return `<b>${this.x}</b><br/>${formatValue(this.y)}`;
+        }
+      },
+      series: [{
+        name: queryResponse.fields.measures[0].label || measure,
+        data: seriesData
+      }]
+    };
+
+    // Add trend line if enabled
+    if (config.show_trend_line) {
+      // Simple linear regression
+      const n = values.length;
+      const sumX = values.reduce((sum, v, i) => sum + i, 0);
+      const sumY = values.reduce((sum, v) => sum + v, 0);
+      const sumXY = values.reduce((sum, v, i) => sum + i * v, 0);
+      const sumX2 = values.reduce((sum, v, i) => sum + i * i, 0);
+
+      const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+      const intercept = (sumY - slope * sumX) / n;
+
+      const trendData = values.map((v, i) => slope * i + intercept);
+
+      chartOptions.series.push({
+        type: 'line',
+        name: 'Trend',
+        data: trendData,
+        color: config.trend_line_color || '#4285F4',
+        marker: { enabled: false },
+        enableMouseTracking: false,
+        dashStyle: 'Dash'
+      });
+    }
+
+    // Create or update chart
+    if (!this.chart) {
+      this.chart = Highcharts.chart('chart-container', chartOptions);
+    } else {
+      this.chart.update(chartOptions, true, true);
+    }
+
     done();
   },
 
-  drawBarChart: function(data, config) {
-    const svgNS = "http://www.w3.org/2000/svg";
-    this._svg.innerHTML = '';
-
-    const rect = this._svg.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-
-    if (width === 0 || height === 0) return;
-
-    const orientation = config.orientation || 'vertical';
-    const margin = { top: 20, right: 20, bottom: 60, left: 80 };
-    const chartWidth = width - margin.left - margin.right;
-    const chartHeight = height - margin.top - margin.bottom;
-
-    this._svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-
-    // Calculate scales
-    const maxValue = Math.max(...data.map(d => Math.abs(d.value)));
-    const minValue = Math.min(...data.map(d => d.value), 0);
-
-    // Apply conditional formatting
-    const formattedData = this.applyConditionalFormatting(data, config);
-
-    // Draw bars
-    if (orientation === 'vertical') {
-      this.drawVerticalBars(formattedData, chartWidth, chartHeight, margin, maxValue, minValue, config);
-    } else {
-      this.drawHorizontalBars(formattedData, chartWidth, chartHeight, margin, maxValue, minValue, config);
-    }
-  },
-
-  drawVerticalBars: function(data, chartWidth, chartHeight, margin, maxValue, minValue, config) {
-    const svgNS = "http://www.w3.org/2000/svg";
-    const barCount = data.length;
-    const barSpacing = chartWidth / barCount;
-    const barWidth = (barSpacing * (config.bar_width || 80)) / 100;
-
-    const valueScale = chartHeight / (maxValue - minValue || 1);
-    const zeroY = margin.top + chartHeight - (0 - minValue) * valueScale;
-
-    data.forEach((item, i) => {
-      const x = margin.left + i * barSpacing + (barSpacing - barWidth) / 2;
-      const barHeight = Math.abs(item.value * valueScale);
-      const y = item.value >= 0 ? zeroY - barHeight : zeroY;
-
-      // Bar
-      const rect = document.createElementNS(svgNS, 'rect');
-      rect.setAttribute('x', x);
-      rect.setAttribute('y', y);
-      rect.setAttribute('width', barWidth);
-      rect.setAttribute('height', barHeight);
-      rect.setAttribute('fill', item.barColor);
-      rect.setAttribute('class', 'bar-rect');
-
-      if (config.bar_gradient) {
-        const gradient = this.createGradient(item.barColor, i);
-        rect.setAttribute('fill', `url(#gradient${i})`);
-      }
-
-      this._svg.appendChild(rect);
-
-      // Label
-      if (config.show_values) {
-        const label = document.createElementNS(svgNS, 'text');
-        label.setAttribute('x', x + barWidth / 2);
-
-        const position = config.value_position || 'outside';
-        if (position === 'inside') {
-          label.setAttribute('y', y + (item.value >= 0 ? barHeight - 5 : 15));
-        } else if (position === 'center') {
-          label.setAttribute('y', y + barHeight / 2 + 4);
-        } else {
-          label.setAttribute('y', y - 5);
-        }
-
-        label.setAttribute('text-anchor', 'middle');
-        label.setAttribute('fill', item.labelColor);
-        label.setAttribute('font-size', config.label_font_size || 12);
-        label.setAttribute('class', 'bar-label');
-        label.textContent = this.formatValue(item.value);
-        this._svg.appendChild(label);
-      }
-
-      // Axis label
-      const axisLabel = document.createElementNS(svgNS, 'text');
-      axisLabel.setAttribute('x', x + barWidth / 2);
-      axisLabel.setAttribute('y', margin.top + chartHeight + 20);
-      axisLabel.setAttribute('text-anchor', 'middle');
-      axisLabel.setAttribute('fill', config.axis_label_color || '#5F6368');
-      axisLabel.setAttribute('font-size', 11);
-      axisLabel.setAttribute('class', 'axis-label');
-      axisLabel.textContent = this.truncate(item.label, 15);
-      this._svg.appendChild(axisLabel);
-    });
-  },
-
-  drawHorizontalBars: function(data, chartWidth, chartHeight, margin, maxValue, minValue, config) {
-    const svgNS = "http://www.w3.org/2000/svg";
-    const barCount = data.length;
-    const barSpacing = chartHeight / barCount;
-    const barHeight = (barSpacing * (config.bar_width || 80)) / 100;
-
-    const valueScale = chartWidth / (maxValue - minValue || 1);
-    const zeroX = margin.left + (0 - minValue) * valueScale;
-
-    data.forEach((item, i) => {
-      const y = margin.top + i * barSpacing + (barSpacing - barHeight) / 2;
-      const barWidth = Math.abs(item.value * valueScale);
-      const x = item.value >= 0 ? zeroX : zeroX - barWidth;
-
-      // Bar
-      const rect = document.createElementNS(svgNS, 'rect');
-      rect.setAttribute('x', x);
-      rect.setAttribute('y', y);
-      rect.setAttribute('width', barWidth);
-      rect.setAttribute('height', barHeight);
-      rect.setAttribute('fill', item.barColor);
-      rect.setAttribute('class', 'bar-rect');
-
-      if (config.bar_gradient) {
-        const gradient = this.createGradient(item.barColor, i);
-        rect.setAttribute('fill', `url(#gradient${i})`);
-      }
-
-      this._svg.appendChild(rect);
-
-      // Label
-      if (config.show_values) {
-        const label = document.createElementNS(svgNS, 'text');
-        label.setAttribute('y', y + barHeight / 2 + 4);
-
-        const position = config.value_position || 'outside';
-        if (position === 'inside') {
-          label.setAttribute('x', x + (item.value >= 0 ? barWidth - 5 : 5));
-          label.setAttribute('text-anchor', item.value >= 0 ? 'end' : 'start');
-        } else if (position === 'center') {
-          label.setAttribute('x', x + barWidth / 2);
-          label.setAttribute('text-anchor', 'middle');
-        } else {
-          label.setAttribute('x', x + (item.value >= 0 ? barWidth + 5 : -5));
-          label.setAttribute('text-anchor', item.value >= 0 ? 'start' : 'end');
-        }
-
-        label.setAttribute('fill', item.labelColor);
-        label.setAttribute('font-size', config.label_font_size || 12);
-        label.setAttribute('class', 'bar-label');
-        label.textContent = this.formatValue(item.value);
-        this._svg.appendChild(label);
-      }
-
-      // Axis label
-      const axisLabel = document.createElementNS(svgNS, 'text');
-      axisLabel.setAttribute('x', margin.left - 10);
-      axisLabel.setAttribute('y', y + barHeight / 2 + 4);
-      axisLabel.setAttribute('text-anchor', 'end');
-      axisLabel.setAttribute('fill', config.axis_label_color || '#5F6368');
-      axisLabel.setAttribute('font-size', 11);
-      axisLabel.setAttribute('class', 'axis-label');
-      axisLabel.textContent = this.truncate(item.label, 15);
-      this._svg.appendChild(axisLabel);
-    });
-  },
-
-  applyConditionalFormatting: function(data, config) {
-    if (!config.enable_conditional) {
-      return data.map(d => ({
-        ...d,
-        barColor: config.default_bar_color || '#4285F4',
-        labelColor: config.label_color || '#202124'
-      }));
-    }
-
-    const ruleCount = config.rule_count || 3;
-    const values = data.map(d => d.value);
-
-    return data.map(item => {
-      let barColor = config.default_bar_color || '#4285F4';
-      let labelColor = config.label_color || '#202124';
-
-      for (let i = 1; i <= ruleCount; i++) {
-        const condition = config[`rule${i}_condition`];
-        const value = config[`rule${i}_value`];
-        const value2 = config[`rule${i}_value2`];
-        const color = config[`rule${i}_color`];
-        const applyTo = config[`rule${i}_apply_to`] || 'bar';
-
-        if (this.evaluateCondition(item.value, condition, value, value2, values)) {
-          if (applyTo === 'bar' || applyTo === 'both') {
-            barColor = color;
-          }
-          if (applyTo === 'label' || applyTo === 'both') {
-            labelColor = color;
-          }
-          break; // First matching rule wins
-        }
-      }
-
-      return { ...item, barColor, labelColor };
-    });
-  },
-
-  evaluateCondition: function(itemValue, condition, value, value2, allValues) {
-    switch (condition) {
-      case 'gt':
-        return itemValue > value;
-      case 'lt':
-        return itemValue < value;
-      case 'between':
-        return itemValue >= value && itemValue <= value2;
-      case 'topn':
-        const topN = [...allValues].sort((a, b) => b - a).slice(0, value);
-        return topN.includes(itemValue);
-      case 'bottomn':
-        const bottomN = [...allValues].sort((a, b) => a - b).slice(0, value);
-        return bottomN.includes(itemValue);
-      default:
-        return false;
-    }
-  },
-
-  createGradient: function(color, index) {
-    const svgNS = "http://www.w3.org/2000/svg";
-    const defs = this._svg.querySelector('defs') || document.createElementNS(svgNS, 'defs');
-    if (!this._svg.querySelector('defs')) {
-      this._svg.appendChild(defs);
-    }
-
-    const gradient = document.createElementNS(svgNS, 'linearGradient');
-    gradient.setAttribute('id', `gradient${index}`);
-    gradient.setAttribute('x1', '0%');
-    gradient.setAttribute('y1', '0%');
-    gradient.setAttribute('x2', '0%');
-    gradient.setAttribute('y2', '100%');
-
-    const stop1 = document.createElementNS(svgNS, 'stop');
-    stop1.setAttribute('offset', '0%');
-    stop1.setAttribute('stop-color', this.lightenColor(color, 30));
-
-    const stop2 = document.createElementNS(svgNS, 'stop');
-    stop2.setAttribute('offset', '100%');
-    stop2.setAttribute('stop-color', color);
-
-    gradient.appendChild(stop1);
-    gradient.appendChild(stop2);
-    defs.appendChild(gradient);
-
-    return gradient;
-  },
-
-  lightenColor: function(color, percent) {
-    const num = parseInt(color.replace("#", ""), 16);
-    const amt = Math.round(2.55 * percent);
-    const R = Math.min(255, (num >> 16) + amt);
-    const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
-    const B = Math.min(255, (num & 0x0000FF) + amt);
-    return "#" + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
-  },
-
-  formatValue: function(value) {
-    const absValue = Math.abs(value);
-    const sign = value < 0 ? '-' : '';
-
-    if (absValue >= 1000000) {
-      return sign + (absValue / 1000000).toFixed(1) + 'M';
-    } else if (absValue >= 1000) {
-      return sign + (absValue / 1000).toFixed(1) + 'K';
-    }
-    return sign + absValue.toFixed(0);
-  },
-
-  truncate: function(text, length) {
-    return text.length > length ? text.substring(0, length) + '...' : text;
+  interpolateColor: function(color1, color2, ratio) {
+    const hex = (c) => {
+      c = c.replace('#', '');
+      return {
+        r: parseInt(c.substring(0, 2), 16),
+        g: parseInt(c.substring(2, 4), 16),
+        b: parseInt(c.substring(4, 6), 16)
+      };
+    };
+    const c1 = hex(color1), c2 = hex(color2);
+    const r = Math.round(c1.r + (c2.r - c1.r) * ratio);
+    const g = Math.round(c1.g + (c2.g - c1.g) * ratio);
+    const b = Math.round(c1.b + (c2.b - c1.b) * ratio);
+    return `rgb(${r}, ${g}, ${b})`;
   }
 });
+```
+
+**Manifest file:**
+```
+project_name: "conditional_column_chart"
+
+visualization: {
+  id: "conditional_column_chart"
+  label: "Conditional Column Chart"
+  file: "conditional_column_chart.js"
+  dependencies: [
+    "https://code.highcharts.com/highcharts.js"
+  ]
+}

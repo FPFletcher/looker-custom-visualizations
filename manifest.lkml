@@ -7,22 +7,9 @@ visualization: {
   # Define the visualization parameters
 }
 
-########################################################################################
-# CUSTOM visuals
-########################################################################################
-
-visualization: {
-  id: "water_drop_viz"
-  label: "Water Drop"
-  file: "08_CUSTOM_visuals/water_drop.js"
-
-  dependencies: [
-  ]
- #"https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"
-}
 
 ########################################################################################
-# STUDIO visuals
+# 01. STUDIO visuals
 ########################################################################################
 
 visualization: {
@@ -46,4 +33,18 @@ visualization: {
   label: "Bar Chart (Conditional formatting)"
   file: "01_STUDIO_visuals/conditional_bar_chart.js"
   dependencies: []
+}
+
+########################################################################################
+# 04. CUSTOM visuals
+########################################################################################
+
+visualization: {
+  id: "water_drop_viz"
+  label: "Water Drop"
+  file: "04_CUSTOM_visuals/water_drop.js"
+
+  dependencies: [
+  ]
+  #"https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"
 }

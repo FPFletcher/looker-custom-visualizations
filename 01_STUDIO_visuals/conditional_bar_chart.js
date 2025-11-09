@@ -288,7 +288,7 @@ looker.plugins.visualizations.add({
       min: 0,
       max: 10,
       section: "Format"
-    }
+    },
 
     // ========== AXIS SECTION ==========
     show_x_axis: {

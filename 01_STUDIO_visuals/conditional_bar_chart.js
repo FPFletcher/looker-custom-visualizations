@@ -262,10 +262,9 @@ looker.plugins.visualizations.add({
     background_color: {
       type: "string",
       label: "Background Color",
-      default: "#FFFFFF",
+      default: "transparent",  // Changed from "#FFFFFF"
       display: "color",
-      section: "Formatting",
-      order: 21
+      section: "Format"
     },
     border_enabled: {
       type: "boolean",
@@ -285,12 +284,11 @@ looker.plugins.visualizations.add({
     border_width: {
       type: "number",
       label: "Border Width",
-      default: 1,
+      default: 0,  // Changed from 1
       min: 0,
       max: 10,
-      section: "Formatting",
-      order: 24
-    },
+      section: "Format"
+    }
 
     // ========== AXIS SECTION ==========
     show_x_axis: {
@@ -371,6 +369,32 @@ looker.plugins.visualizations.add({
       section: "Axis",
       order: 10
     },
+    reference_line_type: {
+      type: "string",
+      label: "Reference Line Type",
+      display: "select",
+      values: [
+        {"Line": "line"},
+        {"Range": "range"},
+        {"Line with Margins": "margins"}
+      ],
+      default: "line",
+      section: "Axis"
+    },
+    reference_line_value_type: {
+      type: "string",
+      label: "Reference Value Type",
+      display: "select",
+      values: [
+        {"Custom": "custom"},
+        {"Average": "average"},
+        {"Median": "median"},
+        {"Min": "min"},
+        {"Max": "max"}
+      ],
+      default: "custom",
+      section: "Axis"
+    },
     show_reference_line: {
       type: "boolean",
       label: "Show Reference Line",
@@ -406,6 +430,27 @@ looker.plugins.visualizations.add({
       default: false,
       section: "Axis",
       order: 15
+    },
+    trend_line_type: {
+      type: "string",
+      label: "Trend Line Type",
+      display: "select",
+      values: [
+        {"Linear": "linear"},
+        {"Moving Average": "moving_avg"},
+        {"Running Total": "running_total"},
+        {"Average": "average"}
+      ],
+      default: "linear",
+      section: "Axis"
+    },
+    trend_line_period: {
+      type: "number",
+      label: "Period (for Moving Avg)",
+      default: 3,
+      min: 2,
+      max: 10,
+      section: "Axis"
     },
     trend_line_color: {
       type: "string",
@@ -566,84 +611,34 @@ looker.plugins.visualizations.add({
     const barWidth = (availableSpace * (1 - totalPadding)) / barCount;
     const gapWidth = availableSpace * pointPadding / (barCount - 1 || 1);
 
-    values.forEach((value, i) => {
-      const g = document.createElementNS(svgNS, 'g');
-      const rect = document.createElementNS(svgNS, 'rect');
+   values.forEach((value, i) => {
+    const g = document.createElementNS(svgNS, 'g');
+    const rect = document.createElementNS(svgNS, 'rect');
 
-      if (isBar) {
-        // Horizontal bars
-        const barHeight = barWidth;
-        const x = margin.left;
-        const y = margin.top + (availableSpace * groupPadding) + i * (barHeight + gapWidth);
-        const barLength = ((value - minValue) / (maxValue - minValue)) * chartWidth;
+    if (isBar) {
+      // Horizontal bars
+      const barHeight = barWidth;
+      const x = margin.left;
+      const y = margin.top + (availableSpace * groupPadding) + i * (barHeight + gapWidth);
+      const barLength = Math.abs((value - minValue) / (maxValue - minValue)) * chartWidth;
 
-        rect.setAttribute('x', x);
-        rect.setAttribute('y', y);
-        rect.setAttribute('width', Math.max(0, barLength));
-        rect.setAttribute('height', barHeight);
-      } else {
-        // Vertical columns
-        const x = margin.left + (availableSpace * groupPadding) + i * (barWidth + gapWidth);
-        const barHeight = chartHeight - yScale(value);
-        const y = margin.top + yScale(value);
+      rect.setAttribute('x', value >= 0 ? x : x + ((value - minValue) / (maxValue - minValue)) * chartWidth);
+      rect.setAttribute('y', y);
+      rect.setAttribute('width', Math.max(1, barLength));
+      rect.setAttribute('height', barHeight);
+    } else {
+      // Vertical columns - FIX HERE
+      const x = margin.left + (availableSpace * groupPadding) + i * (barWidth + gapWidth);
+      const zeroY = margin.top + yScale(0);
+      const valueY = margin.top + yScale(value);
+      const barHeight = Math.abs(zeroY - valueY);
+      const y = Math.min(zeroY, valueY);
 
-        rect.setAttribute('x', x);
-        rect.setAttribute('y', y);
-        rect.setAttribute('width', Math.max(0, barWidth));
-        rect.setAttribute('height', Math.max(0, barHeight));
-      }
-
-      rect.setAttribute('fill', colors[i]);
-      rect.setAttribute('class', 'chart-bar');
-
-      // Tooltip
-      rect.addEventListener('mouseenter', () => {
-        this._tooltip.innerHTML = `
-          <div style="font-weight:600">${categories[i]}</div>
-          <div>${this.formatValue(value, config)}</div>
-        `;
-        this._tooltip.style.display = 'block';
-      });
-      rect.addEventListener('mousemove', (e) => {
-        this._tooltip.style.left = (e.pageX + 12) + 'px';
-        this._tooltip.style.top = (e.pageY + 12) + 'px';
-      });
-      rect.addEventListener('mouseleave', () => {
-        this._tooltip.style.display = 'none';
-      });
-
-      g.appendChild(rect);
-
-      // Value labels
-      if (config.show_labels !== false) {
-        const label = document.createElementNS(svgNS, 'text');
-        const labelText = this.formatValue(value, config);
-
-        if (isBar) {
-          const barLength = ((value - minValue) / (maxValue - minValue)) * chartWidth;
-          label.setAttribute('x', margin.left + barLength + 5);
-          label.setAttribute('y', margin.top + (availableSpace * groupPadding) + i * (barWidth + gapWidth) + barWidth / 2);
-        } else {
-          label.setAttribute('x', margin.left + (availableSpace * groupPadding) + i * (barWidth + gapWidth) + barWidth / 2);
-          label.setAttribute('y', margin.top + yScale(value) - 5);
-        }
-
-        label.setAttribute('text-anchor', 'middle');
-        label.setAttribute('fill', config.label_color || '#000000');
-        label.setAttribute('font-size', (config.label_font_size || 11) + 'px');
-        label.textContent = labelText;
-
-        if (config.label_rotation) {
-          const cx = parseFloat(label.getAttribute('x'));
-          const cy = parseFloat(label.getAttribute('y'));
-          label.setAttribute('transform', `rotate(${config.label_rotation}, ${cx}, ${cy})`);
-        }
-
-        g.appendChild(label);
-      }
-
-      this._svg.appendChild(g);
-    });
+      rect.setAttribute('x', x);
+      rect.setAttribute('y', y);
+      rect.setAttribute('width', Math.max(1, barWidth));
+      rect.setAttribute('height', Math.max(1, barHeight));
+    }
 
     // Draw X axis
     if (config.show_x_axis !== false) {

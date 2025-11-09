@@ -523,8 +523,8 @@ looker.plugins.visualizations.add({
     this._svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
 
     // Calculate Y scale
-    const minValue = config.y_axis_min !== undefined ? config.y_axis_min : Math.min(0, ...values);
-    const maxValue = config.y_axis_max !== undefined ? config.y_axis_max : Math.max(...values);
+    const minValue = config.y_axis_min !== undefined ? config.y_axis_min : Math.min(...values, 0);
+    const maxValue = config.y_axis_max !== undefined ? config.y_axis_max : Math.max(...values, 0);
     const yScale = (value) => {
       if (config.y_axis_scale === 'logarithmic') {
         const logMin = Math.log10(Math.max(0.1, minValue));
@@ -589,7 +589,7 @@ looker.plugins.visualizations.add({
 
         rect.setAttribute('x', x);
         rect.setAttribute('y', y);
-        rect.setAttribute('width', barWidth);
+        rect.setAttribute('width', Math.max(0, barWidth));
         rect.setAttribute('height', Math.max(0, barHeight));
       }
 

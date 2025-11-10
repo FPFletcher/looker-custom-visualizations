@@ -778,8 +778,9 @@ looker.plugins.visualizations.add({
       path.setAttribute('stroke-width', 2);
       path.setAttribute('stroke-dasharray', '5,5');
       this._svg.appendChild(path);
-    }
-  }),
+      }
+    });
+  },
 
   getColors: function(values, config) {
     const palettes = {

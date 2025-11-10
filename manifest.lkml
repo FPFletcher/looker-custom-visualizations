@@ -31,7 +31,7 @@ visualization: {
 visualization: {
   id: "bar_chart_conditional_formatting_viz"
   label: "Bar Chart (Conditional formatting)"
-  file: "01_STUDIO_visuals/conditional_bar_chart.js"
+  file: "01_STUDIO_visuals/bar_chart_conditional.js"
   dependencies: [
     "https://code.highcharts.com/highcharts.js"
   ]
@@ -42,9 +42,9 @@ visualization: {
 ########################################################################################
 
 visualization: {
-  id: "water_drop_viz"
-  label: "Water Drop"
-  file: "04_CUSTOM_visuals/water_drop.js"
+  id: "single_value_picture_background"
+  label: "Single Value (Picture)"
+  file: "04_CUSTOM_visuals/single_value_picture.js"
 
   dependencies: [
   ]

@@ -675,38 +675,6 @@ looker.plugins.visualizations.add({
               fontWeight: 'normal'
             },
             formatter: function() {
-              // FIX: Use formatValue directly, not this.formatValue
-              const format = config.value_format || 'auto';
-              const value = this.y;
-              if (!value && value !== 0) return '';
-
-              if (format === 'currency') return '$' + (value >= 1000 ? (value/1000).toFixed(1) + 'K' : value.toFixed(0));
-              if (format === 'percent') return (value * 100).toFixed(1) + '%';
-              if (format === 'decimal1') return value.toFixed(1);
-              if (format === 'decimal2') return value.toFixed(2);
-              if (format === 'number') return value.toFixed(0);
-
-              if (value >= 1e9) return (value / 1e9).toFixed(1) + 'B';
-              if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
-              if (value >= 1e3) return (value / 1e3).toFixed(1) + 'K';
-              return value.toFixed(0);
-            }
-          },
-        bar: {
-          stacking: config.stacking === 'none' ? undefined : config.stacking,
-          groupPadding: config.group_padding || 0.1,
-          pointPadding: config.point_padding || 0.1,
-          colorByPoint: true,
-          dataLabels: {
-            enabled: config.show_labels !== false,
-            rotation: config.label_rotation || 0,
-            style: {
-              fontSize: (config.label_font_size || 11) + 'px',
-              color: config.label_color || '#000000',
-              fontWeight: 'normal'
-            },
-            formatter: function() {
-              // FIX: Use formatValue directly, not this.formatValue
               const format = config.value_format || 'auto';
               const value = this.y;
               if (!value && value !== 0) return '';
@@ -723,17 +691,64 @@ looker.plugins.visualizations.add({
               return value.toFixed(0);
             }
           }
-      },
+        },  // ← CLOSE column with comma
+        bar: {
+          stacking: config.stacking === 'none' ? undefined : config.stacking,
+          groupPadding: config.group_padding || 0.1,
+          pointPadding: config.point_padding || 0.1,
+          colorByPoint: true,
+          dataLabels: {
+            enabled: config.show_labels !== false,
+            rotation: config.label_rotation || 0,
+            style: {
+              fontSize: (config.label_font_size || 11) + 'px',
+              color: config.label_color || '#000000',
+              fontWeight: 'normal'
+            },
+            formatter: function() {
+              const format = config.value_format || 'auto';
+              const value = this.y;
+              if (!value && value !== 0) return '';
+
+              if (format === 'currency') return '$' + (value >= 1000 ? (value/1000).toFixed(1) + 'K' : value.toFixed(0));
+              if (format === 'percent') return (value * 100).toFixed(1) + '%';
+              if (format === 'decimal1') return value.toFixed(1);
+              if (format === 'decimal2') return value.toFixed(2);
+              if (format === 'number') return value.toFixed(0);
+
+              if (value >= 1e9) return (value / 1e9).toFixed(1) + 'B';
+              if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
+              if (value >= 1e3) return (value / 1e3).toFixed(1) + 'K';
+              return value.toFixed(0);
+            }
+          }
+        }  // ← CLOSE bar, NO comma (last property)
+      },  // ← CLOSE plotOptions with comma
       legend: { enabled: false },
       tooltip: {
         formatter: function() {
-          return `<b>${this.x}</b><br/>${this.formatValue(this.y, config)}`;
-        }.bind(this)
+          const format = config.value_format || 'auto';
+          const value = this.y;
+          if (!value && value !== 0) return `<b>${this.x}</b><br/>`;
+
+          let formattedValue = '';
+          if (format === 'currency') formattedValue = '$' + (value >= 1000 ? (value/1000).toFixed(1) + 'K' : value.toFixed(0));
+          else if (format === 'percent') formattedValue = (value * 100).toFixed(1) + '%';
+          else if (format === 'decimal1') formattedValue = value.toFixed(1);
+          else if (format === 'decimal2') formattedValue = value.toFixed(2);
+          else if (format === 'number') formattedValue = value.toFixed(0);
+          else if (value >= 1e9) formattedValue = (value / 1e9).toFixed(1) + 'B';
+          else if (value >= 1e6) formattedValue = (value / 1e6).toFixed(1) + 'M';
+          else if (value >= 1e3) formattedValue = (value / 1e3).toFixed(1) + 'K';
+          else formattedValue = value.toFixed(0);
+
+          return `<b>${this.x}</b><br/>${formattedValue}`;
+        }
       },
       series: [{ name: queryResponse.fields.measures[0].label || measure, data: seriesData }]
-    },
+    };  // ← SEMICOLON here to end const declaration
 
-    // Add trend line
+    // Add trend line AFTER chartOptions is defined
     if (config.trend_line_enabled) {
       let trendData = [];
 

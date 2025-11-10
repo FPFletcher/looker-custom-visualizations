@@ -573,43 +573,43 @@ looker.plugins.visualizations.add({
 
     // Get colors with rule priority
     const getColors = () => {
-  if (!config.conditional_formatting_enabled) {
-    const palette = palettes[config.color_collection] || palettes.google;
-    if (config.series_colors) {
-      const custom = config.series_colors.split(',').map(c => c.trim());
-      return values.map((v, i) => custom[i % custom.length]);
-    }
-    return values.map((v, i) => palette[i % palette.length]);
-  }
+      if (!config.conditional_formatting_enabled) {
+        const palette = palettes[config.color_collection] || palettes.google;
+        if (config.series_colors) {
+          const custom = config.series_colors.split(',').map(c => c.trim());
+          return values.map((v, i) => custom[i % custom.length]);
+        }
+        return values.map((v, i) => palette[i % palette.length]);
+      }
 
-  // Check for gradient rule first
-  if (config.rule1_enabled && config.rule1_type === 'gradient') {
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    return values.map(v => {
-      const ratio = (max === min) ? 0.5 : (v - min) / (max - min);
-      return this.interpolateColor(
-        config.rule1_gradient_start || '#F1F8E9',
-        config.rule1_gradient_end || '#33691E',
-        ratio
-      );
-    });
-  }
+      // Check for gradient rule first
+      if (config.rule1_enabled && config.rule1_type === 'gradient') {
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        return values.map(v => {
+          const ratio = (max === min) ? 0.5 : (v - min) / (max - min);
+          return this.interpolateColor(
+            config.rule1_gradient_start || '#F1F8E9',
+            config.rule1_gradient_end || '#33691E',
+            ratio
+          );
+        });
+      }
 
-  // Apply rules in priority
-  return values.map(v => {
-    if (config.rule1_enabled && this.checkRule(v, values, config, 1)) {
-      return config.rule1_color;
-    }
-    if (config.rule2_enabled && this.checkRule(v, values, config, 2)) {
-      return config.rule2_color;
-    }
-    if (config.rule3_enabled && this.checkRule(v, values, config, 3)) {
-      return config.rule3_color;
-    }
-    return config.default_color || '#9AA0A6';
-  });
-};
+      // Apply rules in priority
+      return values.map(v => {
+        if (config.rule1_enabled && this.checkRule(v, values, config, 1)) {
+          return config.rule1_color;
+        }
+        if (config.rule2_enabled && this.checkRule(v, values, config, 2)) {
+          return config.rule2_color;
+        }
+        if (config.rule3_enabled && this.checkRule(v, values, config, 3)) {
+          return config.rule3_color;
+        }
+        return config.default_color || '#9AA0A6';
+      });
+    };
 
     const colors = getColors();
     const seriesData = values.map((v, i) => ({ y: v, color: colors[i] }));
@@ -779,22 +779,6 @@ looker.plugins.visualizations.add({
     done();
   },
 
-  interpolateColor: function(color1, color2, ratio) {
-      const hex = (c) => {
-        c = c.replace('#', '');
-        return {
-          r: parseInt(c.substring(0, 2), 16),
-          g: parseInt(c.substring(2, 4), 16),
-          b: parseInt(c.substring(4, 6), 16)
-        };
-      };
-      const c1 = hex(color1), c2 = hex(color2);
-      const r = Math.round(c1.r + (c2.r - c1.r) * ratio);
-      const g = Math.round(c1.g + (c2.g - c1.g) * ratio);
-      const b = Math.round(c1.b + (c2.b - c1.b) * ratio);
-      return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
-    },
-
   checkRule: function(value, allValues, config, ruleNum) {
     const type = config[`rule${ruleNum}_type`];
     const val1 = config[`rule${ruleNum}_value`] || 0;
@@ -842,5 +826,21 @@ looker.plugins.visualizations.add({
     if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
     if (value >= 1e3) return (value / 1e3).toFixed(1) + 'K';
     return value.toFixed(0);
+  },
+
+  interpolateColor: function(color1, color2, ratio) {
+    const hex = (c) => {
+      c = c.replace('#', '');
+      return {
+        r: parseInt(c.substring(0, 2), 16),
+        g: parseInt(c.substring(2, 4), 16),
+        b: parseInt(c.substring(4, 6), 16)
+      };
+    };
+    const c1 = hex(color1), c2 = hex(color2);
+    const r = Math.round(c1.r + (c2.r - c1.r) * ratio);
+    const g = Math.round(c1.g + (c2.g - c1.g) * ratio);
+    const b = Math.round(c1.b + (c2.b - c1.b) * ratio);
+    return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
   }
 });

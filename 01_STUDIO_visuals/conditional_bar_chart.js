@@ -781,22 +781,22 @@ looker.plugins.visualizations.add({
         height: '100%'
       },
       title: { text: null },
-      xAxis: {
-        categories: categories,
-        // Force 'category' if not explicitly explicitly set to 'datetime' AND proven valid.
-        // For Looker month strings like "2019-02", 'category' works best.
-        type: 'category',
-        visible: config.show_x_axis !== false,
-        title: { text: config.x_axis_label || null },
-        labels: {
-          rotation: config.x_axis_label_rotation !== undefined ? config.x_axis_label_rotation : -45,
-          // Don't try to format Looker's pre-formatted date strings with Highcharts date formats if using 'category'
-          format: undefined
+         xAxis: {
+          // ALWAYS pass categories. Highcharts ignores them if type is datetime anyway.
+          categories: categories,
+          // FORCE 'category' type by default. Only use 'datetime' if strictly configured.
+          // Auto-detection often fails with Looker's pre-formatted date strings.
+          type: config.x_axis_scale_type === 'datetime' ? 'datetime' : 'category',
+          visible: config.show_x_axis !== false,
+          title: { text: config.x_axis_label || null },
+          labels: {
+            rotation: config.x_axis_label_rotation !== undefined ? config.x_axis_label_rotation : -45,
+          },
+          gridLineWidth: config.show_x_gridlines ? 1 : 0,
+          // Critical for proper spacing
+          min: 0,
+          max: categories.length - 1
         },
-        gridLineWidth: config.show_x_gridlines ? 1 : 0,
-        min: 0,
-        max: categories.length - 1
-      },
       yAxis: {
         visible: config.show_y_axis !== false,
         title: { text: config.y_axis_label || null },

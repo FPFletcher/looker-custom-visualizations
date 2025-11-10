@@ -32,7 +32,9 @@ visualization: {
   id: "bar_chart_conditional_formatting_viz"
   label: "Bar Chart (Conditional formatting)"
   file: "01_STUDIO_visuals/conditional_bar_chart.js"
-  dependencies: []
+  dependencies: [
+    "https://code.highcharts.com/highcharts.js"
+  ]
 }
 
 ########################################################################################

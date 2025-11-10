@@ -793,7 +793,7 @@ looker.plugins.visualizations.add({
       const g = Math.round(c1.g + (c2.g - c1.g) * ratio);
       const b = Math.round(c1.b + (c2.b - c1.b) * ratio);
       return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
-    }
+    },
 
   checkRule: function(value, allValues, config, ruleNum) {
     const type = config[`rule${ruleNum}_type`];

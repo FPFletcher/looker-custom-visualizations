@@ -17,7 +17,7 @@ looker.plugins.visualizations.add({
         {"Bar": "bar"}
       ],
       default: "column",
-      section: " Plot",
+      section: "Plot",
       order: 1
     },
     stacking: {
@@ -30,7 +30,7 @@ looker.plugins.visualizations.add({
         {"Percent": "percent"}
       ],
       default: "none",
-      section: " Plot",
+      section: "Plot",
       order: 2
     },
     group_padding: {
@@ -40,7 +40,7 @@ looker.plugins.visualizations.add({
       min: 0,
       max: 0.5,
       step: 0.05,
-      section: " Plot",
+      section: "Plot",
       order: 3
     },
     point_padding: {
@@ -50,7 +50,7 @@ looker.plugins.visualizations.add({
       min: 0,
       max: 0.5,
       step: 0.05,
-      section: " Plot",
+      section: "Plot",
       order: 4
     },
 
@@ -150,7 +150,7 @@ looker.plugins.visualizations.add({
       type: "boolean",
       label: "Enable Conditional Formatting",
       default: false,
-      section: "Format",
+      section: "_Format",
       order: 1
     },
     conditional_type: {
@@ -164,7 +164,7 @@ looker.plugins.visualizations.add({
         {"Bottom N": "bottomn"}
       ],
       default: "gradient",
-      section: "Format",
+      section: "_Format",
       order: 2
     },
     gradient_start_color: {
@@ -172,7 +172,7 @@ looker.plugins.visualizations.add({
       label: "Gradient Start Color",
       default: "#F1F8E9",
       display: "color",
-      section: "Format",
+      section: "_Format",
       order: 3
     },
     gradient_end_color: {
@@ -180,7 +180,7 @@ looker.plugins.visualizations.add({
       label: "Gradient End Color",
       default: "#33691E",
       display: "color",
-      section: "Format",
+      section: "_Format",
       order: 4
     },
     topbottom_n: {
@@ -189,7 +189,7 @@ looker.plugins.visualizations.add({
       default: 5,
       min: 1,
       max: 50,
-      section: "Format",
+      section: "_Format",
       order: 5
     },
     topn_color: {
@@ -197,7 +197,7 @@ looker.plugins.visualizations.add({
       label: "Top N Color",
       default: "#34A853",
       display: "color",
-      section: "Format",
+      section: "_Format",
       order: 6
     },
     bottomn_color: {
@@ -205,7 +205,7 @@ looker.plugins.visualizations.add({
       label: "Bottom N Color",
       default: "#EA4335",
       display: "color",
-      section: "Format",
+      section: "_Format",
       order: 7
     },
     other_color: {
@@ -213,7 +213,7 @@ looker.plugins.visualizations.add({
       label: "Other Values Color",
       default: "#9AA0A6",
       display: "color",
-      section: "Format",
+      section: "_Format",
       order: 8
     },
     rule1_operator: {
@@ -227,21 +227,21 @@ looker.plugins.visualizations.add({
         {"Between": "between"}
       ],
       default: "gt",
-      section: "Format",
+      section: "_Format",
       order: 9
     },
     rule1_value: {
       type: "number",
       label: "Rule 1: Value",
       default: 0,
-      section: "Format",
+      section: "_Format",
       order: 10
     },
     rule1_value2: {
       type: "number",
       label: "Rule 1: Value 2",
       default: 100,
-      section: "Format",
+      section: "_Format",
       order: 11
     },
     rule1_color: {
@@ -249,14 +249,14 @@ looker.plugins.visualizations.add({
       label: "Rule 1: Color",
       default: "#EA4335",
       display: "color",
-      section: "Format",
+      section: "_Format",
       order: 12
     },
     background_enabled: {
       type: "boolean",
       label: "Enable Background",
       default: false,
-      section: "Format",
+      section: "_Format",
       order: 20
     },
     background_color: {
@@ -264,13 +264,13 @@ looker.plugins.visualizations.add({
       label: "Background Color",
       default: "transparent",  // Changed from "#FFFFFF"
       display: "color",
-      section: "Format"
+      section: "_Format"
     },
     border_enabled: {
       type: "boolean",
       label: "Enable Border",
       default: false,
-      section: "Format",
+      section: "_Format",
       order: 22
     },
     border_color: {
@@ -278,7 +278,7 @@ looker.plugins.visualizations.add({
       label: "Border Color",
       default: "#E0E0E0",
       display: "color",
-      section: "Format",
+      section: "_Format",
       order: 23
     },
     border_width: {
@@ -287,7 +287,7 @@ looker.plugins.visualizations.add({
       default: 0,  // Changed from 1
       min: 0,
       max: 10,
-      section: "Format"
+      section: "_Format"
     },
 
     // ========== AXIS SECTION ==========
@@ -295,14 +295,14 @@ looker.plugins.visualizations.add({
       type: "boolean",
       label: "Show X Axis",
       default: true,
-      section: "Axis",
+      section: "_Axis",
       order: 1
     },
     x_axis_label: {
       type: "string",
       label: "X Axis Title",
       placeholder: "Category",
-      section: "Axis",
+      section: "_Axis",
       order: 2
     },
     x_axis_label_rotation: {
@@ -312,49 +312,49 @@ looker.plugins.visualizations.add({
       min: -90,
       max: 90,
       step: 15,
-      section: "Axis",
+      section: "_Axis",
       order: 3
     },
     show_x_gridlines: {
       type: "boolean",
       label: "Show X Gridlines",
       default: false,
-      section: "Axis",
+      section: "_Axis",
       order: 4
     },
     show_y_axis: {
       type: "boolean",
       label: "Show Y Axis",
       default: true,
-      section: "Axis",
+      section: "_Axis",
       order: 5
     },
     y_axis_label: {
       type: "string",
       label: "Y Axis Title",
       placeholder: "Value",
-      section: "Axis",
+      section: "_Axis",
       order: 6
     },
     y_axis_min: {
       type: "number",
       label: "Y Axis Min",
       placeholder: "auto",
-      section: "Axis",
+      section: "_Axis",
       order: 7
     },
     y_axis_max: {
       type: "number",
       label: "Y Axis Max",
       placeholder: "auto",
-      section: "Axis",
+      section: "_Axis",
       order: 8
     },
     show_y_gridlines: {
       type: "boolean",
       label: "Show Y Gridlines",
       default: true,
-      section: "Axis",
+      section: "_Axis",
       order: 9
     },
     y_axis_scale: {
@@ -366,7 +366,7 @@ looker.plugins.visualizations.add({
         {"Logarithmic": "logarithmic"}
       ],
       default: "linear",
-      section: "Axis",
+      section: "_Axis",
       order: 10
     },
     reference_line_type: {
@@ -379,7 +379,7 @@ looker.plugins.visualizations.add({
         {"Line with Margins": "margins"}
       ],
       default: "line",
-      section: "Axis"
+      section: "_Axis"
     },
     reference_line_value_type: {
       type: "string",
@@ -393,27 +393,27 @@ looker.plugins.visualizations.add({
         {"Max": "max"}
       ],
       default: "custom",
-      section: "Axis"
+      section: "_Axis"
     },
     show_reference_line: {
       type: "boolean",
       label: "Show Reference Line",
       default: false,
-      section: "Axis",
+      section: "_Axis",
       order: 11
     },
     reference_line_value: {
       type: "number",
       label: "Reference Line Value",
       default: 0,
-      section: "Axis",
+      section: "_Axis",
       order: 12
     },
     reference_line_label: {
       type: "string",
       label: "Reference Line Label",
       placeholder: "Target",
-      section: "Axis",
+      section: "_Axis",
       order: 13
     },
     reference_line_color: {
@@ -421,14 +421,14 @@ looker.plugins.visualizations.add({
       label: "Reference Line Color",
       default: "#EA4335",
       display: "color",
-      section: "Axis",
+      section: "_Axis",
       order: 14
     },
     show_trend_line: {
       type: "boolean",
       label: "Show Trend Line",
       default: false,
-      section: "Axis",
+      section: "_Axis",
       order: 15
     },
     trend_line_type: {
@@ -442,7 +442,7 @@ looker.plugins.visualizations.add({
         {"Average": "average"}
       ],
       default: "linear",
-      section: "Axis"
+      section: "_Axis"
     },
     trend_line_period: {
       type: "number",
@@ -450,14 +450,14 @@ looker.plugins.visualizations.add({
       default: 3,
       min: 2,
       max: 10,
-      section: "Axis"
+      section: "_Axis"
     },
     trend_line_color: {
       type: "string",
       label: "Trend Line Color",
       default: "#4285F4",
       display: "color",
-      section: "Axis",
+      section: "_Axis",
       order: 16
     }
   },

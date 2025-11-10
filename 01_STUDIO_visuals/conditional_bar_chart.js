@@ -1038,11 +1038,10 @@ looker.plugins.visualizations.add({
     return false;
   },
 
-  formatValue: function(value, config) {
+   formatValue: function(value, config) {
     if (value === undefined || value === null || isNaN(value)) {
       return '';
     }
-
     const format = config.value_format || 'auto';
     if (format === 'currency') return '$' + (value >= 1000 ? (value/1000).toFixed(1) + 'K' : value.toFixed(0));
     if (format === 'percent') return (value * 100).toFixed(1) + '%';

@@ -1,7 +1,7 @@
 ![Project_Picasso_banner](./99_ASSETS/Project_Picasso_Edited_banner.png)
 
 # Introduction
-**The objective of this repository is to provide the combined Javascript code of Looker custom visualizations** to improve the 40-visual portfolio available natively or within its marketplace.
+**The objective of this repository is to provide the combined Javascript code of custom visualizations** to improve Looker's 40-visual portfolio available natively or within its marketplace.
 
 For context, the end goal is to enable any Looker customers to benefit from most of **the visual capabilities of Studio/ PowerBI/ Tableau or any other BI providers directly within Looker** by leveraging its extensive API endpoints (more info [here](https://github.com/looker-open-source/custom_visualizations_v2/blob/master/docs/api_reference.md)) with a list of production ready visualizations which can be imported within a few clicks!! 💎  
 In terms of process used, a detailed guide can be found in our community platform [here](https://discuss.google.dev/t/create-a-custom-visualization-without-development-skills-using-generative-ai/163652).

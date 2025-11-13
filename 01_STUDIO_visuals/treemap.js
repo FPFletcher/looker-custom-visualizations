@@ -506,28 +506,56 @@ const colorChanged = this._lastColorBy !== config.color_by ||
 
       if (config.enable_drill_down && (item.isDrillable || item.isOthers)) {
         rect.addEventListener('click', (e) => {
-          e.stopPropagation();  // ADD THIS - prevent event bubbling
+          console.log('=== TREEMAP CLICK DEBUG ===');
+          console.log('Item clicked:', item.name);
+          console.log('Item isDrillable:', item.isDrillable);
+          console.log('Item isOthers:', item.isOthers);
+          console.log('Item drillLinks:', item.drillLinks);
+          console.log('Item drillLinks length:', item.drillLinks ? item.drillLinks.length : 0);
+
+          e.stopPropagation();
 
           // Check if we're at the last drill level
           const dimensions = queryResponse.fields.dimension_like;
           const currentLevel = this._drillStack.length;
           const isLastLevel = currentLevel >= dimensions.length - 1 && !item.isOthers;
 
+          console.log('Current drill level:', currentLevel);
+          console.log('Total dimensions:', dimensions.length);
+          console.log('Is last level?', isLastLevel);
+          console.log('LookerCharts exists?', typeof LookerCharts !== 'undefined');
+          console.log('LookerCharts.Utils exists?', LookerCharts && typeof LookerCharts.Utils !== 'undefined');
+
           // At last level: Show LookML drill menu
           if (isLastLevel && item.drillLinks && item.drillLinks.length > 0) {
+            console.log('✓ ATTEMPTING TO OPEN DRILL MENU');
             if (LookerCharts && LookerCharts.Utils) {
-              LookerCharts.Utils.openDrillMenu({
-                links: item.drillLinks,
-                event: e
-              });
+              console.log('✓ Calling openDrillMenu with links:', item.drillLinks);
+              try {
+                LookerCharts.Utils.openDrillMenu({
+                  links: item.drillLinks,
+                  event: e
+                });
+                console.log('✓ openDrillMenu called successfully');
+              } catch (error) {
+                console.error('✗ Error calling openDrillMenu:', error);
+              }
+            } else {
+              console.log('✗ LookerCharts.Utils not available');
             }
-            return false;  // IMPORTANT - stop execution here
+            return false;
+          } else {
+            console.log('✗ NOT at last level or no drill links');
+            console.log('  - isLastLevel:', isLastLevel);
+            console.log('  - has drillLinks:', item.drillLinks && item.drillLinks.length > 0);
           }
 
           // Otherwise: Normal drill-down behavior
           if (item.isOthers) {
+            console.log('→ Drilling into Others group');
             this.drawTreemap(item.rawData, config, queryResponse);
           } else {
+            console.log('→ Drilling down to next level:', item.name);
             this._drillStack.push(item.name);
             this.drawTreemap(null, config, queryResponse);
           }

@@ -361,7 +361,6 @@ looker.plugins.visualizations.add({
 
     // Extract values
     const row = data[0];
-    this._data = data;  // store data for drill links
     const primaryField = measures[0].name;
     const secondaryField = measures[1].name;
     const percentageField = measures.length > 2 ? measures[2].name : null;
@@ -405,7 +404,9 @@ looker.plugins.visualizations.add({
       percentageFormatted,
       primaryLabel,
       secondaryLabel,
-      config
+      config,
+      data,          // pass the data
+      primaryField   // pass the field name
     );
 
     done();
@@ -466,7 +467,7 @@ looker.plugins.visualizations.add({
   /**
    * Draw the water drop images and text
    */
-  drawWaterDrops: function(primaryValue, secondaryValue, percentage, primaryLabel, secondaryLabel, config) {
+  drawWaterDrops: function(primaryValue, secondaryValue, percentage, primaryLabel, secondaryLabel, config, data, primaryField) {
     const svg = this._svg;
     const svgNS = "http://www.w3.org/2000/svg";
 
@@ -509,24 +510,36 @@ looker.plugins.visualizations.add({
     primaryValueText.setAttribute('class', 'drop-value');
     primaryValueText.setAttribute('fill', config.primary_text_color || '#FFFFFF');
     primaryValueText.setAttribute('font-size', config.font_size_primary_value || '52');
-    primaryValueText.setAttribute('cursor', 'pointer');  // ADD cursor
+    primaryValueText.setAttribute('cursor', 'pointer');
     primaryValueText.textContent = primaryValue;
 
     // ADD DRILL FUNCTIONALITY - Get links from the first measure
-    const primaryMeasureLinks = this._data && this._data[0] && this._data[0][primaryField]
-      ? (this._data[0][primaryField].links || [])
+    const primaryMeasureLinks = data && data[0] && data[0][primaryField]
+      ? (data[0][primaryField].links || [])
       : [];
+
+    console.log('Primary field:', primaryField);
+    console.log('Primary measure links:', primaryMeasureLinks);
 
     if (primaryMeasureLinks.length > 0) {
       primaryValueText.addEventListener('click', (e) => {
-        if (LookerCharts.Utils) {
-          LookerCharts.Utils.openDrillMenu({
-            links: primaryMeasureLinks,
-            event: e
-          });
+        console.log('Primary value clicked - opening drill menu');
+        if (LookerCharts && LookerCharts.Utils) {
+          try {
+            LookerCharts.Utils.openDrillMenu({
+              links: primaryMeasureLinks,
+              event: e
+            });
+            console.log('✓ Drill menu opened');
+          } catch (error) {
+            console.error('✗ Error opening drill menu:', error);
+          }
         }
       });
+    } else {
+      console.log('✗ No drill links available for primary value');
     }
+
     svg.appendChild(primaryValueText);
 
     // Primary label text

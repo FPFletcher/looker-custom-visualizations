@@ -263,7 +263,7 @@ looker.plugins.visualizations.add({
   },
 
   updateAsync: function(data, element, config, queryResponse, details, done) {
-    // console.log("[INIT] updateAsync called. Rows:", data.length);
+    // //console.log("[INIT] updateAsync called. Rows:", data.length);
     this.clearErrors();
 
     if (!data || data.length === 0) {
@@ -325,8 +325,8 @@ const colorChanged = this._lastColorBy !== config.color_by ||
   },
 
   drawTreemap: function(data, config, queryResponse) {
-    // console.log("[DRAW] drawTreemap called. DrillStack:", JSON.stringify(this._drillStack));
-    // console.log("[DRAW] Incoming data is:", data ? `Array(${data.length})` : "NULL (will re-filter)");
+    // //console.log("[DRAW] drawTreemap called. DrillStack:", JSON.stringify(this._drillStack));
+    // //console.log("[DRAW] Incoming data is:", data ? `Array(${data.length})` : "NULL (will re-filter)");
 
     const dimensions = queryResponse.fields.dimension_like;
     const measures = queryResponse.fields.measure_like;
@@ -344,7 +344,7 @@ const colorChanged = this._lastColorBy !== config.color_by ||
         activeData = activeData.filter(row => row[dimName].value === filterVal);
       }
     }
-    // console.log("[DRAW] activeData after filtering:", activeData.length, "rows");
+    // //console.log("[DRAW] activeData after filtering:", activeData.length, "rows");
 
     // Rest of the function...
     const dimIndex = Math.min(currentLevel, dimensions.length - 1);
@@ -514,7 +514,7 @@ const colorChanged = this._lastColorBy !== config.color_by ||
 
         if (this._config.enable_drill_down && (item.isDrillable || item.isOthers)) {
           // MODE 1: Treemap drill-down navigation
-          console.log('→ Drilling down to:', item.name);
+          //console.log('→ Drilling down to:', item.name);
 
           if (item.isOthers) {
             this.drawTreemap(item.rawData, this._config, this._queryResponse);
@@ -524,7 +524,7 @@ const colorChanged = this._lastColorBy !== config.color_by ||
           }
         } else {
           // MODE 2: LookML drill fields
-          console.log('→ Looking for LookML drill fields for:', item.name);
+          //console.log('→ Looking for LookML drill fields for:', item.name);
 
           // Extract drill links from rawData
           let drillLinks = [];
@@ -538,7 +538,7 @@ const colorChanged = this._lastColorBy !== config.color_by ||
           }
 
           if (drillLinks.length > 0 && LookerCharts && LookerCharts.Utils) {
-            console.log('✓ Opening LookML drill menu with', drillLinks.length, 'options');
+            //console.log('✓ Opening LookML drill menu with', drillLinks.length, 'options');
             try {
               LookerCharts.Utils.openDrillMenu({
                 links: drillLinks,
@@ -548,7 +548,7 @@ const colorChanged = this._lastColorBy !== config.color_by ||
               console.error('✗ Error opening drill menu:', error);
             }
           } else {
-            console.log('✗ No drill fields available');
+            //console.log('✗ No drill fields available');
           }
         }
       });

@@ -811,7 +811,10 @@ looker.plugins.visualizations.add({
             textOutline: 'none'
           },
           formatter: function() {
+            // ADD NULL CHECK HERE
             const num = this.total;
+            if (num === undefined || num === null || isNaN(num)) return '';
+
             const format = config.value_format || 'auto';
             if (format === 'currency') return '$' + (num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toFixed(0));
             if (format === 'percent') return (num * 100).toFixed(1) + '%';
@@ -831,30 +834,30 @@ looker.plugins.visualizations.add({
           zIndex: 5,
           dashStyle: 'Dash',
           label: {
-            useHTML: true,
-            text: (() => {
-              const num = refValue;
-              const format = config.value_format || 'auto';
-              let formatted = '';
-              if (format === 'currency') formatted = '$' + (num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toFixed(0));
-              else if (format === 'percent') formatted = (num * 100).toFixed(1) + '%';
-              else if (format === 'decimal1') formatted = num.toFixed(1);
-              else if (format === 'decimal2') formatted = num.toFixed(2);
-              else if (format === 'number') formatted = num.toLocaleString();
-              else if (num >= 1e9) formatted = (num / 1e9).toFixed(1) + 'B';
-              else if (num >= 1e6) formatted = (num / 1e6).toFixed(1) + 'M';
-              else if (num >= 1e3) formatted = (num / 1e3).toFixed(1) + 'K';
-              else formatted = num.toLocaleString();
-              return `<span style="background-color: ${config.ref_line_title_bg || '#FFFFFF'}; color: ${config.ref_line_color || '#EA4335'}; padding: 4px; border: 1px solid ${config.ref_line_color || '#EA4335'}; border-radius: 3px; font-weight: bold; white-space: nowrap;">${config.ref_line_title || 'Reference'}: ${formatted}</span>`;
-            })(),
-            align: isBar ? 'left' : 'right',
-            verticalAlign: isBar ? 'middle' : 'bottom',
-            rotation: 0,
-            y: isBar ? 0 : -5,
-            x: isBar ? 10 : -10,
-            style: { textOutline: 'none' }
+          useHTML: true,
+          text: (() => {
+          const num = refValue;
+          const format = config.value_format || 'auto';
+          let formatted = '';
+          if (format === 'currency') formatted = '$' + (num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toFixed(0));
+          else if (format === 'percent') formatted = (num * 100).toFixed(1) + '%';
+          else if (format === 'decimal1') formatted = num.toFixed(1);
+          else if (format === 'decimal2') formatted = num.toFixed(2);
+          else if (format === 'number') formatted = num.toLocaleString();
+          else if (num >= 1e9) formatted = (num / 1e9).toFixed(1) + 'B';
+          else if (num >= 1e6) formatted = (num / 1e6).toFixed(1) + 'M';
+          else if (num >= 1e3) formatted = (num / 1e3).toFixed(1) + 'K';
+          else formatted = num.toLocaleString();
+          return `<span style="background-color: ${config.ref_line_title_bg || '#FFFFFF'}; color: ${config.ref_line_color || '#EA4335'}; padding: 4px; border: 1px solid ${config.ref_line_color || '#EA4335'}; border-radius: 3px; font-weight: bold; white-space: nowrap;">${config.ref_line_title || 'Reference'}: ${formatted}</span>`;
+          })(),
+          align: isBar ? 'left' : 'right',
+          verticalAlign: isBar ? 'middle' : 'bottom',
+          rotation: 0,
+          y: isBar ? 0 : -5,
+          x: isBar ? 10 : -10,
+          style: { textOutline: 'none' }
           }
-        }] : []
+          }] : []
       },
       plotOptions: {
         series: {
@@ -916,16 +919,25 @@ looker.plugins.visualizations.add({
     };
 
     // TRENDLINE
-    if (config.trend_line_enabled && seriesData.length > 0) {
-      let trendSourceData;
+    if (config.trend_line_enabled) {
+  console.log('=== TRENDLINE ENABLED ===');
+  console.log('seriesData length:', seriesData.length);
+  console.log('seriesData[0]:', seriesData[0]);
+
+  if (seriesData.length > 0) {
+    let trendSourceData;
+
+    try {
       if (config.trend_line_apply_to === 'stacked') {
+        console.log('Using stacked totals for trend');
         trendSourceData = stackedTotals;
       } else if (config.trend_line_apply_to === 'all') {
+        console.log('Using all measures average for trend');
         trendSourceData = [];
         for (let i = 0; i < categories.length; i++) {
           let sum = 0, count = 0;
           seriesData.forEach(s => {
-            if (typeof s.data[i].y === 'number') {
+            if (s.data[i] && typeof s.data[i].y === 'number') {
               sum += s.data[i].y;
               count++;
             }
@@ -933,14 +945,20 @@ looker.plugins.visualizations.add({
           trendSourceData.push(count > 0 ? sum / count : null);
         }
       } else {
-        trendSourceData = seriesData[0].data.map(d => d.y);
+        console.log('Using first measure for trend');
+        trendSourceData = seriesData[0].data.map(d => d && d.y !== undefined ? d.y : null);
       }
+
+      console.log('trendSourceData:', trendSourceData);
 
       let trendSeriesData = [];
       const validPoints = trendSourceData.map((y, x) => ({ x, y })).filter(p => typeof p.y === 'number');
 
+      console.log('validPoints:', validPoints);
+
       if (validPoints.length > 1) {
         if (config.trend_line_type === 'linear') {
+          console.log('Calculating linear trend');
           const n = validPoints.length;
           const sumX = validPoints.reduce((a, p) => a + p.x, 0);
           const sumY = validPoints.reduce((a, p) => a + p.y, 0);
@@ -950,6 +968,7 @@ looker.plugins.visualizations.add({
           const intercept = (sumY - slope * sumX) / n;
           trendSeriesData = categories.map((_, x) => slope * x + intercept);
         } else if (config.trend_line_type === 'moving_avg') {
+          console.log('Calculating moving average trend');
           const period = config.trend_line_period || 3;
           trendSeriesData = trendSourceData.map((val, i, arr) => {
             if (i < period - 1) return null;
@@ -957,72 +976,91 @@ looker.plugins.visualizations.add({
             return subset.length > 0 ? subset.reduce((a, b) => a + b, 0) / subset.length : null;
           });
         } else {
+          console.log('Calculating average line');
           const avg = validPoints.reduce((a, p) => a + p.y, 0) / validPoints.length;
           trendSeriesData = categories.map(() => avg);
         }
-      }
 
-      let lastValidIndex = -1;
-      for (let i = trendSeriesData.length - 1; i >= 0; i--) {
-        if (trendSeriesData[i] !== null && trendSeriesData[i] !== undefined) {
-          lastValidIndex = i;
-          break;
-        }
-      }
+        console.log('trendSeriesData calculated:', trendSeriesData);
 
-      const finalTrendData = trendSeriesData.map((y, i) => {
-        if (i === lastValidIndex && y !== null) {
-          return {
-            y: y,
-            dataLabels: {
-              enabled: true,
-              useHTML: true,
-              align: 'right',
-              x: isBar ? 10 : -35,
-              y: 0,
-              verticalAlign: 'middle',
-              rotation: 0,
-              overflow: 'allow',
-              crop: false,
-              formatter: function() {
-                return `<span style="background-color: ${config.trend_line_title_bg || '#FFFFFF'}; color: ${config.trend_line_label_color || config.trend_line_color || '#4285F4'}; padding: 4px; border: 1px solid ${config.trend_line_color || '#4285F4'}; border-radius: 3px; font-weight: bold; white-space: nowrap;">${config.trend_line_title || 'Trend'}</span>`;
-              },
-              style: { textOutline: 'none' }
-            }
-          };
-        }
-        return y;
-      });
-
-      chartOptions.series.push({
-        type: 'line',
-        name: config.trend_line_title || 'Trend',
-        data: finalTrendData,
-        color: config.trend_line_color || '#4285F4',
-        dashStyle: 'ShortDash',
-        marker: { enabled: false },
-        enableMouseTracking: true,
-        zIndex: 10,
-        showInLegend: false,
-        tooltip: {
-          pointFormatter: function() {
-            const num = this.y;
-            const format = config.value_format || 'auto';
-            let formatted = '';
-            if (format === 'currency') formatted = '$' + (num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toFixed(0));
-            else if (format === 'percent') formatted = (num * 100).toFixed(1) + '%';
-            else if (format === 'decimal1') formatted = num.toFixed(1);
-            else if (format === 'decimal2') formatted = num.toFixed(2);
-            else if (format === 'number') formatted = num.toLocaleString();
-            else if (num >= 1e9) formatted = (num / 1e9).toFixed(1) + 'B';
-            else if (num >= 1e6) formatted = (num / 1e6).toFixed(1) + 'M';
-            else if (num >= 1e3) formatted = (num / 1e3).toFixed(1) + 'K';
-            else formatted = num.toLocaleString();
-            return `<b>${config.trend_line_title || 'Trend'}</b>: ${formatted}`;
+        // Find last valid point
+        let lastValidIndex = -1;
+        for (let i = trendSeriesData.length - 1; i >= 0; i--) {
+          if (trendSeriesData[i] !== null && trendSeriesData[i] !== undefined) {
+            lastValidIndex = i;
+            break;
           }
         }
-      });
+
+        console.log('lastValidIndex:', lastValidIndex);
+
+        const finalTrendData = trendSeriesData.map((y, i) => {
+          if (i === lastValidIndex && y !== null) {
+            return {
+              y: y,
+              dataLabels: {
+                enabled: true,
+                useHTML: true,
+                align: 'right',
+                x: isBar ? 10 : -35,
+                y: 0,
+                verticalAlign: 'middle',
+                rotation: 0,
+                overflow: 'allow',
+                crop: false,
+                formatter: function() {
+                  return `<span style="background-color: ${config.trend_line_title_bg || '#FFFFFF'}; color: ${config.trend_line_label_color || config.trend_line_color || '#4285F4'}; padding: 4px; border: 1px solid ${config.trend_line_color || '#4285F4'}; border-radius: 3px; font-weight: bold; white-space: nowrap;">${config.trend_line_title || 'Trend'}</span>`;
+                },
+                style: { textOutline: 'none' }
+              }
+            };
+          }
+          return y;
+        });
+
+        console.log('finalTrendData:', finalTrendData);
+
+        const trendSeries = {
+          type: 'line',
+          name: config.trend_line_title || 'Trend',
+          data: finalTrendData,
+          color: config.trend_line_color || '#4285F4',
+          dashStyle: 'ShortDash',
+          marker: { enabled: false },
+          enableMouseTracking: true,
+          zIndex: 10,
+          showInLegend: false,
+          tooltip: {
+            pointFormatter: function() {
+              const num = this.y;
+              const format = config.value_format || 'auto';
+              let formatted = '';
+              if (format === 'currency') formatted = '$' + (num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toFixed(0));
+              else if (format === 'percent') formatted = (num * 100).toFixed(1) + '%';
+              else if (format === 'decimal1') formatted = num.toFixed(1);
+              else if (format === 'decimal2') formatted = num.toFixed(2);
+              else if (format === 'number') formatted = num.toLocaleString();
+              else if (num >= 1e9) formatted = (num / 1e9).toFixed(1) + 'B';
+              else if (num >= 1e6) formatted = (num / 1e6).toFixed(1) + 'M';
+              else if (num >= 1e3) formatted = (num / 1e3).toFixed(1) + 'K';
+              else formatted = num.toLocaleString();
+              return `<b>${config.trend_line_title || 'Trend'}</b>: ${formatted}`;
+            }
+          }
+        };
+
+        console.log('Pushing trend series:', trendSeries);
+        chartOptions.series.push(trendSeries);
+      } else {
+        console.log('Not enough valid points for trendline');
+      }
+    } catch (error) {
+      console.error('Error calculating trendline:', error);
     }
+  } else {
+    console.log('No series data available for trendline');
+  }
+}
 
     if (!this.chart) {
       this.chart = Highcharts.chart(this._chartContainer, chartOptions);

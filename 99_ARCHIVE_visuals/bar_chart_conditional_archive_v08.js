@@ -56,6 +56,15 @@ looker.plugins.visualizations.add({
       order: 4
     },
 
+    default_color: {
+      type: "string",
+      label: "Default Color (No Rule Match)",
+      default: "#9AA0A6",
+      display: "color",
+      section: "Plot",
+      order: 5
+    },
+
     conditional_formatting_enabled: {
       type: "boolean",
       label: "Enable Conditional Formatting",
@@ -394,14 +403,6 @@ looker.plugins.visualizations.add({
       order: 8
     },
 
-    total_label_bold: {
-      type: "boolean",
-      label: "Total Label Bold",
-      default: true,
-      section: "Values",
-      order: 9
-    },
-
     // ========== X AXIS SECTION ==========
     show_x_axis: {
       type: "boolean",
@@ -580,6 +581,7 @@ looker.plugins.visualizations.add({
       values: [
         {"Linear": "linear"},
         {"Moving Average": "moving_avg"},
+        {"Average Line": "average"}
       ],
       default: "linear",
       section: "Y",
@@ -804,11 +806,12 @@ looker.plugins.visualizations.add({
         stackLabels: {
           enabled: config.show_total_labels === true && !!stackingMode,
           style: {
-            fontWeight: config.total_label_bold !== false ? 'bold' : 'normal',  // CHANGE THIS LINE
+            fontWeight: 'bold',
             color: config.total_label_color || '#000000',
             textOutline: 'none'
           },
           formatter: function() {
+            // ADD NULL CHECK HERE
             const num = this.total;
             if (num === undefined || num === null || isNaN(num)) return '';
 
@@ -972,6 +975,10 @@ looker.plugins.visualizations.add({
             const subset = arr.slice(i - period + 1, i + 1).filter(v => typeof v === 'number');
             return subset.length > 0 ? subset.reduce((a, b) => a + b, 0) / subset.length : null;
           });
+        } else {
+          console.log('Calculating average line');
+          const avg = validPoints.reduce((a, p) => a + p.y, 0) / validPoints.length;
+          trendSeriesData = categories.map(() => avg);
         }
 
         console.log('trendSeriesData calculated:', trendSeriesData);
@@ -988,29 +995,28 @@ looker.plugins.visualizations.add({
         console.log('lastValidIndex:', lastValidIndex);
 
         const finalTrendData = trendSeriesData.map((y, i) => {
-  const point = { y: y };
-
-  // Only add title label on last valid point
-  if (i === lastValidIndex && y !== null) {
-    point.dataLabels = {
-      enabled: true,
-      useHTML: true,
-      align: 'right',
-      x: isBar ? 10 : -35,
-      y: 0,
-      verticalAlign: 'middle',
-      rotation: 0,
-      overflow: 'allow',
-      crop: false,
-      formatter: function() {
-        return `<span style="background-color: ${config.trend_line_title_bg || '#FFFFFF'}; color: ${config.trend_line_label_color || config.trend_line_color || '#4285F4'}; padding: 4px; border: 1px solid ${config.trend_line_color || '#4285F4'}; border-radius: 3px; font-weight: bold; white-space: nowrap;">${config.trend_line_title || 'Trend'}</span>`;
-      },
-      style: { textOutline: 'none' }
-    };
-  }
-
-  return point;
-});
+          if (i === lastValidIndex && y !== null) {
+            return {
+              y: y,
+              dataLabels: {
+                enabled: true,
+                useHTML: true,
+                align: 'right',
+                x: isBar ? 10 : -35,
+                y: 0,
+                verticalAlign: 'middle',
+                rotation: 0,
+                overflow: 'allow',
+                crop: false,
+                formatter: function() {
+                  return `<span style="background-color: ${config.trend_line_title_bg || '#FFFFFF'}; color: ${config.trend_line_label_color || config.trend_line_color || '#4285F4'}; padding: 4px; border: 1px solid ${config.trend_line_color || '#4285F4'}; border-radius: 3px; font-weight: bold; white-space: nowrap;">${config.trend_line_title || 'Trend'}</span>`;
+                },
+                style: { textOutline: 'none' }
+              }
+            };
+          }
+          return y;
+        });
 
         console.log('finalTrendData:', finalTrendData);
 
@@ -1024,32 +1030,6 @@ looker.plugins.visualizations.add({
           enableMouseTracking: true,
           zIndex: 10,
           showInLegend: false,
-          stacking: undefined,  // ADD THIS - Explicitly disable stacking
-          stack: null,          // ADD THIS - Ensure no stack assignment
-          dataLabels: {
-            enabled: config.trend_line_show_label === true,
-            formatter: function() {
-              const num = this.y;
-              const format = config.value_format || 'auto';
-              let formatted = '';
-              if (format === 'currency') formatted = '$' + (num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toFixed(0));
-              else if (format === 'percent') formatted = (num * 100).toFixed(1) + '%';
-              else if (format === 'decimal1') formatted = num.toFixed(1);
-              else if (format === 'decimal2') formatted = num.toFixed(2);
-              else if (format === 'number') formatted = num.toLocaleString();
-              else if (num >= 1e9) formatted = (num / 1e9).toFixed(1) + 'B';
-              else if (num >= 1e6) formatted = (num / 1e6).toFixed(1) + 'M';
-              else if (num >= 1e3) formatted = (num / 1e3).toFixed(1) + 'K';
-              else formatted = num.toLocaleString();
-              return formatted;
-            },
-            style: {
-              color: config.trend_line_label_color || config.trend_line_color || '#4285F4',
-              fontSize: '11px',
-              textOutline: 'none',
-              fontWeight: 'normal'
-            }
-          },
           tooltip: {
             pointFormatter: function() {
               const num = this.y;
@@ -1071,7 +1051,6 @@ looker.plugins.visualizations.add({
 
         console.log('Pushing trend series:', trendSeries);
         chartOptions.series.push(trendSeries);
-
       } else {
         console.log('Not enough valid points for trendline');
       }
@@ -1093,66 +1072,46 @@ looker.plugins.visualizations.add({
   },
 
   getColors: function(values, config) {
-  const palettes = {
-    google: ['#4285F4', '#EA4335', '#FBBC04', '#34A853', '#FF6D00', '#46BDC6', '#AB47BC'],
-    looker: ['#7FCDAE', '#7ED09C', '#7DD389', '#85D67C', '#9AD97B', '#B1DB7A'],
-    green_scale: ['#F1F8E9', '#C5E1A5', '#9CCC65', '#7CB342', '#558B2F', '#33691E'],
-    blue_scale: ['#E3F2FD', '#90CAF9', '#42A5F5', '#1E88E5', '#1565C0', '#0D47A1'],
-    red_scale: ['#FFEBEE', '#FFCDD2', '#EF9A9A', '#E57373', '#EF5350', '#F44336', '#E53935', '#D32F2F'],
-    purple_scale: ['#F3E5F5', '#CE93D8', '#AB47BC', '#8E24AA', '#6A1B9A', '#4A148C'],
-    orange_scale: ['#FFF3E0', '#FFE0B2', '#FFCC80', '#FFB74D', '#FFA726', '#FF9800', '#FB8C00', '#F57C00'],
-    viridis: ['#440154', '#414487', '#2A788E', '#22A884', '#7AD151', '#FDE725'],
-    warm: ['#FFF5EB', '#FDD0A2', '#FD8D3C', '#E6550D', '#A63603'],
-    cool: ['#F0F9FF', '#DEEBF7', '#C6DBEF', '#9ECAE1', '#6BAED6', '#4292C6', '#2171B5', '#08519C', '#08306B']
-  };
+    if (!config.conditional_formatting_enabled) return values.map(() => config.default_color);
 
-  const palette = palettes[config.color_collection] || palettes.google;
-  const customColors = config.series_colors ? String(config.series_colors).split(',').map(c => c.trim()) : null;
-  // GET THE BASE SERIES COLOR (first measure color)
-  const baseSeriesColor = customColors ? customColors[0] : palette[0];
+    const check = (val, ruleNum, allVals) => {
+      if (!config[`rule${ruleNum}_enabled`]) return false;
+      const type = config[`rule${ruleNum}_type`];
+      const v1 = config[`rule${ruleNum}_value`];
+      const v2 = config[`rule${ruleNum}_value2`];
+      if (type === 'gt') return val > v1;
+      if (type === 'lt') return val < v1;
+      if (type === 'eq') return val == v1;
+      if (type === 'between') return val >= v1 && val <= v2;
+      if (type === 'topn' || type === 'bottomn') {
+        const numericVals = allVals.filter(v => typeof v === 'number');
+        const n = Math.max(1, Math.floor(v1 || 5));
+        const sorted = [...numericVals].sort((a, b) => type === 'topn' ? b - a : a - b);
+        const threshold = sorted[Math.min(n - 1, sorted.length - 1)];
+        return type === 'topn' ? val >= threshold : val <= threshold;
+      }
+      return false;
+    };
 
-  if (!config.conditional_formatting_enabled) {
-    return values.map(() => baseSeriesColor);  // CHANGED: Use series color instead of default_color
-  }
-
-  const check = (val, ruleNum, allVals) => {
-    if (!config[`rule${ruleNum}_enabled`]) return false;
-    const type = config[`rule${ruleNum}_type`];
-    const v1 = config[`rule${ruleNum}_value`];
-    const v2 = config[`rule${ruleNum}_value2`];
-    if (type === 'gt') return val > v1;
-    if (type === 'lt') return val < v1;
-    if (type === 'eq') return val == v1;
-    if (type === 'between') return val >= v1 && val <= v2;
-    if (type === 'topn' || type === 'bottomn') {
-      const numericVals = allVals.filter(v => typeof v === 'number');
-      const n = Math.max(1, Math.floor(v1 || 5));
-      const sorted = [...numericVals].sort((a, b) => type === 'topn' ? b - a : a - b);
-      const threshold = sorted[Math.min(n - 1, sorted.length - 1)];
-      return type === 'topn' ? val >= threshold : val <= threshold;
+    if (config.rule1_enabled && config.rule1_type === 'gradient') {
+      const numericValues = values.filter(v => typeof v === 'number');
+      const min = Math.min(...numericValues);
+      const max = Math.max(...numericValues);
+      return values.map(v => {
+        if (typeof v !== 'number') return config.default_color;
+        const ratio = (max === min) ? 0.5 : (v - min) / (max - min);
+        return this.interpolateColor(config.rule1_color || '#F1F8E9', config.rule1_color2 || '#33691E', ratio);
+      });
     }
-    return false;
-  };
 
-  if (config.rule1_enabled && config.rule1_type === 'gradient') {
-    const numericValues = values.filter(v => typeof v === 'number');
-    const min = Math.min(...numericValues);
-    const max = Math.max(...numericValues);
-    return values.map(v => {
-      if (typeof v !== 'number') return baseSeriesColor;  // CHANGED
-      const ratio = (max === min) ? 0.5 : (v - min) / (max - min);
-      return this.interpolateColor(config.rule1_color || '#F1F8E9', config.rule1_color2 || '#33691E', ratio);
+    return values.map(val => {
+      if (typeof val !== 'number') return config.default_color;
+      if (check(val, 1, values)) return config.rule1_color;
+      if (check(val, 2, values)) return config.rule2_color;
+      if (check(val, 3, values)) return config.rule3_color;
+      return config.default_color;
     });
-  }
-
-  return values.map(val => {
-    if (typeof val !== 'number') return baseSeriesColor;  // CHANGED
-    if (check(val, 1, values)) return config.rule1_color;
-    if (check(val, 2, values)) return config.rule2_color;
-    if (check(val, 3, values)) return config.rule3_color;
-    return baseSeriesColor;  // CHANGED: Use series color when no rule matches
-  });
-},
+  },
 
   interpolateColor: function(color1, color2, ratio) {
     const hex = (c) => {

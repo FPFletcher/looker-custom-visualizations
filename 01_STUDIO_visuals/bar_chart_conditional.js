@@ -1125,7 +1125,8 @@ looker.plugins.visualizations.add({
   },
 
 
-  getColors: function(values, config, baseColor) {  // ADD baseColor parameter
+  // REPLACE THE ENTIRE getColors FUNCTION (around line 1000-1080):
+getColors: function(values, config, baseColor) {
   const palettes = {
     google: ['#4285F4', '#EA4335', '#FBBC04', '#34A853', '#FF6D00', '#46BDC6', '#AB47BC'],
     looker: ['#7FCDAE', '#7ED09C', '#7DD389', '#85D67C', '#9AD97B', '#B1DB7A'],
@@ -1150,11 +1151,44 @@ looker.plugins.visualizations.add({
     return values.map(() => baseColor);
   }
 
+  // CHECK FOR GRADIENT IN ANY RULE (priority: rule1 > rule2 > rule3)
+  let gradientRule = null;
+  if (config.rule1_enabled && config.rule1_type === 'gradient') {
+    gradientRule = 1;
+  } else if (config.rule2_enabled && config.rule2_type === 'gradient') {
+    gradientRule = 2;
+  } else if (config.rule3_enabled && config.rule3_type === 'gradient') {
+    gradientRule = 3;
+  }
+
+  // If gradient is enabled on any rule, apply it
+  if (gradientRule) {
+    const numericValues = values.filter(v => typeof v === 'number');
+    if (numericValues.length === 0) {
+      return values.map(() => baseColor);
+    }
+
+    const min = Math.min(...numericValues);
+    const max = Math.max(...numericValues);
+    const startColor = config[`rule${gradientRule}_color`] || '#F1F8E9';
+    const endColor = config[`rule${gradientRule}_color2`] || '#33691E';
+
+    return values.map(v => {
+      if (typeof v !== 'number') return baseColor;
+      const ratio = (max === min) ? 0.5 : (v - min) / (max - min);
+      return this.interpolateColor(startColor, endColor, ratio);
+    });
+  }
+
+  // No gradient - check discrete rules
   const check = (val, ruleNum, allVals) => {
     if (!config[`rule${ruleNum}_enabled`]) return false;
     const type = config[`rule${ruleNum}_type`];
+    if (type === 'gradient') return false; // Already handled above
+
     const v1 = config[`rule${ruleNum}_value`];
     const v2 = config[`rule${ruleNum}_value2`];
+
     if (type === 'gt') return val > v1;
     if (type === 'lt') return val < v1;
     if (type === 'eq') return val == v1;
@@ -1169,17 +1203,7 @@ looker.plugins.visualizations.add({
     return false;
   };
 
-  if (config.rule1_enabled && config.rule1_type === 'gradient') {
-    const numericValues = values.filter(v => typeof v === 'number');
-    const min = Math.min(...numericValues);
-    const max = Math.max(...numericValues);
-    return values.map(v => {
-      if (typeof v !== 'number') return baseColor;
-      const ratio = (max === min) ? 0.5 : (v - min) / (max - min);
-      return this.interpolateColor(config.rule1_color || '#F1F8E9', config.rule1_color2 || '#33691E', ratio);
-    });
-  }
-
+  // Apply discrete rules in priority order
   return values.map(val => {
     if (typeof val !== 'number') return baseColor;
     if (check(val, 1, values)) return config.rule1_color;

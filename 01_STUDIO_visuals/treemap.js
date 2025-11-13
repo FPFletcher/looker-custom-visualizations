@@ -447,7 +447,8 @@ const colorChanged = this._lastColorBy !== config.color_by ||
 
     const nodes = data.map(d => ({
       ...d,
-      area: (d.value / totalValue) * rootArea
+      area: (d.value / totalValue) * rootArea,
+      drillLinks: d.children && d.children.length > 0 ? d.children[0][dimension].links : []  // ADD THIS
     }));
 
     let layout = this.squarify(nodes, 0, 0, width, height);
@@ -501,20 +502,31 @@ const colorChanged = this._lastColorBy !== config.color_by ||
       rect.setAttribute('stroke-width', config.border_width);
       rect.setAttribute('class', 'treemap-rect');
 
-          if (config.enable_drill_down && (item.isDrillable || item.isOthers)) {
-        rect.addEventListener('click', () => {
-          // console.log("[CLICK] Node clicked:", item.name, "| isOthers:", item.isOthers);
-          if (item.isOthers) {
-             // For "Others", just show its contents without changing drill stack level
-             this.drawTreemap(item.children, config, this._queryResponse);
-          } else {
-             // For normal nodes, push to stack and PASS NULL data
-             // to force drawTreemap to re-filter from global data.
-             this._drillStack.push(item.name);
-             this.drawTreemap(null, config, this._queryResponse);
-          }
-        });
-      }
+      if (config.enable_drill_down && (item.isDrillable || item.isOthers)) {
+      rect.addEventListener('click', (e) => {
+        // Check if we're at the last drill level
+        const dimensions = this._queryResponse.fields.dimension_like;
+        const currentLevel = this._drillStack.length;
+        const isLastLevel = currentLevel >= dimensions.length - 1 && !item.isOthers;
+
+        // At last level: Show LookML drill menu
+        if (isLastLevel && LookerCharts.Utils && item.drillLinks && item.drillLinks.length > 0) {
+          LookerCharts.Utils.openDrillMenu({
+            links: item.drillLinks,
+            event: e
+          });
+          return;
+        }
+
+        // Otherwise: Normal drill-down behavior
+        if (item.isOthers) {
+          this.drawTreemap(item.children, config, this._queryResponse);
+        } else {
+          this._drillStack.push(item.name);
+          this.drawTreemap(null, config, this._queryResponse);
+        }
+      });
+    }
 
       rect.addEventListener('mouseenter', () => {
         const pct = ((item.value / totalValue) * 100).toFixed(1);

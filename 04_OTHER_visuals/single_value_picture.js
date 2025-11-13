@@ -127,7 +127,7 @@ looker.plugins.visualizations.add({
     primary_label: {
       type: "string",
       label: "Primary Drop Label",
-      default: "Send By WTCO",
+      default: "",
       section: "Primary"
     },
     primary_text_color: {
@@ -148,7 +148,7 @@ looker.plugins.visualizations.add({
     secondary_label: {
       type: "string",
       label: "Secondary Drop Label",
-      default: "Distribution Variance",
+      default: "",
       section: "Secondary"
     },
     secondary_text_color: {
@@ -361,6 +361,7 @@ looker.plugins.visualizations.add({
 
     // Extract values
     const row = data[0];
+    this._data = data;  // store data for drill links
     const primaryField = measures[0].name;
     const secondaryField = measures[1].name;
     const percentageField = measures.length > 2 ? measures[2].name : null;
@@ -498,16 +499,34 @@ looker.plugins.visualizations.add({
     primaryImage.setAttribute('class', 'water-drop-image');
     primaryImage.setAttribute('opacity', primaryOpacity);
     primaryImage.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    primaryImage.style.pointerEvents = 'none';
     svg.appendChild(primaryImage);
 
-    // Primary value text
+    // Primary value text (with drill functionality)
     const primaryValueText = document.createElementNS(svgNS, 'text');
     primaryValueText.setAttribute('x', primaryX);
     primaryValueText.setAttribute('y', primaryY - 10);
     primaryValueText.setAttribute('class', 'drop-value');
     primaryValueText.setAttribute('fill', config.primary_text_color || '#FFFFFF');
     primaryValueText.setAttribute('font-size', config.font_size_primary_value || '52');
+    primaryValueText.setAttribute('cursor', 'pointer');  // ADD cursor
     primaryValueText.textContent = primaryValue;
+
+    // ADD DRILL FUNCTIONALITY - Get links from the first measure
+    const primaryMeasureLinks = this._data && this._data[0] && this._data[0][primaryField]
+      ? (this._data[0][primaryField].links || [])
+      : [];
+
+    if (primaryMeasureLinks.length > 0) {
+      primaryValueText.addEventListener('click', (e) => {
+        if (LookerCharts.Utils) {
+          LookerCharts.Utils.openDrillMenu({
+            links: primaryMeasureLinks,
+            event: e
+          });
+        }
+      });
+    }
     svg.appendChild(primaryValueText);
 
     // Primary label text
@@ -531,6 +550,7 @@ looker.plugins.visualizations.add({
     secondaryImage.setAttribute('class', 'water-drop-image');
     secondaryImage.setAttribute('opacity', secondaryOpacity);
     secondaryImage.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    secondaryImage.style.pointerEvents = 'none';
     svg.appendChild(secondaryImage);
 
     // Percentage indicator (at top of secondary drop)

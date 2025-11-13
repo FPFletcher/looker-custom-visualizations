@@ -709,18 +709,32 @@ looker.plugins.visualizations.add({
           return { y: cell && cell.value !== null ? Number(cell.value) : null, drillLinks: cell ? cell.links : [], categoryIndex: i };
         });
 
-        const applyFormatting = config.conditional_formatting_enabled && (config.conditional_formatting_apply_to === 'all' || index === 0);
-        let colors = [];
-        if (applyFormatting) {
-          const rawValues = values.map(v => v.y);
-          colors = this.getColors(rawValues, config);
-        }
+        // CRITICAL FIX: Only apply formatting to the correct measure(s)
+        const shouldApplyFormatting = config.conditional_formatting_enabled &&
+                                      (config.conditional_formatting_apply_to === 'all' || index === 0);
 
-        seriesData.push({
-          name: customLabels && customLabels[index] ? customLabels[index] : queryResponse.fields.measures[index].label_short || queryResponse.fields.measures[index].label,
-          data: values.map((v, i) => applyFormatting ? { ...v, color: colors[i] } : v),
-          color: !applyFormatting ? (customColors ? customColors[index % customColors.length] : palette[index % palette.length]) : undefined
-        });
+        const baseColor = customColors ? customColors[index % customColors.length] : palette[index % palette.length];
+
+        if (shouldApplyFormatting) {
+          // Apply conditional formatting
+          const rawValues = values.map(v => v.y);
+          const colors = this.getColors(rawValues, config, baseColor);  // PASS baseColor
+
+          seriesData.push({
+            name: customLabels && customLabels[index] ? customLabels[index] : queryResponse.fields.measures[index].label_short || queryResponse.fields.measures[index].label,
+            data: values.map((v, i) => ({ ...v, color: colors[i] })),
+            // DON'T set a series-level color when using conditional formatting
+            showInLegend: true
+          });
+        } else {
+          // No conditional formatting - use normal series color
+          seriesData.push({
+            name: customLabels && customLabels[index] ? customLabels[index] : queryResponse.fields.measures[index].label_short || queryResponse.fields.measures[index].label,
+            data: values,
+            color: baseColor,
+            showInLegend: true
+          });
+        }
       });
     }
 
@@ -870,9 +884,9 @@ looker.plugins.visualizations.add({
           dataLabels: {
             enabled: config.show_labels,
             align: config.label_position === 'outside' ? 'center' :
-                   config.label_position === 'inside' ? 'center' : 'center',
+            config.label_position === 'inside' ? 'center' : 'center',
             verticalAlign: config.label_position === 'outside' ? null :
-                            config.label_position === 'inside' ? 'top' : 'middle',
+            config.label_position === 'inside' ? 'top' : 'middle',
             inside: config.label_position === 'inside' || config.label_position === 'center',
             rotation: config.label_rotation || 0,
             style: {
@@ -898,7 +912,25 @@ looker.plugins.visualizations.add({
           }
         },
         column: { groupPadding, pointPadding, borderWidth: 0 },
-        bar: { groupPadding, pointPadding, borderWidth: 0 }
+        bar: { groupPadding, pointPadding, borderWidth: 0 },
+
+        // FIND THIS LINE:
+        area: { marker: { enabled: false } },
+
+        // REPLACE IT WITH THIS:
+        area: {
+          marker: {
+            enabled: true,  // Enable markers so point colors show
+            radius: 3
+          },
+          fillOpacity: 0.75,  // Makes the area slightly transparent
+          lineWidth: 2,
+          // This prevents individual point colors from affecting the area fill
+          // The area fill will use the series color, but markers will show conditional colors
+          zones: []  // Empty zones array ensures normal behavior
+        },
+
+        line: { marker: { enabled: true, radius: 3 } }
       },
       legend: {
         enabled: seriesData.length > 1 || ruleLegendItems.length > 0,
@@ -988,29 +1020,29 @@ looker.plugins.visualizations.add({
         console.log('lastValidIndex:', lastValidIndex);
 
         const finalTrendData = trendSeriesData.map((y, i) => {
-  const point = { y: y };
+          const point = { y: y };
 
-  // Only add title label on last valid point
-  if (i === lastValidIndex && y !== null) {
-    point.dataLabels = {
-      enabled: true,
-      useHTML: true,
-      align: 'right',
-      x: isBar ? 10 : -35,
-      y: 0,
-      verticalAlign: 'middle',
-      rotation: 0,
-      overflow: 'allow',
-      crop: false,
-      formatter: function() {
-        return `<span style="background-color: ${config.trend_line_title_bg || '#FFFFFF'}; color: ${config.trend_line_label_color || config.trend_line_color || '#4285F4'}; padding: 4px; border: 1px solid ${config.trend_line_color || '#4285F4'}; border-radius: 3px; font-weight: bold; white-space: nowrap;">${config.trend_line_title || 'Trend'}</span>`;
-      },
-      style: { textOutline: 'none' }
-    };
-  }
+          // Only add title label on last valid point
+          if (i === lastValidIndex && y !== null) {
+            point.dataLabels = {
+              enabled: true,
+              useHTML: true,
+              align: isBar ? 'left' : 'left',  // CHANGED to 'left' for better positioning
+              x: isBar ? 10 : -50,  // CHANGED: More space from the edge
+              y: isBar ? 0 : -10,  // CHANGED: Slightly above the line
+              verticalAlign: isBar ? 'middle' : 'bottom',  // CHANGED to 'bottom'
+              rotation: 0,
+              overflow: 'allow',
+              crop: false,
+              formatter: function() {
+                return `<span style="background-color: ${config.trend_line_title_bg || '#FFFFFF'}; color: ${config.trend_line_label_color || config.trend_line_color || '#4285F4'}; padding: 4px; border: 1px solid ${config.trend_line_color || '#4285F4'}; border-radius: 3px; font-weight: bold; white-space: nowrap;">${config.trend_line_title || 'Trend'}</span>`;
+              },
+              style: { textOutline: 'none' }
+            };
+          }
 
-  return point;
-});
+          return point;
+        });
 
         console.log('finalTrendData:', finalTrendData);
 
@@ -1092,7 +1124,8 @@ looker.plugins.visualizations.add({
     done();
   },
 
-  getColors: function(values, config) {
+
+  getColors: function(values, config, baseColor) {  // ADD baseColor parameter
   const palettes = {
     google: ['#4285F4', '#EA4335', '#FBBC04', '#34A853', '#FF6D00', '#46BDC6', '#AB47BC'],
     looker: ['#7FCDAE', '#7ED09C', '#7DD389', '#85D67C', '#9AD97B', '#B1DB7A'],
@@ -1106,13 +1139,15 @@ looker.plugins.visualizations.add({
     cool: ['#F0F9FF', '#DEEBF7', '#C6DBEF', '#9ECAE1', '#6BAED6', '#4292C6', '#2171B5', '#08519C', '#08306B']
   };
 
-  const palette = palettes[config.color_collection] || palettes.google;
-  const customColors = config.series_colors ? String(config.series_colors).split(',').map(c => c.trim()) : null;
-  // GET THE BASE SERIES COLOR (first measure color)
-  const baseSeriesColor = customColors ? customColors[0] : palette[0];
+  // Use passed baseColor, or fallback to first color in palette
+  if (!baseColor) {
+    const palette = palettes[config.color_collection] || palettes.google;
+    const customColors = config.series_colors ? String(config.series_colors).split(',').map(c => c.trim()) : null;
+    baseColor = customColors ? customColors[0] : palette[0];
+  }
 
   if (!config.conditional_formatting_enabled) {
-    return values.map(() => baseSeriesColor);  // CHANGED: Use series color instead of default_color
+    return values.map(() => baseColor);
   }
 
   const check = (val, ruleNum, allVals) => {
@@ -1139,18 +1174,18 @@ looker.plugins.visualizations.add({
     const min = Math.min(...numericValues);
     const max = Math.max(...numericValues);
     return values.map(v => {
-      if (typeof v !== 'number') return baseSeriesColor;  // CHANGED
+      if (typeof v !== 'number') return baseColor;
       const ratio = (max === min) ? 0.5 : (v - min) / (max - min);
       return this.interpolateColor(config.rule1_color || '#F1F8E9', config.rule1_color2 || '#33691E', ratio);
     });
   }
 
   return values.map(val => {
-    if (typeof val !== 'number') return baseSeriesColor;  // CHANGED
+    if (typeof val !== 'number') return baseColor;
     if (check(val, 1, values)) return config.rule1_color;
     if (check(val, 2, values)) return config.rule2_color;
     if (check(val, 3, values)) return config.rule3_color;
-    return baseSeriesColor;  // CHANGED: Use series color when no rule matches
+    return baseColor;
   });
 },
 

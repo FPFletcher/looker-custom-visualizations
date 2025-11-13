@@ -1138,50 +1138,57 @@ looker.plugins.visualizations.add({
         // Find last valid point
         let lastValidIndex = -1;
         for (let i = trendSeriesData.length - 1; i >= 0; i--) {
-          if (trendSeriesData[i] !== null && trendSeriesData[i] !== undefined) {
+          if (trendSeriesData[i] !== null && trendSeriesData[i] !== undefined && typeof trendSeriesData[i] === 'number') {
             lastValidIndex = i;
             break;
           }
         }
 
-        //console.log('lastValidIndex:', lastValidIndex);
+        console.log('TREND DEBUG - Apply to mode:', config.trend_line_apply_to);
+        console.log('TREND DEBUG - trendSeriesData length:', trendSeriesData.length);
+        console.log('TREND DEBUG - lastValidIndex:', lastValidIndex);
+        console.log('TREND DEBUG - trendSeriesData:', trendSeriesData);
 
         const finalTrendData = trendSeriesData.map((y, i) => {
           const point = { y: y };
 
           // Only add title label on last valid point
-        if (i === lastValidIndex && y !== null) {
-          point.dataLabels = {
-            enabled: true,
-            useHTML: true,
-            align: 'right',
-            x: isBar ? 5 : -5,  // Closer to line to avoid disappearing
-            y: 0,  // Center on the line vertically
-            verticalAlign: 'middle',  // Always middle align
-            rotation: 0,
-            overflow: 'allow',
-            crop: false,
-            inside: false,  // Allow it to go outside plot area
-            formatter: function() {
-              // CALCULATE DEFAULT TITLE BASED ON TYPE
-              let trendTitle = config.trend_line_title;
-              if (!trendTitle || trendTitle.trim() === '') {
-                // Auto-generate title based on type
-                const typeMap = {
-                  'linear': 'Linear Trend',
-                  'moving_avg': `Moving Avg (${config.trend_line_period || 3})`
-                };
-                trendTitle = typeMap[config.trend_line_type] || 'Trend';
-              }
+          if (i === lastValidIndex && y !== null && y !== undefined && typeof y === 'number') {
+            console.log('TREND DEBUG - Adding label at index:', i, 'with value:', y);
 
-              return `<span style="background-color: ${config.trend_line_title_bg || '#FFFFFF'}; color: ${config.trend_line_label_color || config.trend_line_color || '#4285F4'}; padding: 4px; border: 1px solid ${config.trend_line_color || '#4285F4'}; border-radius: 3px; font-weight: bold; white-space: nowrap;">${trendTitle}</span>`;
-            },
-            style: { textOutline: 'none' }
-          };
-        }
+            point.dataLabels = {
+              enabled: true,
+              useHTML: true,
+              align: 'right',
+              x: isBar ? 5 : -5,
+              y: 0,
+              verticalAlign: 'middle',
+              rotation: 0,
+              overflow: 'allow',
+              crop: false,
+              inside: false,
+              formatter: function() {
+                // CALCULATE DEFAULT TITLE BASED ON TYPE
+                let trendTitle = config.trend_line_title;
+                if (!trendTitle || trendTitle.trim() === '') {
+                  // Auto-generate title based on type
+                  const typeMap = {
+                    'linear': 'Linear Trend',
+                    'moving_avg': `Moving Avg (${config.trend_line_period || 3})`
+                  };
+                  trendTitle = typeMap[config.trend_line_type] || 'Trend';
+                }
+
+                return `<span style="background-color: ${config.trend_line_title_bg || '#FFFFFF'}; color: ${config.trend_line_label_color || config.trend_line_color || '#4285F4'}; padding: 4px; border: 1px solid ${config.trend_line_color || '#4285F4'}; border-radius: 3px; font-weight: bold; white-space: nowrap;">${trendTitle}</span>`;
+              },
+              style: { textOutline: 'none' }
+            };
+          }
 
           return point;
         });
+
+        console.log('TREND DEBUG - finalTrendData:', finalTrendData);
 
         //console.log('finalTrendData:', finalTrendData);
 

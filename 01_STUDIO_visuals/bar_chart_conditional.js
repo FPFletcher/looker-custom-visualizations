@@ -1150,34 +1150,35 @@ looker.plugins.visualizations.add({
           const point = { y: y };
 
           // Only add title label on last valid point
-          if (i === lastValidIndex && y !== null) {
-            point.dataLabels = {
-              enabled: true,
-              useHTML: true,
-              align: 'right',  // RIGHT align
-              x: isBar ? 5 : -10,  // NEGATIVE value to go LEFT
-              y: isBar ? 0 : -5,
-              verticalAlign: isBar ? 'middle' : 'bottom',
-              rotation: 0,
-              overflow: 'allow',
-              crop: false,
-              formatter: function() {
-                // CALCULATE DEFAULT TITLE BASED ON TYPE
-                let trendTitle = config.trend_line_title;
-                if (!trendTitle || trendTitle.trim() === '') {
-                  // Auto-generate title based on type
-                  const typeMap = {
-                    'linear': 'Linear Trend',
-                    'moving_avg': `Moving Avg (${config.trend_line_period || 3})`
-                  };
-                  trendTitle = typeMap[config.trend_line_type] || 'Trend';
-                }
+        if (i === lastValidIndex && y !== null) {
+          point.dataLabels = {
+            enabled: true,
+            useHTML: true,
+            align: 'right',
+            x: isBar ? 5 : -5,  // Closer to line to avoid disappearing
+            y: 0,  // Center on the line vertically
+            verticalAlign: 'middle',  // Always middle align
+            rotation: 0,
+            overflow: 'allow',
+            crop: false,
+            inside: false,  // Allow it to go outside plot area
+            formatter: function() {
+              // CALCULATE DEFAULT TITLE BASED ON TYPE
+              let trendTitle = config.trend_line_title;
+              if (!trendTitle || trendTitle.trim() === '') {
+                // Auto-generate title based on type
+                const typeMap = {
+                  'linear': 'Linear Trend',
+                  'moving_avg': `Moving Avg (${config.trend_line_period || 3})`
+                };
+                trendTitle = typeMap[config.trend_line_type] || 'Trend';
+              }
 
-                return `<span style="background-color: ${config.trend_line_title_bg || '#FFFFFF'}; color: ${config.trend_line_label_color || config.trend_line_color || '#4285F4'}; padding: 4px; border: 1px solid ${config.trend_line_color || '#4285F4'}; border-radius: 3px; font-weight: bold; white-space: nowrap;">${trendTitle}</span>`;
-              },
-              style: { textOutline: 'none' }
-            };
-          }
+              return `<span style="background-color: ${config.trend_line_title_bg || '#FFFFFF'}; color: ${config.trend_line_label_color || config.trend_line_color || '#4285F4'}; padding: 4px; border: 1px solid ${config.trend_line_color || '#4285F4'}; border-radius: 3px; font-weight: bold; white-space: nowrap;">${trendTitle}</span>`;
+            },
+            style: { textOutline: 'none' }
+          };
+        }
 
           return point;
         });

@@ -365,7 +365,7 @@ const colorChanged = this._lastColorBy !== config.color_by ||
     });
 
     this.updateBreadcrumb();
-    this.renderTreemap(treemapData, config);
+    this.renderTreemap(treemapData, config, dimension, queryResponse);
   },
 
   // --- NEW GROUPING FUNCTION ---
@@ -427,7 +427,7 @@ const colorChanged = this._lastColorBy !== config.color_by ||
   },
 
 // This is the most important function by far as it dictates the treemap shaping logic. We made it "deterministic" for a cleaner output yet it could use a more flexible sizing if so desired
-  renderTreemap: function(data, config) {
+  renderTreemap: function(data, config, dimension, queryResponse) {
     const svgNS = "http://www.w3.org/2000/svg";
     this._svg.innerHTML = '';
 
@@ -448,7 +448,9 @@ const colorChanged = this._lastColorBy !== config.color_by ||
     const nodes = data.map(d => ({
       ...d,
       area: (d.value / totalValue) * rootArea,
-      drillLinks: d.children && d.children.length > 0 ? d.children[0][dimension].links : []  // ADD THIS
+      drillLinks: (d.children && d.children.length > 0 && dimension && d.children[0][dimension])
+        ? (d.children[0][dimension].links || [])
+        : []
     }));
 
     let layout = this.squarify(nodes, 0, 0, width, height);
@@ -503,30 +505,30 @@ const colorChanged = this._lastColorBy !== config.color_by ||
       rect.setAttribute('class', 'treemap-rect');
 
       if (config.enable_drill_down && (item.isDrillable || item.isOthers)) {
-      rect.addEventListener('click', (e) => {
-        // Check if we're at the last drill level
-        const dimensions = this._queryResponse.fields.dimension_like;
-        const currentLevel = this._drillStack.length;
-        const isLastLevel = currentLevel >= dimensions.length - 1 && !item.isOthers;
+        rect.addEventListener('click', (e) => {
+          // Check if we're at the last drill level
+          const dimensions = queryResponse.fields.dimension_like;
+          const currentLevel = this._drillStack.length;
+          const isLastLevel = currentLevel >= dimensions.length - 1 && !item.isOthers;
 
-        // At last level: Show LookML drill menu
-        if (isLastLevel && LookerCharts.Utils && item.drillLinks && item.drillLinks.length > 0) {
-          LookerCharts.Utils.openDrillMenu({
-            links: item.drillLinks,
-            event: e
-          });
-          return;
-        }
+          // At last level: Show LookML drill menu
+          if (isLastLevel && LookerCharts && LookerCharts.Utils && item.drillLinks && item.drillLinks.length > 0) {
+            LookerCharts.Utils.openDrillMenu({
+              links: item.drillLinks,
+              event: e
+            });
+            return;
+          }
 
-        // Otherwise: Normal drill-down behavior
-        if (item.isOthers) {
-          this.drawTreemap(item.children, config, this._queryResponse);
-        } else {
-          this._drillStack.push(item.name);
-          this.drawTreemap(null, config, this._queryResponse);
-        }
-      });
-    }
+          // Otherwise: Normal drill-down behavior
+          if (item.isOthers) {
+            this.drawTreemap(item.children, config, queryResponse);
+          } else {
+            this._drillStack.push(item.name);
+            this.drawTreemap(null, config, queryResponse);
+          }
+        });
+      }
 
       rect.addEventListener('mouseenter', () => {
         const pct = ((item.value / totalValue) * 100).toFixed(1);

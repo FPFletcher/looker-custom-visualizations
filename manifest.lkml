@@ -32,13 +32,13 @@ visualization: {
 
 
 ########################################################################################
-# 04. CUSTOM visuals
+# 04. OTHER visuals
 ########################################################################################
 
 visualization: {
   id: "single_value_picture_background"
   label: "Single Value (Picture)"
-  file: "04_CUSTOM_visuals/single_value_picture.js"
+  file: "04_OTHER_visuals/single_value_picture.js"
 
   dependencies: [
   ]

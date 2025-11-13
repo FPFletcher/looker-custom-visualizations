@@ -35,6 +35,15 @@ looker.plugins.visualizations.add({
       default: true,
       section: "Plot"
     },
+    drill_levels: {
+      type: "number",
+      label: "Number of Drill Levels",
+      default: 2,
+      min: 1,
+      max: 10,
+      section: "Plot",
+      order: 38
+    },
     others_toggle: {
       type: "boolean",
       label: "Group Small Items into 'Others'",
@@ -281,6 +290,11 @@ looker.plugins.visualizations.add({
       return;
     }
 
+    // Auto-set drill levels based on dimensions if not manually configured
+    if (!config.drill_levels || config.drill_levels === 2) {
+      config.drill_levels = dimensions.length;
+    }
+
     this._container.style.backgroundColor = config.background_color;
     this._queryResponse = queryResponse;
     this._config = config;
@@ -508,68 +522,70 @@ const colorChanged = this._lastColorBy !== config.color_by ||
       // SIMPLIFIED DRILL TEST - Show drill menu on ANY click
 
       if (this._config.enable_drill_down && (item.isDrillable || item.isOthers)) {
-        rect.addEventListener('click', (e) => {
-          console.log('=== TREEMAP CLICK DEBUG ===');
-          console.log('Item clicked:', item.name);
-          console.log('Current drill stack:', this._drillStack);
+  rect.addEventListener('click', (e) => {
+    console.log('=== TREEMAP CLICK DEBUG ===');
+    console.log('Item clicked:', item.name);
+    console.log('Current drill stack:', this._drillStack);
 
-          e.stopPropagation();
+    e.stopPropagation();
 
-          // Check if we're at the last drill level
-          const dimensions = this._queryResponse.fields.dimension_like;
-          const currentLevel = this._drillStack.length;
-          const isLastLevel = currentLevel >= dimensions.length - 1 && !item.isOthers;
+    // Check if we're at the configured drill level
+    const maxDrillLevels = this._config.drill_levels || 2;
+    const currentLevel = this._drillStack.length;
+    const isLastLevel = currentLevel >= maxDrillLevels - 1 && !item.isOthers;
 
-          console.log('Current level:', currentLevel, '/ Total dimensions:', dimensions.length);
-          console.log('Is last level?', isLastLevel);
-          console.log('Is Others?', item.isOthers);
+    console.log('Current level:', currentLevel, '/ Max drill levels:', maxDrillLevels);
+    console.log('Is last level?', isLastLevel);
+    console.log('Is Others?', item.isOthers);
 
-          // At last level: Show LookML drill menu
-          if (isLastLevel) {
-            console.log('✓ AT LAST LEVEL - Looking for drill links');
+    // At last level: Show LookML drill menu
+    if (isLastLevel) {
+      console.log('✓ AT LAST LEVEL - Looking for drill links');
 
-            // Extract drill links from rawData
-            let drillLinks = [];
-            if (item.rawData && item.rawData.length > 0) {
-              const firstRow = item.rawData[0];
-              // Find the measure field (it will have links)
-              Object.keys(firstRow).forEach(key => {
-                if (firstRow[key] && firstRow[key].links && firstRow[key].links.length > 0) {
-                  drillLinks = firstRow[key].links;
-                }
-              });
-            }
-
-            console.log('Found drill links:', drillLinks);
-
-            if (drillLinks.length > 0 && LookerCharts && LookerCharts.Utils) {
-              console.log('✓ Opening LookML drill menu');
-              try {
-                LookerCharts.Utils.openDrillMenu({
-                  links: drillLinks,
-                  event: e
-                });
-                console.log('✓ Drill menu opened successfully');
-              } catch (error) {
-                console.error('✗ Error opening drill menu:', error);
-              }
-              return false; // Stop here - don't drill down further
-            } else {
-              console.log('✗ No drill links available');
-            }
-          }
-
-          // Not at last level: Normal drill-down behavior
-          if (item.isOthers) {
-            console.log('→ Drilling into Others group');
-            this.drawTreemap(item.rawData, this._config, this._queryResponse);
-          } else {
-            console.log('→ Drilling down to next level:', item.name);
-            this._drillStack.push(item.name);
-            this.drawTreemap(null, this._config, this._queryResponse);
+      // Extract drill links from rawData
+      let drillLinks = [];
+      if (item.rawData && item.rawData.length > 0) {
+        const firstRow = item.rawData[0];
+        console.log('First row of rawData:', firstRow);
+        // Find the measure field (it will have links)
+        Object.keys(firstRow).forEach(key => {
+          if (firstRow[key] && firstRow[key].links && firstRow[key].links.length > 0) {
+            console.log(`Found ${firstRow[key].links.length} drill links in field "${key}"`);
+            drillLinks = firstRow[key].links;
           }
         });
       }
+
+      console.log('Final drill links:', drillLinks);
+
+      if (drillLinks.length > 0 && LookerCharts && LookerCharts.Utils) {
+        console.log('✓ Opening LookML drill menu');
+        try {
+          LookerCharts.Utils.openDrillMenu({
+            links: drillLinks,
+            event: e
+          });
+          console.log('✓ Drill menu opened successfully');
+          return false; // Stop here - don't drill down further
+        } catch (error) {
+          console.error('✗ Error opening drill menu:', error);
+        }
+      } else {
+        console.log('✗ No drill links available');
+      }
+    }
+
+    // Not at last level: Normal drill-down behavior
+    if (item.isOthers) {
+      console.log('→ Drilling into Others group');
+      this.drawTreemap(item.rawData, this._config, this._queryResponse);
+    } else {
+      console.log('→ Drilling down to next level:', item.name);
+      this._drillStack.push(item.name);
+      this.drawTreemap(null, this._config, this._queryResponse);
+    }
+  });
+}
 
       rect.addEventListener('mouseenter', () => {
         const pct = ((item.value / totalValue) * 100).toFixed(1);

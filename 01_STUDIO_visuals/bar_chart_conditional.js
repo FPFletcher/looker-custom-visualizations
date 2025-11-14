@@ -80,11 +80,20 @@ looker.plugins.visualizations.add({
 
     conditional_formatting_help: {
       type: "string",
-      label: "ℹ️ First Measure: colors only the first series | All Measures: colors each series independently | Stacked Measures: colors all bars based on their combined total. Top/Bottom N use Value 1 as N, Between uses both, Gradient uses both colors. Rule 1 overwrite Rule 2 that overwrite Rule 3.If your changes are not applied, try refreshing your page.",
+      label: "ℹ️ First Measure: colors only the first series | All Measures: colors each series independently | Stacked Measures: colors all bars based on their combined total.",
       display: "divider",
       section: "Plot",
       default: "",
       order: 11
+    },
+
+    conditional_formatting_help: {
+      type: "string",
+      label: "Top/Bottom N use Value 1 as N, Between uses both, Gradient uses both colors. Rule 1 overwrite Rule 2 that overwrite Rule 3.If your changes are not applied, try refreshing your page.",
+      display: "divider",
+      section: "Plot",
+      default: "",
+      order: 12
     },
 
     // Rule 1
@@ -93,7 +102,7 @@ looker.plugins.visualizations.add({
       label: "Rule 1: Enabled",
       default: false,
       section: "Plot",
-      order: 12
+      order: 13
     },
     rule1_type: {
       type: "string",
@@ -110,7 +119,7 @@ looker.plugins.visualizations.add({
       ],
       default: "gt",
       section: "Plot",
-      order: 13
+      order: 14
     },
     rule1_value: {
       type: "number",
@@ -118,14 +127,14 @@ looker.plugins.visualizations.add({
       placeholder: "Enter value or N",
       default: 5,
       section: "Plot",
-      order: 14
+      order: 15
     },
     rule1_value2: {
       type: "number",
       label: "Value 2 (Between only)",
       default: 100,
       section: "Plot",
-      order: 15
+      order: 16
     },
     rule1_color: {
       type: "string",
@@ -133,7 +142,7 @@ looker.plugins.visualizations.add({
       default: "#EA4335",
       display: "color",
       section: "Plot",
-      order: 16
+      order: 17
     },
     rule1_color2: {
       type: "string",
@@ -141,14 +150,14 @@ looker.plugins.visualizations.add({
       default: "#34A853",
       display: "color",
       section: "Plot",
-      order: 17
+      order: 18
     },
     rule1_legend_label: {
       type: "string",
       label: "Legend Label (optional)",
       placeholder: "e.g., High Performers",
       section: "Plot",
-      order: 18
+      order: 19
     },
 
     // Rule 2
@@ -311,6 +320,7 @@ looker.plugins.visualizations.add({
       type: "string",
       label: "Custom Series Labels (comma-separated)",
       placeholder: "Sales,Returns,Profit",
+      default: ""
       section: "Series",
       order: 3
     },
@@ -511,7 +521,7 @@ looker.plugins.visualizations.add({
       type: "string",
       label: "ℹ️ First Measure: calculates from the first series only | All Measures: calculates from all series combined | Stacked Measures: calculates from the sum of all series at each point. If your changes are not applied, try refreshing your page.",
       display: "divider",
-      section: "Plot",
+      section: "Y",
       default: "",
       order: 12
     },
@@ -587,7 +597,7 @@ looker.plugins.visualizations.add({
       type: "string",
       label: "ℹ️ First Measure: trend follows the first series only | All Measures: trend follows the average of all series | Stacked Measures: trend follows the sum of all series. If your changes are not applied, try refreshing your page.",
       display: "divider",
-      section: "Plot",
+      section: "Y",
       default: "",
       order: 22
     },

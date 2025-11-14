@@ -925,8 +925,7 @@ looker.plugins.visualizations.add({
         type: baseType,
         backgroundColor: 'transparent',
         spacing: [10, 10, 10, 10],
-        width: null,    // Will be set explicitly before render
-        height: null    // Will be set explicitly before render
+        reflow: false  // Prevent auto-reflow that causes width issues
       },
       title: { text: null },
       credits: { enabled: false },
@@ -1305,15 +1304,6 @@ looker.plugins.visualizations.add({
     //console.log('No series data available for trendline');
   }
 }
-
-    // Get actual container dimensions to prevent overflow
-    const containerRect = this._chartContainer.getBoundingClientRect();
-    const chartWidth = Math.floor(containerRect.width);
-    const chartHeight = Math.floor(containerRect.height);
-
-    // Update chart options with explicit dimensions
-    chartOptions.chart.width = chartWidth > 0 ? chartWidth : null;
-    chartOptions.chart.height = chartHeight > 0 ? chartHeight : null;
 
     if (!this.chart) {
       this.chart = Highcharts.chart(this._chartContainer, chartOptions);

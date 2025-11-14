@@ -107,7 +107,7 @@ CTRL + / should be the keyboard shortcut to comment out a block of code.
 | Visualization | External Dependency | Required Domain |
 |--------------|---------------------|-----------------|
 | Bar Chart (Conditional) | Highcharts | `code.highcharts.com` |
-| *(Add others as needed)* | - | - |
+| - | - | - |
 
 **If your Looker instance has network restrictions:**
 1. Contact your network/security team

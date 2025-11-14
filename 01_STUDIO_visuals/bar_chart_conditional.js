@@ -87,7 +87,7 @@ looker.plugins.visualizations.add({
       order: 11
     },
 
-    conditional_formatting_help: {
+    conditional_formatting_help_2: {
       type: "string",
       label: "Top/Bottom N use Value 1 as N, Between uses both, Gradient uses both colors. Rule 1 overwrite Rule 2 that overwrite Rule 3.If your changes are not applied, try refreshing your page.",
       display: "divider",
@@ -496,6 +496,15 @@ looker.plugins.visualizations.add({
       order: 5
     },
 
+    reference_line_divider_1: {
+      type: "string",
+      label: "-----------------------------",
+      display: "divider",
+      section: "Y",
+      default: "",
+      order: 6
+    },
+
     // Reference Lines
     ref_line_enabled: {
       type: "boolean",
@@ -570,6 +579,15 @@ looker.plugins.visualizations.add({
       display: "color",
       section: "Y",
       order: 17
+    },
+
+    reference_line_divider_2: {
+      type: "string",
+      label: "-----------------------------",
+      display: "divider",
+      section: "Y",
+      default: "",
+      order: 18
     },
 
     // Trend Line

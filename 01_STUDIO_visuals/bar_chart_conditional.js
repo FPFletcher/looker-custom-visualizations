@@ -853,6 +853,12 @@ looker.plugins.visualizations.add({
 
         const baseColor = customColors ? customColors[index % customColors.length] : palette[index % palette.length];
 
+        console.log(`=== Series ${index}: ${measure} ===`);
+        console.log(`  shouldApplyFormatting: ${shouldApplyFormatting}`);
+        console.log(`  baseColor: ${baseColor}`);
+        console.log(`  conditional_formatting_enabled: ${config.conditional_formatting_enabled}`);
+        console.log(`  conditional_formatting_apply_to: ${config.conditional_formatting_apply_to}`);
+
         const measureName = measure;
         const defaultName = queryResponse.fields.measures[index].label_short || queryResponse.fields.measures[index].label;
 
@@ -872,14 +878,21 @@ looker.plugins.visualizations.add({
           const rawValues = values.map(v => v.y);
           const colors = this.getColors(rawValues, config, baseColor);  // PASS baseColor
 
+          console.log(`  First 5 raw values:`, rawValues.slice(0, 5));
+          console.log(`  First 5 colors returned:`, colors.slice(0, 5));
+
           seriesData.push({
             name: seriesName,
             data: values.map((v, i) => ({ ...v, color: colors[i] })),
             color: baseColor,  // Fallback color for legend and any points without explicit colors
             showInLegend: true
           });
+
+          console.log(`  First data point:`, values[0], '-> color:', colors[0]);
         } else {
           // No conditional formatting - use normal series color
+          console.log(`  Using series color: ${baseColor} (no conditional formatting)`);
+
           seriesData.push({
             name: seriesName,
             data: values.map(v => ({ y: v.y, drillLinks: v.drillLinks, categoryIndex: v.categoryIndex })),  // Don't carry over any color property
@@ -1383,6 +1396,7 @@ looker.plugins.visualizations.add({
 
 
   getColors: function(values, config, baseColor) {
+  console.log(`[getColors] Called with baseColor: ${baseColor}`);
   const palettes = {
     google: ['#4285F4', '#EA4335', '#FBBC04', '#34A853', '#FF6D00', '#46BDC6', '#AB47BC'],
     looker: ['#7FCDAE', '#7ED09C', '#7DD389', '#85D67C', '#9AD97B', '#B1DB7A'],
@@ -1499,6 +1513,56 @@ looker.plugins.visualizations.add({
     }
 
     // No rule matched - use base series color
+    console.log(`[getColors] Value ${val} at index ${index} -> no rule matched, returning baseColor: ${baseColor}`);
+    return baseColor;
+  });
+
+  console.log(`[getColors] Returning ${values.length} colors. First 5:`, values.slice(0, 5).map((val, i) => {
+    const color = values.map((v, idx) => {
+      if (typeof v !== 'number') return baseColor;
+      if (config.rule1_enabled && config.rule1_type !== 'gradient' && checkDiscrete(v, 1, values)) return config.rule1_color;
+      if (config.rule2_enabled && config.rule2_type !== 'gradient' && checkDiscrete(v, 2, values)) return config.rule2_color;
+      if (config.rule3_enabled && config.rule3_type !== 'gradient' && checkDiscrete(v, 3, values)) return config.rule3_color;
+      return baseColor;
+    })[i];
+    return `val:${val} -> color:${color}`;
+  }));
+
+  return values.map((val, index) => {
+    if (typeof val !== 'number') return baseColor;
+    if (config.rule1_enabled) {
+      if (config.rule1_type === 'gradient') {
+        const numericValues = values.filter(v => typeof v === 'number');
+        const min = Math.min(...numericValues);
+        const max = Math.max(...numericValues);
+        const ratio = (max === min) ? 0.5 : (val - min) / (max - min);
+        return this.interpolateColor(config.rule1_color || '#F1F8E9', config.rule1_color2 || '#33691E', ratio);
+      } else if (checkDiscrete(val, 1, values)) {
+        return config.rule1_color;
+      }
+    }
+    if (config.rule2_enabled) {
+      if (config.rule2_type === 'gradient') {
+        const numericValues = values.filter(v => typeof v === 'number');
+        const min = Math.min(...numericValues);
+        const max = Math.max(...numericValues);
+        const ratio = (max === min) ? 0.5 : (val - min) / (max - min);
+        return this.interpolateColor(config.rule2_color || '#F1F8E9', config.rule2_color2 || '#33691E', ratio);
+      } else if (checkDiscrete(val, 2, values)) {
+        return config.rule2_color;
+      }
+    }
+    if (config.rule3_enabled) {
+      if (config.rule3_type === 'gradient') {
+        const numericValues = values.filter(v => typeof v === 'number');
+        const min = Math.min(...numericValues);
+        const max = Math.max(...numericValues);
+        const ratio = (max === min) ? 0.5 : (val - min) / (max - min);
+        return this.interpolateColor(config.rule3_color || '#F1F8E9', config.rule3_color2 || '#33691E', ratio);
+      } else if (checkDiscrete(val, 3, values)) {
+        return config.rule3_color;
+      }
+    }
     return baseColor;
   });
 },

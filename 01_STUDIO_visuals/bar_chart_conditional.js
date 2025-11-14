@@ -80,9 +80,7 @@ looker.plugins.visualizations.add({
 
     conditional_formatting_help: {
       type: "string",
-      label: "ℹ️ First Measure: colors only the first series | All Measures: colors each series independently | Stacked Measures: colors all bars based on their combined total.\n
-        Top/Bottom N use Value 1 as N, Between uses both, Gradient uses both colors. Rule 1 overwrite Rule 2 that overwrite Rule 3.\n
-        If your changes are not applied, try refreshing your page.",
+      label: "ℹ️ First Measure: colors only the first series | All Measures: colors each series independently | Stacked Measures: colors all bars based on their combined total. Top/Bottom N use Value 1 as N, Between uses both, Gradient uses both colors. Rule 1 overwrite Rule 2 that overwrite Rule 3.If your changes are not applied, try refreshing your page.",
       display: "divider",
       section: "Plot",
       default: "",
@@ -511,8 +509,7 @@ looker.plugins.visualizations.add({
     },
     reference_line_help: {
       type: "string",
-      label: "ℹ️ First Measure: calculates from the first series only | All Measures: calculates from all series combined | Stacked Measures: calculates from the sum of all series at each point\n
-        If your changes are not applied, try refreshing your page.",
+      label: "ℹ️ First Measure: calculates from the first series only | All Measures: calculates from all series combined | Stacked Measures: calculates from the sum of all series at each point. If your changes are not applied, try refreshing your page.",
       display: "divider",
       section: "Plot",
       default: "",
@@ -588,8 +585,7 @@ looker.plugins.visualizations.add({
     },
     trend_line_help: {
       type: "string",
-      label: "ℹ️ First Measure: trend follows the first series only | All Measures: trend follows the average of all series | Stacked Measures: trend follows the sum of all series\n
-        If your changes are not applied, try refreshing your page.",
+      label: "ℹ️ First Measure: trend follows the first series only | All Measures: trend follows the average of all series | Stacked Measures: trend follows the sum of all series. If your changes are not applied, try refreshing your page.",
       display: "divider",
       section: "Plot",
       default: "",

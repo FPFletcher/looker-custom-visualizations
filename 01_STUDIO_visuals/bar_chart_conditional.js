@@ -826,6 +826,7 @@ looker.plugins.visualizations.add({
             seriesData.push({
               name: seriesName,
               data: values.map((v, i) => ({ ...v, color: colors[i] })),
+              color: baseColor,  // Fallback color for legend and any points without explicit colors
               showInLegend: true
             });
           } else {
@@ -874,7 +875,7 @@ looker.plugins.visualizations.add({
           seriesData.push({
             name: seriesName,
             data: values.map((v, i) => ({ ...v, color: colors[i] })),
-            // DON'T set a series-level color when using conditional formatting
+            color: baseColor,  // Fallback color for legend and any points without explicit colors
             showInLegend: true
           });
         } else {

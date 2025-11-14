@@ -58,12 +58,32 @@ looker.plugins.visualizations.add({
     },
 
     // Images subsection (under Plot)
+
+    primary_image_url_00_divider: {
+      type: "string",
+      label: "─────────────────────────────────────",
+      display: "divider",
+      section: "Plot",
+      default: "",
+      //order: 5
+    },
+
     primary_image_url: {
       type: "string",
       label: "Primary Picture Image URL",
       default: "https://static.vecteezy.com/system/resources/thumbnails/044/570/540/small_2x/single-water-Picture-on-transparent-background-free-png.png",
       section: "Plot"
     },
+
+    secondary_image_url_00_divider: {
+      type: "string",
+      label: "─────────────────────────────────────",
+      display: "divider",
+      section: "Plot",
+      default: "",
+      //order: 5
+    },
+
     secondary_image_url: {
       type: "string",
       label: "Secondary Picture Image URL",

@@ -56,6 +56,15 @@ looker.plugins.visualizations.add({
       order: 4
     },
 
+    conditional_formatting_divider_1: {
+      type: "string",
+      label: "─────────────────────────────────────",
+      display: "divider",
+      section: "Plot",
+      default: "",
+      order: 5
+    },
+
     conditional_formatting_enabled: {
       type: "boolean",
       label: "Enable Conditional Formatting",
@@ -160,6 +169,15 @@ looker.plugins.visualizations.add({
       order: 19
     },
 
+    conditional_formatting_divider_2: {
+      type: "string",
+      label: "─────────────────────────────────────",
+      display: "divider",
+      section: "Plot",
+      default: "",
+      order: 20
+    },
+
     // Rule 2
     rule2_enabled: {
       type: "boolean",
@@ -222,6 +240,15 @@ looker.plugins.visualizations.add({
       placeholder: "e.g., Medium Performers",
       section: "Plot",
       order: 27
+    },
+
+    conditional_formatting_divider_3: {
+      type: "string",
+      label: "─────────────────────────────────────",
+      display: "divider",
+      section: "Plot",
+      default: "",
+      order: 28
     },
 
     // Rule 3
@@ -498,7 +525,7 @@ looker.plugins.visualizations.add({
 
     reference_line_divider_1: {
       type: "string",
-      label: "-----------------------------",
+      label: "─────────────────────────────────────",
       display: "divider",
       section: "Y",
       default: "",
@@ -583,7 +610,7 @@ looker.plugins.visualizations.add({
 
     reference_line_divider_2: {
       type: "string",
-      label: "-----------------------------",
+      label: "─────────────────────────────────────",
       display: "divider",
       section: "Y",
       default: "",

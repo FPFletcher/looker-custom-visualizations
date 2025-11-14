@@ -1352,12 +1352,31 @@ looker.plugins.visualizations.add({
   }
 }
 
-    if (!this.chart) {
-      this.chart = Highcharts.chart(this._chartContainer, chartOptions);
-    } else {
-      this.chart.update(chartOptions, true, true);
-      this.chart.reflow();
+    // Check if Highcharts is available
+    if (typeof Highcharts === 'undefined') {
+      console.error('Highcharts not loaded');
+      this.addError({ title: 'Highcharts Error', message: 'Highcharts library failed to load. Please refresh the page.' });
+      done();
+      return;
     }
+
+    // Destroy existing chart to prevent memory leaks when switching modes rapidly
+    if (this.chart) {
+      try {
+        this.chart.destroy();
+        this.chart = null;
+      } catch (e) {
+        console.warn('Error destroying chart:', e);
+      }
+    }
+
+    try {
+      this.chart = Highcharts.chart(this._chartContainer, chartOptions);
+    } catch (error) {
+      console.error('Error creating chart:', error);
+      this.addError({ title: 'Chart Error', message: 'Failed to create chart: ' + error.message });
+    }
+
     done();
   },
 

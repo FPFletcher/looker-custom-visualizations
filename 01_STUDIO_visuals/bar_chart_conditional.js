@@ -320,7 +320,7 @@ looker.plugins.visualizations.add({
       type: "string",
       label: "Custom Series Labels (comma-separated)",
       placeholder: "Sales,Returns,Profit",
-      default: ""
+      default: "",
       section: "Series",
       order: 3
     },

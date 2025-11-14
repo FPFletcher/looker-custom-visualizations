@@ -715,9 +715,17 @@ looker.plugins.visualizations.add({
     element.style.overflow = 'hidden';
     element.innerHTML = `
       <style>
-        .highcharts-container { width: 100% !important; height: 100% !important; }
+        .highcharts-container {
+          width: 100% !important;
+          height: 100% !important;
+          overflow: hidden !important;
+        }
+        .highcharts-root {
+          width: 100% !important;
+          height: 100% !important;
+        }
       </style>
-      <div id="chart-container" style="width:100%; height:100%; position:absolute;"></div>
+      <div id="chart-container" style="width:100%; height:100%; position:absolute; overflow:hidden;"></div>
     `;
     this._chartContainer = element.querySelector('#chart-container');
     this.chart = null;
@@ -754,10 +762,19 @@ looker.plugins.visualizations.add({
       cool: ['#F0F9FF', '#DEEBF7', '#C6DBEF', '#9ECAE1', '#6BAED6', '#4292C6', '#2171B5', '#08519C', '#08306B']
     };
 
-    // Handle series_labels - Looker passes it as an object like {"measure.name": "Custom Label"}
-    const customLabels = config.series_labels && typeof config.series_labels === 'object'
-      ? config.series_labels
-      : null;
+    // Handle series_labels - can be:
+    // 1. A string from manual input: "Label1,Label2,Label3"
+    // 2. An object from Looker UI: {"measure.name": "Custom Label"}
+    let customLabels = null;
+    if (config.series_labels) {
+      if (typeof config.series_labels === 'string') {
+        // Manual comma-separated input
+        customLabels = config.series_labels.split(',').map(l => l.trim());
+      } else if (typeof config.series_labels === 'object') {
+        // Looker's built-in series_labels object
+        customLabels = config.series_labels;
+      }
+    }
     const palette = palettes[config.color_collection] || palettes.google;
     const customColors = config.series_colors ? String(config.series_colors).split(',').map(c => c.trim()) : null;
 
@@ -773,7 +790,17 @@ looker.plugins.visualizations.add({
           const seriesIndex = pivotIndex * measures.length + measureIndex;
           const measureName = measure;
           const defaultName = `${queryResponse.fields.measures[measureIndex].label_short || queryResponse.fields.measures[measureIndex].label} - ${pivotValue.key}`;
-          const seriesName = (customLabels && customLabels[measureName]) || defaultName;
+
+          let seriesName = defaultName;
+          if (customLabels) {
+            if (Array.isArray(customLabels)) {
+              // Array format: use index
+              seriesName = customLabels[seriesIndex] || defaultName;
+            } else {
+              // Object format: use measure name as key
+              seriesName = customLabels[measureName] || defaultName;
+            }
+          }
 
           seriesData.push({
             name: seriesName,
@@ -797,7 +824,17 @@ looker.plugins.visualizations.add({
 
         const measureName = measure;
         const defaultName = queryResponse.fields.measures[index].label_short || queryResponse.fields.measures[index].label;
-        const seriesName = (customLabels && customLabels[measureName]) || defaultName;
+
+        let seriesName = defaultName;
+        if (customLabels) {
+          if (Array.isArray(customLabels)) {
+            // Array format: use index
+            seriesName = customLabels[index] || defaultName;
+          } else {
+            // Object format: use measure name as key
+            seriesName = customLabels[measureName] || defaultName;
+          }
+        }
 
         if (shouldApplyFormatting) {
           // Apply conditional formatting
@@ -884,7 +921,14 @@ looker.plugins.visualizations.add({
 
     // Apply conditional formatting
     const chartOptions = {
-      chart: { type: baseType, backgroundColor: 'transparent', spacing: [10, 10, 10, 10] },
+      chart: {
+        type: baseType,
+        backgroundColor: 'transparent',
+        spacing: [10, 10, 10, 10],
+        reflow: false,  // Prevent auto-reflow that causes width issues
+        width: null,    // Let container control width
+        height: null    // Let container control height
+      },
       title: { text: null },
       credits: { enabled: false },
       xAxis: {

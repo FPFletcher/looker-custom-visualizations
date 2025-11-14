@@ -48,6 +48,8 @@ looker.plugins.visualizations.add({
       order: 11
     },
 
+    // Custom Series Labels (comma-separated)
+
     primary_image_url: {
       type: "string",
       label: "Primary Picture Image URL",
@@ -132,31 +134,36 @@ looker.plugins.visualizations.add({
       type: "number",
       label: "Primary Value Font Size",
       default: 52,
-      section: "Font"
+      section: "Font",
+      order: 1
     },
     font_size_primary_label: {
       type: "number",
       label: "Primary Label Font Size",
       default: 18,
-      section: "Font"
+      section: "Font",
+      order: 2
     },
     font_size_secondary_value: {
       type: "number",
       label: "Secondary Value Font Size",
       default: 44,
-      section: "Font"
+      section: "Font",
+      order: 3
     },
     font_size_secondary_label: {
       type: "number",
       label: "Secondary Label Font Size",
       default: 16,
-      section: "Font"
+      section: "Font",
+      order: 4
     },
     font_size_percentage: {
       type: "number",
       label: "Percentage Font Size",
       default: 28,
-      section: "Font"
+      section: "Font",
+      order: 5
     },
 
     // ========== PRIMARY SECTION ==========

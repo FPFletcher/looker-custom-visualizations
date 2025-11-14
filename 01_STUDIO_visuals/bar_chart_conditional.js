@@ -713,38 +713,34 @@ looker.plugins.visualizations.add({
     element.style.width = '100%';
     element.style.position = 'relative';
     element.style.overflow = 'hidden';
-    element.style.boxSizing = 'border-box';
     element.innerHTML = `
       <style>
+        /* Hide scrollbars completely */
+        ::-webkit-scrollbar {
+          display: none;
+          width: 0 !important;
+          height: 0 !important;
+        }
         * {
-          box-sizing: border-box;
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE/Edge */
         }
         .highcharts-container {
           width: 100% !important;
           height: 100% !important;
           overflow: hidden !important;
-          box-sizing: border-box !important;
         }
         .highcharts-root {
           width: 100% !important;
           height: 100% !important;
-          overflow: hidden !important;
-        }
-        svg.highcharts-root {
-          max-width: 100% !important;
         }
       </style>
-      <div id="chart-container" style="width:100%; height:100%; position:absolute; overflow:hidden; box-sizing:border-box;"></div>
+      <div id="chart-container" style="width:100%; height:100%; position:absolute; overflow:hidden;"></div>
     `;
     this._chartContainer = element.querySelector('#chart-container');
     this.chart = null;
     this._resizeObserver = new ResizeObserver(() => {
-      if (this.chart) {
-        const rect = this._chartContainer.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0) {
-          this.chart.setSize(rect.width, rect.height, false);
-        }
-      }
+      if (this.chart) { this.chart.reflow(); }
     });
     this._resizeObserver.observe(element);
   },
@@ -832,7 +828,9 @@ looker.plugins.visualizations.add({
 
 
         const shouldApplyFormatting = config.conditional_formatting_enabled &&
-                                      (config.conditional_formatting_apply_to === 'all' || index === 0);
+                                      (config.conditional_formatting_apply_to === 'all' ||
+                                       config.conditional_formatting_apply_to === 'stacked' ||
+                                       index === 0);
 
         const baseColor = customColors ? customColors[index % customColors.length] : palette[index % palette.length];
 
@@ -939,8 +937,7 @@ looker.plugins.visualizations.add({
         type: baseType,
         backgroundColor: 'transparent',
         spacing: [10, 10, 10, 10],
-        width: null,    // Will be set explicitly before render
-        height: null    // Will be set explicitly before render
+        reflow: false  // Prevent auto-reflow that causes width issues
       },
       title: { text: null },
       credits: { enabled: false },
@@ -1319,15 +1316,6 @@ looker.plugins.visualizations.add({
     //console.log('No series data available for trendline');
   }
 }
-
-    // Get actual container dimensions to prevent overflow
-    const containerRect = this._chartContainer.getBoundingClientRect();
-    const chartWidth = Math.floor(containerRect.width);
-    const chartHeight = Math.floor(containerRect.height);
-
-    // Update chart options with explicit dimensions
-    chartOptions.chart.width = chartWidth > 0 ? chartWidth : null;
-    chartOptions.chart.height = chartHeight > 0 ? chartHeight : null;
 
     if (!this.chart) {
       this.chart = Highcharts.chart(this._chartContainer, chartOptions);

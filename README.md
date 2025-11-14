@@ -6,126 +6,76 @@
 
 For context, the end goal is to enable any Looker customers to benefit from most of **the visual capabilities of Studio/ PowerBI/ Tableau or any other BI providers directly within Looker** by leveraging its extensive API endpoints (more info [here](https://github.com/looker-open-source/custom_visualizations_v2/blob/master/docs/api_reference.md)) with a list of production ready visualizations which can be imported within a few clicks!! 💎  
 
-In terms of process used, a detailed guide can be found in our community platform [here](https://discuss.google.dev/t/create-a-custom-visualization-without-development-skills-using-generative-ai/163652).
+In terms of process used, a detailed guide can be found in our community platform [here](https://discuss.google.dev/t/create-a-custom-visualization-without-development-skills-using-generative-ai/163652).  
+
+**📢 You have a visualization request?** [Fill this form](https://forms.gle/5XfUnQsxpyVnBbBo8) to let the Google team know if you have a **true need for a visual you can't find** in this repository or in our Looker native portfolio/marketplace.
 
 ---
 
 # Set Up
 
+**One line summary:** Fork this repo → Connect to Looker via Git → Disable some visuals as needed on `manifest.lkml` → Deploy
+
+1. **Fork or Clone the Repository**
+   - Fork [this repository](https://github.com/FPFletcher/looker-custom-visualizations-picasso-project) to your GitHub account, OR clone it directly:
+```bash
+     git clone https://github.com/FPFletcher/looker-custom-visualizations-picasso-project.git
+```
+
+2. **Configure Git in Looker**
+   - Click path in Looker: **Develop** → **Projects** → **New Model** → create a **BLANK Project** → **Configure Git** → Import this Git repo using one of the methods below
+
+   > <details>
+   > <summary>🔐 <b>Using SSH (Recommended)</b></summary>
+   > <br>
+   > 
+   > - Generate SSH key in Looker: **Admin** → **Git** → **Configure Git** → Copy public key
+   > - Add to GitHub: Your repo → **Settings** → **Deploy keys** → **Add deploy key** → Paste key
+   > - Import in Looker using SSH URL:
+   > 
+   > ```
+   > git@github.com:YOUR-USERNAME/looker-custom-visualizations-picasso-project.git
+   > ```
+   > 
+   > </details>
+   
+   > <details>
+   > <summary>🔗 <b>Using HTTPS</b></summary>
+   > <br>
+   > 
+   > - Use HTTPS URL when importing:
+   > 
+   > ```
+   > https://github.com/YOUR-USERNAME/looker-custom-visualizations-picasso-project.git
+   > ```
+   > 
+   > - For private repos, configure a GitHub Personal Access Token.
+   > 
+   > </details>
+
+3. **Configure `manifest.lkml`**
+   - Edit the manifest to **disable visualizations as needed** by commenting them out using `#` (shortcut: `Ctrl + /`)
+
 <details>
-<summary><b>⚙️ Complete Setup Guide (Click to expand)</b></summary>
+<summary><b>4. Network Requirements</b> <i>(Optional)</i></summary>
 <br>
 
-## Step 1: Fork or Clone the Repository
+- ✅ **Most visualizations have NO external dependencies** - work on private IP, self-hosted, and restricted environments.
+- ⚠️ **Some require external libraries to be whitelisted:**
 
-### Option A: Fork to Your GitHub Account
-1. Navigate to [this repository](https://github.com/FPFletcher/looker-custom-visualizations-picasso-project)
-2. Click the **"Fork"** button in the top-right corner
-3. This creates a copy of the repository in your GitHub account that you can modify
+| Visualization | Domain to Whitelist |
+|--------------|---------------------|
+| Bar Chart (Conditional) | `code.highcharts.com` |
 
-### Option B: Clone Directly
-```bash
-git clone https://github.com/FPFletcher/looker-custom-visualizations-picasso-project.git
-cd looker-custom-visualizations-picasso-project
-```
+- If needed, contact your network team to whitelist these domains before deploying.
 
----
-
-## Step 2: Connect Your Repository to Looker
-
-### Using SSH (Recommended)
-1. Generate an SSH key pair in Looker (if you haven't already):
-   - Go to **Admin** → **Git** → **Configure Git**
-   - Copy the public SSH key provided by Looker
-2. Add the SSH key to your GitHub repository:
-   - Go to your repository → **Settings** → **Deploy keys**
-   - Click **Add deploy key**
-   - Paste the public key from Looker
-   - Check **"Allow write access"** if you want to commit from Looker
-3. In Looker, use the SSH URL when importing:
-```
-   git@github.com:YOUR-USERNAME/looker-custom-visualizations-picasso-project.git
-```
-### Using HTTPS
-1. In Looker, navigate to **Develop** → **Manage LookML Projects**
-2. Click **New LookML Project**
-3. Select **"Import from Git Repository"**
-4. Enter your repository URL:
-```
-   https://github.com/YOUR-USERNAME/looker-custom-visualizations-picasso-project.git
-```
-5. Configure authentication:
-   - For public repos: No authentication needed
-   - For private repos: Use a GitHub Personal Access Token
-
----
-
-## Step 3: Configure the Manifest File
-
-Open `manifest.lkml` in your Looker project and configure which visualizations you want to enable.
-
-**Example manifest configuration:**
-```lkml
-project_name: "custom_viz_picasso"
-
-# ========================================
-# STUDIO VISUALS
-# ========================================
-
-visualization: {
-  id: "treemap_viz"
-  label: "Treemap (Studio)"
-  file: "STUDIO_visuals/treemap.js"
-  # No external dependencies - works on all Looker deployments
-}
-
-# ========================================
-# DISABLE VISUALS BY COMMENTING OUT
-# ========================================
-
-# visualization: {
-#   id: "example_disabled_viz"
-#   label: "Disabled Visualization"
-#   file: "EXAMPLE_visuals/example.js"
-# }
-```
-
-**To disable a visualization:** Comment out its entire block using `#` at the start of each line.  
-CTRL + / should be the keyboard shortcut to comment out a block of code.
-
----
-
-## Step 4: Network Configuration (If Using External Dependencies)
-
-**Most visualizations in this repository have NO external dependencies** and will work on any Looker deployment including:
-- ✅ Private IP deployments
-- ✅ Self-hosted instances
-- ✅ Restricted network environments
-
-**However, some visualizations require external libraries:**
-
-| Visualization | External Dependency | Required Domain |
-|--------------|---------------------|-----------------|
-| Bar Chart (Conditional) | Highcharts | `code.highcharts.com` |
-| - | - | - |
-
-**If your Looker instance has network restrictions:**
-1. Contact your network/security team
-2. Request whitelisting for the required domains
-3. Test connectivity from your Looker instance before deploying
-
----
-
-## Step 5: Deploy and Use
-
-1. **Commit your manifest changes** in Looker's IDE
-2. **Deploy to production** when ready
-3. **Access visualizations** in any Explore or Dashboard by:
-   - Opening the visualization picker (chart icon)
-   - Scrolling to find your custom visualizations
-   - Selecting the desired visualization
-   
 </details>
+
+5. **Deploy and Use**
+   - Commit changes in Looker's IDE
+   - Deploy to production
+   - Access visualizations via the visualization picker (chart icon) in any Explore or Dashboard
+   
 ---
 
 # 01. STUDIO Visuals
@@ -256,7 +206,7 @@ We welcome contributions! If you've built a custom visualization that could bene
 - Documentation of unique features and configuration options
 - Update to this README with your visualization details
 
-**📢 Have a visualization request?** [Fill this form](https://forms.gle/5XfUnQsxpyVnBbBo8) to let the Google team know if you have a **true need for a visual you can't find** in this repository or in our Looker native portfolio/marketplace.
+**Have a visualization request?** [Fill this form](https://forms.gle/5XfUnQsxpyVnBbBo8) to let the Google team know if you have a **true need for a visual you can't find** in this repository or in our Looker native portfolio/marketplace.
 
 ---
 
@@ -268,7 +218,7 @@ We welcome contributions! If you've built a custom visualization that could bene
 - 📚 Check the [Custom Visualizations API documentation](https://github.com/looker-open-source/custom_visualizations_v2/blob/master/docs/api_reference.md)
 - 📝 Review the [step-by-step guide](https://discuss.google.dev/t/create-a-custom-visualization-without-development-skills-using-generative-ai/163652) for creating custom visualizations
 
-**💡 Finding this project useful?** [Fill this form](https://forms.gle/RNjQvsHpTsp9pUn38) to let the Google team know **this project is particularly useful to you and your team** so we can gather more internal resources to work on it.
+**Finding this project useful?** [Fill this form](https://forms.gle/RNjQvsHpTsp9pUn38) to let the Google team know **this project is particularly useful to you and your team** so we can gather more internal resources to work on it.
 
 ---
 

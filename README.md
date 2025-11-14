@@ -11,6 +11,7 @@ In terms of process used, a detailed guide can be found in our community platfor
 - _[Fill this form](https://docs.google.com/forms/d/1JL2mMq-hGUeVc_rmASJu6MCviJQ-F8ToU_x84jI29Xc/edit?resourcekey=0-MNibdyKXv4NcHX3w3N6e4A)_ to confirm that this projet is useful to you and your team so we can gather more internal ressources to work on it.
 
 
+
 # 01. STUDIO Visuals
 
 ## Scorecard
@@ -21,10 +22,15 @@ In terms of process used, a detailed guide can be found in our community platfor
 ## Bar chart
 
 
+
 # 02. POWERBI Visuals
+
 
 
 # 03. TABLEAU Visuals
 
 
+
 # 04. OTHER Visuals
+
+## Single Value (with Picture)

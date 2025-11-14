@@ -26,7 +26,7 @@ In terms of process used, a detailed guide can be found in our community platfor
    - Click path in Looker: **Develop** → **Projects** → **New Model** → create a **BLANK Project** → **Configure Git** → Import this Git repo using one of the methods below
 
    > <details>
-   > <summary>🔐 <b>Using SSH (Recommended)</b></summary>
+   > <summary>🔐 Using SSH <i>(Recommended)</i></summary>
    > <br>
    > 
    > - Generate SSH key in Looker: **Admin** → **Git** → **Configure Git** → Copy public key
@@ -40,7 +40,7 @@ In terms of process used, a detailed guide can be found in our community platfor
    > </details>
    
    > <details>
-   > <summary>🔗 <b>Using HTTPS</b></summary>
+   > <summary>🔗 Using HTTPS</summary>
    > <br>
    > 
    > - Use HTTPS URL when importing:
@@ -56,20 +56,19 @@ In terms of process used, a detailed guide can be found in our community platfor
 3. **Configure `manifest.lkml`**
    - Edit the manifest to **disable visualizations as needed** by commenting them out using `#` (shortcut: `Ctrl + /`)
 
-<details>
-<summary><b>4. Network Requirements</b> <i>(Optional)</i></summary>
-<br>
-
-- ✅ **Most visualizations have NO external dependencies** - work on private IP, self-hosted, and restricted environments.
-- ⚠️ **Some require external libraries to be whitelisted:**
-
-| Visualization | Domain to Whitelist |
-|--------------|---------------------|
-| Bar Chart (Conditional) | `code.highcharts.com` |
-
-- If needed, contact your network team to whitelist these domains before deploying.
-
-</details>
+4. **Network Requirements**
+   
+   > <details>
+   > <summary>⚠️ Only a few visualizations have external dependencies which may require <b>external libraries to be whitelisted</b> <i>(private IP, self-hosted, and restricted environments)</i></summary>
+   > <br>
+   > 
+   > | Visualization | Domain to Whitelist |
+   > |--------------|---------------------|
+   > | Bar Chart (Conditional) | `code.highcharts.com` |
+   > 
+   > - If needed, contact your network team to whitelist these domains before deploying.
+   > 
+   > </details>
 
 5. **Deploy and Use**
    - Commit changes in Looker's IDE

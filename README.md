@@ -82,11 +82,8 @@ In terms of process used, a detailed guide can be found in our community platfor
 ## Scorecard with Sparkline
 ![STUDIO Scorecard visualization](./99_ASSETS/STUDIO_scorecard.gif)
 
-<details>
-<summary><b>📊 What it does</b></summary>
-<br>
+**📊 What it does**  
 Displays a primary metric with a secondary comparison value, percentage variance, and an inline sparkline trend chart. Perfect for executive dashboards and KPI monitoring.
-</details>
 
 <details>
 <summary><b>✨ Unique value</b></summary>
@@ -106,11 +103,8 @@ Displays a primary metric with a secondary comparison value, percentage variance
 ## Treemap
 ![STUDIO Treemap visualization](./99_ASSETS/STUDIO_treemap.gif)
 
-<details>
-<summary><b>📊 What it does</b></summary>
-<br>
+**📊 What it does**  
 Hierarchical visualization that displays nested data as proportionally-sized rectangles. Supports multi-level drill-down navigation through dimension hierarchies with automatic grouping of small values into an "Others" category.
-</details>
 
 <details>
 <summary><b>✨ Unique value</b></summary>
@@ -131,11 +125,8 @@ Hierarchical visualization that displays nested data as proportionally-sized rec
 ## Bar Chart (Conditional Formatting)
 ![STUDIO Bar Chart visualization](./99_ASSETS/STUDIO_bar_chart.gif)
 
-<details>
-<summary><b>📊 What it does</b></summary>
-<br>
+**📊 What it does**  
 Enhanced column/bar chart with advanced conditional formatting capabilities. Supports multiple chart types (column, bar, area, line) with comprehensive formatting rules and reference/trend lines.
-</details>
 
 <details>
 <summary><b>✨ Unique value</b></summary>
@@ -173,11 +164,8 @@ Enhanced column/bar chart with advanced conditional formatting capabilities. Sup
 ## Single Value with Picture
 ![Single Value with Picture visualization](./99_ASSETS/STUDIO_single_value_picture.gif)
 
-<details>
-<summary><b>📊 What it does</b></summary>
-<br>
+**📊 What it does**  
 Displays two key metrics overlaid on customizable water drop images with a percentage comparison indicator. Ideal for visual storytelling in executive dashboards where brand imagery matters.
-</details>
 
 <details>
 <summary><b>✨ Unique value</b></summary>

@@ -13,9 +13,11 @@ In terms of process used, a detailed guide can be found in our community platfor
 ---
 
 # Set Up
+5min required to import 20+ production ready custom visuals 🎁    
 
-**One line summary:** Fork this repo → Connect to Looker via Git → Disable some visuals as needed on `manifest.lkml` → Deploy
+**One-line step by step:** Fork this repo → Connect to Looker via Git → Disable some visuals as needed on `manifest.lkml` → Deploy  
 
+**Detailed step by step:**  
 1. **Fork or Clone the Repository**
    - Fork [this repository](https://github.com/FPFletcher/looker-custom-visualizations-picasso-project) to your GitHub account, OR clone it directly:
 ```bash

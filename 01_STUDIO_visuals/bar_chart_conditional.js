@@ -58,7 +58,7 @@ looker.plugins.visualizations.add({
 
     conditional_formatting_divider_1: {
       type: "string",
-      label: "──────────────────────────",
+      label: "────────────────────────────",
       display: "divider",
       section: "Plot",
       default: "",
@@ -171,7 +171,7 @@ looker.plugins.visualizations.add({
 
     conditional_formatting_divider_2: {
       type: "string",
-      label: "────────────────────────────────",
+      label: "─────────────────────────────",
       display: "divider",
       section: "Plot",
       default: "",

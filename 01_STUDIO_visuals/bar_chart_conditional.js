@@ -642,7 +642,7 @@ looker.plugins.visualizations.add({
     ref_line_title: {
       type: "string",
       label: "Reference Title",
-      placeholder: "Auto (based on type)",
+      placeholder: "Auto (based on type)",  // empty string (will be calculated dynamically)
       default: "",  // empty string (will be calculated dynamically)
       section: "Y",
       order: 16
@@ -1138,7 +1138,7 @@ looker.plugins.visualizations.add({
         type: baseType,
         backgroundColor: 'transparent',
         spacing: [10, 10, 10, 10],
-        // FIX 1: Add a simple reflow/redraw on animation complete to prevent trendline from being hidden by chart updates
+        // Removed the chart.events.redraw handler that was interfering
         events: {
           load: function() {
             console.log('[HIGHCHARTS EVENT] Load. Checking trendline state...');
@@ -1152,22 +1152,6 @@ looker.plugins.visualizations.add({
                 }
               });
             }
-          },
-          redraw: function() {
-              console.log('[HIGHCHARTS EVENT] Redraw. Forcing trendline to front.');
-              const trendSeries = this.get('trend-line-series');
-              if (trendSeries) {
-                  // Ensure visibility and zIndex after redraw
-                  trendSeries.setVisible(true, false);
-                  trendSeries.update({ zIndex: 10 }, false);
-                  if (trendSeries.points) {
-                    trendSeries.points.forEach(point => {
-                      if (point.dataLabel) {
-                        point.dataLabel.toFront();
-                      }
-                    });
-                  }
-              }
           }
         }
       },
@@ -1277,6 +1261,26 @@ looker.plugins.visualizations.add({
         series: {
           stacking: stackingMode,
           cursor: 'pointer',
+          // FIX 1: Add afterAnimate event here
+          events: {
+              afterAnimate: function() {
+                  // Check if this is the trend line we care about
+                  const trendSeries = this.chart.get('trend-line-series');
+                  if (trendSeries) {
+                      console.log('[TRENDLINE FIX] afterAnimate triggered. Forcing trendline to front.');
+                      trendSeries.setVisible(true, false);
+                      trendSeries.update({ zIndex: 10 }, false);
+                      if (trendSeries.points) {
+                          trendSeries.points.forEach(point => {
+                              if (point.dataLabel) {
+                                  point.dataLabel.toFront();
+                              }
+                          });
+                      }
+                      this.chart.redraw(false); // Quick redraw if necessary, but keep animation false
+                  }
+              }
+          },
           point: {
             events: {
               click: function (e) {
@@ -1496,6 +1500,22 @@ looker.plugins.visualizations.add({
               stacking: undefined,
               stack: null,
 
+              // Ensure trend series also benefits from the z-index fix
+              events: {
+                  afterAnimate: function() {
+                      console.log('[TRENDLINE FIX] Trend series afterAnimate. Forcing self to front.');
+                      this.setVisible(true, false);
+                      this.update({ zIndex: 10 }, false);
+                      if (this.points) {
+                          this.points.forEach(point => {
+                              if (point.dataLabel) {
+                                  point.dataLabel.toFront();
+                              }
+                          });
+                      }
+                  }
+              },
+
               dataLabels: {
                 enabled: config.trend_line_show_label === true,
                 allowOverlap: true,
@@ -1539,8 +1559,6 @@ looker.plugins.visualizations.add({
     } else {
       console.log('[CHART UPDATE] Updating existing chart with new options (deep merge: true).');
       // FIX 1: We use (true, true) to ensure a deep update and immediate redraw.
-      // Highcharts is known to have visibility issues if series are added/removed/updated frequently,
-      // but this is the recommended way to handle Looker update cycles. The 'redraw' event handler should stabilize visibility.
       this.chart.update(chartOptions, true, true);
     }
     console.log('=== TRENDLINE CHECK END ===');

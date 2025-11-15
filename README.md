@@ -124,7 +124,7 @@ Hierarchical visualization that displays nested data as proportionally-sized rec
 ---
 
 ## Bar Chart (Conditional Formatting)
-![STUDIO Bar Chart visualization](./99_ASSETS/STUDIO_bar_chart.gif)
+![STUDIO Bar Chart _Conditional_visualization](./99_ASSETS/STUDIO_bar_chart_conditional.gif)
 
 **📊 What it does**  
 Enhanced column/bar chart with advanced conditional formatting capabilities. Supports multiple chart types (column, bar, area, line) with comprehensive formatting rules and reference/trend lines.
@@ -163,7 +163,7 @@ Enhanced column/bar chart with advanced conditional formatting capabilities. Sup
 # 04. OTHER Visuals
 
 ## Single Value with Picture
-![Single Value with Picture visualization](./99_ASSETS/STUDIO_single_value_picture.gif)
+![OTHER Value with Picture visualization](./99_ASSETS/OTHER_single_value_picture.gif)
 
 **📊 What it does**  
 Displays two key metrics overlaid on customizable water drop images with a percentage comparison indicator. Ideal for visual storytelling in executive dashboards where brand imagery matters.

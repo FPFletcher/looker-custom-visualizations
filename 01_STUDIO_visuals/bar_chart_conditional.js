@@ -823,15 +823,57 @@ looker.plugins.visualizations.add({
         if (renderedValue !== null && renderedValue !== undefined) {
           return renderedValue;
         }
-        // Fallback: try field's value_format using LookerCharts utility
-        if (field) {
+        // Fallback: parse field.value_format if available
+        if (field && field.value_format) {
           try {
-            // LookerCharts.Utils.textForCell expects a cell object with value and potentially rendered
-            // If we pass the field as second parameter, it will use field.value_format
-            const formatted = LookerCharts.Utils.textForCell({ value: value }, field);
-            return formatted;
+            const fmt = field.value_format;
+            const num = Number(value);
+
+            // Handle common Looker format patterns
+            // Pattern: "$#,##0.0,\"K\"" or "#,##0.0,\"K\"" -> thousands with K suffix
+            if (fmt.includes(',\"K\"') || fmt.includes(",'K'")) {
+              const hasDecimal = fmt.match(/0\.([0#]+)/);
+              const decimals = hasDecimal ? hasDecimal[1].length : 0;
+              const thousands = (num / 1000).toFixed(decimals);
+              return (fmt.startsWith('$') ? '$' : '') + thousands + 'k';
+            }
+
+            // Pattern: "$#,##0.0,,\"M\"" -> millions with M suffix
+            if (fmt.includes(',,\"M\"') || fmt.includes(",,'M'")) {
+              const hasDecimal = fmt.match(/0\.([0#]+)/);
+              const decimals = hasDecimal ? hasDecimal[1].length : 0;
+              const millions = (num / 1000000).toFixed(decimals);
+              return (fmt.startsWith('$') ? '$' : '') + millions + 'M';
+            }
+
+            // Pattern: "0.0%" -> percentage
+            if (fmt.includes('%')) {
+              const hasDecimal = fmt.match(/0\.([0#]+)/);
+              const decimals = hasDecimal ? hasDecimal[1].length : 1;
+              return (num * 100).toFixed(decimals) + '%';
+            }
+
+            // Pattern: "$#,##0.00" -> currency with decimals
+            if (fmt.startsWith('$')) {
+              const hasDecimal = fmt.match(/0\.([0#]+)/);
+              const decimals = hasDecimal ? hasDecimal[1].length : 0;
+              return '$' + num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+            }
+
+            // Pattern: "#,##0" or "#,##0.00" -> number with commas
+            if (fmt.includes('#,##0')) {
+              const hasDecimal = fmt.match(/0\.([0#]+)/);
+              const decimals = hasDecimal ? hasDecimal[1].length : 0;
+              return num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+            }
+
+            // Fallback: try textForCell with just the value
+            const formatted = LookerCharts.Utils.textForCell({ value: value });
+            if (formatted !== null && formatted !== undefined && formatted !== String(value)) {
+              return formatted;
+            }
           } catch (e) {
-            // Fall through to default if textForCell fails
+            // Fall through to default
           }
         }
       }
@@ -842,13 +884,44 @@ looker.plugins.visualizations.add({
       if (formatType === 'decimal1') return value.toFixed(1);
       if (formatType === 'decimal2') return value.toFixed(2);
       if (formatType === 'number') return value.toLocaleString();
-      if (formatType === 'date_ymd') return new Date(value).toISOString().split('T')[0];
-      if (formatType === 'date_mdy') {
-        const d = new Date(value);
-        return `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+
+      // Date formats - handle both Date objects and date strings
+      if (formatType === 'date_ymd') {
+        try {
+          const d = new Date(value);
+          if (isNaN(d.getTime())) return String(value);
+          return d.toISOString().split('T')[0];
+        } catch (e) {
+          return String(value);
+        }
       }
-      if (formatType === 'date_ym') return new Date(value).toISOString().slice(0, 7);
-      if (formatType === 'date_y') return new Date(value).getFullYear();
+      if (formatType === 'date_mdy') {
+        try {
+          const d = new Date(value);
+          if (isNaN(d.getTime())) return String(value);
+          return `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+        } catch (e) {
+          return String(value);
+        }
+      }
+      if (formatType === 'date_ym') {
+        try {
+          const d = new Date(value);
+          if (isNaN(d.getTime())) return String(value);
+          return d.toISOString().slice(0, 7);
+        } catch (e) {
+          return String(value);
+        }
+      }
+      if (formatType === 'date_y') {
+        try {
+          const d = new Date(value);
+          if (isNaN(d.getTime())) return String(value);
+          return String(d.getFullYear());
+        } catch (e) {
+          return String(value);
+        }
+      }
 
       // PRIORITY 4: Auto fallback - smart number formatting
       if (value >= 1e9) return (value / 1e9).toFixed(1) + 'B';

@@ -826,14 +826,12 @@ looker.plugins.visualizations.add({
         // Fallback: try field's value_format using LookerCharts utility
         if (field) {
           try {
-            // Create a cell object that LookerCharts.Utils.textForCell expects
-            const cellData = { value: value };
-            const formatted = LookerCharts.Utils.textForCell(cellData, field);
-            if (formatted && formatted !== String(value)) {
-              return formatted;
-            }
+            // LookerCharts.Utils.textForCell expects a cell object with value and potentially rendered
+            // If we pass the field as second parameter, it will use field.value_format
+            const formatted = LookerCharts.Utils.textForCell({ value: value }, field);
+            return formatted;
           } catch (e) {
-            // Fall through to default
+            // Fall through to default if textForCell fails
           }
         }
       }
@@ -862,6 +860,10 @@ looker.plugins.visualizations.add({
     const dimension = queryResponse.fields.dimensions[0].name;
     const dimensionField = queryResponse.fields.dimensions[0];
     const categories = data.map(row => LookerCharts.Utils.textForCell(row[dimension]));
+    const rawDimensionValues = data.map(row => {
+      const cell = row[dimension];
+      return cell && cell.value !== undefined ? cell.value : cell;
+    });
     const measures = queryResponse.fields.measures.map(m => m.name);
     const measureFields = queryResponse.fields.measures;
     const hasPivot = queryResponse.fields.pivots && queryResponse.fields.pivots.length > 0;
@@ -1050,16 +1052,21 @@ looker.plugins.visualizations.add({
         labels: {
           rotation: isBar ? 0 : (config.x_axis_label_rotation || -45),
           formatter: function() {
-            // Apply x_axis formatting
             const formatType = config.x_axis_value_format || 'auto';
             const customFormat = config.x_axis_value_format_custom || '';
 
-            // If auto and no custom format, return raw value
+            // If auto and no custom format, use the pre-formatted category
             if (formatType === 'auto' && customFormat.trim() === '') {
               return this.value;
             }
 
-            return formatValue(this.value, formatType, customFormat, dimensionField);
+            // Otherwise, apply formatting to the raw dimension value
+            const rawValue = rawDimensionValues[this.pos];
+            if (rawValue === undefined || rawValue === null) {
+              return this.value;
+            }
+
+            return formatValue(rawValue, formatType, customFormat, dimensionField);
           }
         },
         tickInterval: tickInterval,

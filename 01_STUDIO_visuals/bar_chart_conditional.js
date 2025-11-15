@@ -1634,7 +1634,6 @@ looker.plugins.visualizations.add({
     // Track if critical options changed that require full re-render
     const criticalOptionsChanged = this.chart && (
       this._lastConditionalFormatting !== config.conditional_formatting_enabled ||
-      this._lastReverseColors !== config.reverse_colors ||
       this._lastSeriesPositioning !== config.series_positioning ||
       this._lastChartType !== config.chart_type
     );
@@ -1684,7 +1683,6 @@ looker.plugins.visualizations.add({
 
     // Store last state
     this._lastConditionalFormatting = config.conditional_formatting_enabled;
-    this._lastReverseColors = config.reverse_colors;
     this._lastSeriesPositioning = config.series_positioning;
     this._lastChartType = config.chart_type;
 

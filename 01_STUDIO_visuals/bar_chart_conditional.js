@@ -642,7 +642,7 @@ looker.plugins.visualizations.add({
     ref_line_title: {
       type: "string",
       label: "Reference Title",
-      placeholder: "Auto (based on type)",  // empty string (will be calculated dynamically)
+      placeholder: "Auto (based on type)",
       default: "",  // empty string (will be calculated dynamically)
       section: "Y",
       order: 16
@@ -959,8 +959,8 @@ looker.plugins.visualizations.add({
               name: seriesName,
               data: values.map((v, i) => ({ ...v, color: colors[i] })),
               showInLegend: true,
-              // Do NOT set series color here, use point colors
-              // color: baseColor // REMOVED: Rely on point colors
+              // Add a base series color (needed for area/line fill), but point colors will override bars
+              color: baseColor
             });
           } else {
             seriesData.push({
@@ -1138,10 +1138,8 @@ looker.plugins.visualizations.add({
         type: baseType,
         backgroundColor: 'transparent',
         spacing: [10, 10, 10, 10],
-        // Removed the chart.events.redraw handler that was interfering
         events: {
           load: function() {
-            console.log('[HIGHCHARTS EVENT] Load. Checking trendline state...');
             // Ensure trendline title labels are visible after chart loads
             const trendSeries = this.get('trend-line-series');
             if (trendSeries && trendSeries.points) {
@@ -1261,26 +1259,7 @@ looker.plugins.visualizations.add({
         series: {
           stacking: stackingMode,
           cursor: 'pointer',
-          // FIX 1: Add afterAnimate event here
-          events: {
-              afterAnimate: function() {
-                  // Check if this is the trend line we care about
-                  const trendSeries = this.chart.get('trend-line-series');
-                  if (trendSeries) {
-                      console.log('[TRENDLINE FIX] afterAnimate triggered. Forcing trendline to front.');
-                      trendSeries.setVisible(true, false);
-                      trendSeries.update({ zIndex: 10 }, false);
-                      if (trendSeries.points) {
-                          trendSeries.points.forEach(point => {
-                              if (point.dataLabel) {
-                                  point.dataLabel.toFront();
-                              }
-                          });
-                      }
-                      this.chart.redraw(false); // Quick redraw if necessary, but keep animation false
-                  }
-              }
-          },
+          // REMOVED: The afterAnimate event that caused the infinite loop
           point: {
             events: {
               click: function (e) {
@@ -1342,19 +1321,13 @@ looker.plugins.visualizations.add({
         line: { marker: { enabled: true, radius: 3 } }
       },
       legend: {
-        // FIX 2: Only hide series legend if hide_legend_with_formatting is true, but always show if there are rule items.
+        // Only hide series legend if hide_legend_with_formatting is true, but always show if there are rule items.
         enabled: finalLegendEnabled,
-        // If series legend is hidden, align should be based on rule items presence.
-        // We'll keep it simple: if *anything* is in the legend, show it.
-        // We ensure that the data for ruleLegendItems is always added to the chart options.
         align: 'center',
         verticalAlign: 'bottom'
       },
       series: [
-        // Filter out series data if the series legend is disabled AND conditional formatting is active,
-        // to prevent duplicate legend entries if rule labels are shown.
-        // HACK: To hide the series legend visually while allowing the series objects (which carry data)
-        // to exist, we control `showInLegend` for the individual series objects based on `seriesLegendEnabled`.
+        // Filter out series data showInLegend property based on seriesLegendEnabled flag
         ...seriesData.map(s => ({
             ...s,
             showInLegend: seriesLegendEnabled
@@ -1500,21 +1473,7 @@ looker.plugins.visualizations.add({
               stacking: undefined,
               stack: null,
 
-              // Ensure trend series also benefits from the z-index fix
-              events: {
-                  afterAnimate: function() {
-                      console.log('[TRENDLINE FIX] Trend series afterAnimate. Forcing self to front.');
-                      this.setVisible(true, false);
-                      this.update({ zIndex: 10 }, false);
-                      if (this.points) {
-                          this.points.forEach(point => {
-                              if (point.dataLabel) {
-                                  point.dataLabel.toFront();
-                              }
-                          });
-                      }
-                  }
-              },
+              // Removed redundant and dangerous afterAnimate events from trendSeries itself
 
               dataLabels: {
                 enabled: config.trend_line_show_label === true,
@@ -1558,7 +1517,7 @@ looker.plugins.visualizations.add({
       this.chart = Highcharts.chart(this._chartContainer, chartOptions);
     } else {
       console.log('[CHART UPDATE] Updating existing chart with new options (deep merge: true).');
-      // FIX 1: We use (true, true) to ensure a deep update and immediate redraw.
+      // Use (true, true) to ensure a deep update and immediate redraw.
       this.chart.update(chartOptions, true, true);
     }
     console.log('=== TRENDLINE CHECK END ===');
@@ -1568,8 +1527,6 @@ looker.plugins.visualizations.add({
 
   // FIX 1.2: Implement getStackedColors inspired by the provided file to ensure non-matched categories revert to their base color.
   getStackedColors: function(values, config) {
-    // Note: Since the core series color is handled in updateAsync and passed in via `series.color`,
-    // here we return `null` if no rule matches, signaling `updateAsync` to use the series default color.
     const defaultColor = '#EEEEEE';
 
     // Helper function to check discrete rules (non-gradient) - RE-COPIED from bar_chart_conditional (6).js
@@ -1606,7 +1563,7 @@ looker.plugins.visualizations.add({
 
     // Apply rules in priority order: Rule 1 > Rule 2 > Rule 3
     return values.map((val, index) => {
-        if (val === null || val === undefined || isNaN(val)) return null;
+        if (val === null || val === undefined || isNaN(val)) return null; // Return null if not numeric, so updateAsync uses base series color
 
         // 1. Check discrete rules first (R1 > R2 > R3)
         for (let ruleNum = 1; ruleNum <= 3; ruleNum++) {

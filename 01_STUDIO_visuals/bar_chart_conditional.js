@@ -331,14 +331,60 @@ looker.plugins.visualizations.add({
       values: [
         {"Google": "google"},
         {"Looker Classic": "looker"},
+        {"Categorical - Shoreline": "cat_shoreline"},
+        {"Categorical - Boardwalk": "cat_boardwalk"},
+        {"Categorical - Breeze": "cat_breeze"},
+        {"Categorical - Vivid": "cat_vivid"},
+        {"Categorical - Springfield": "cat_springfield"},
+        {"Categorical - Cowells": "cat_cowells"},
+        {"Categorical - Organic": "cat_organic"},
+        {"Categorical - Lighthouse": "cat_lighthouse"},
+        {"Categorical - Taos": "cat_taos"},
+        {"Categorical - Sonoma": "cat_sonoma"},
+        {"Categorical - Casual": "cat_casual"},
+        {"Categorical - Sunset": "cat_sunset"},
+        {"Categorical - Ashland": "cat_ashland"},
+        {"Categorical - Oasis": "cat_oasis"},
+        {"Categorical - Dalton": "cat_dalton"},
+        {"Categorical - Legacy": "cat_legacy"},
+        {"Sequential - Shoreline": "seq_shoreline"},
+        {"Sequential - Boardwalk": "seq_boardwalk"},
+        {"Sequential - Breeze": "seq_breeze"},
+        {"Sequential - Vivid": "seq_vivid"},
+        {"Sequential - Springfield": "seq_springfield"},
+        {"Sequential - Cowells": "seq_cowells"},
+        {"Sequential - Organic": "seq_organic"},
+        {"Sequential - Lighthouse": "seq_lighthouse"},
+        {"Sequential - Taos": "seq_taos"},
+        {"Sequential - Sonoma": "seq_sonoma"},
+        {"Sequential - Casual": "seq_casual"},
+        {"Sequential - Sunset": "seq_sunset"},
+        {"Sequential - Ashland": "seq_ashland"},
+        {"Sequential - Oasis": "seq_oasis"},
+        {"Sequential - Dalton": "seq_dalton"},
+        {"Sequential - Legacy": "seq_legacy"},
+        {"Diverging - Shoreline": "div_shoreline"},
+        {"Diverging - Boardwalk": "div_boardwalk"},
+        {"Diverging - Breeze": "div_breeze"},
+        {"Diverging - Vivid": "div_vivid"},
+        {"Diverging - Springfield": "div_springfield"},
+        {"Diverging - Cowells": "div_cowells"},
+        {"Diverging - Organic": "div_organic"},
+        {"Diverging - Lighthouse": "div_lighthouse"},
+        {"Diverging - Taos": "div_taos"},
+        {"Diverging - Sonoma": "div_sonoma"},
+        {"Diverging - Casual": "div_casual"},
+        {"Diverging - Sunset": "div_sunset"},
+        {"Diverging - Ashland": "div_ashland"},
+        {"Diverging - Oasis": "div_oasis"},
+        {"Diverging - Dalton": "div_dalton"},
+        {"Diverging - Legacy": "div_legacy"},
         {"Green Scale": "green_scale"},
         {"Blue Scale": "blue_scale"},
         {"Red Scale": "red_scale"},
         {"Purple Scale": "purple_scale"},
         {"Orange Scale": "orange_scale"},
-        {"Viridis": "viridis"},
-        {"Warm": "warm"},
-        {"Cool": "cool"}
+        {"Chantelle Brand": "chantelle"}
       ],
       default: "google",
       section: "Series",
@@ -908,19 +954,70 @@ looker.plugins.visualizations.add({
     const palettes = {
       google: ['#4285F4', '#EA4335', '#FBBC04', '#34A853', '#FF6D00', '#46BDC6', '#AB47BC'],
       looker: ['#7FCDAE', '#7ED09C', '#7DD389', '#85D67C', '#9AD97B', '#B1DB7A'],
+      // Categorical palettes
+      cat_shoreline: ['#1A5B87', '#5C9AB4', '#8FC3DD', '#C0E5F6', '#FFA726', '#FF7043', '#E91E63'],
+      cat_boardwalk: ['#A0522D', '#CD853F', '#DEB887', '#F5DEB3', '#5F9EA0', '#4682B4', '#B0C4DE'],
+      cat_breeze: ['#C51B7D', '#E7298A', '#F781BF', '#FDE0DD', '#B8E186', '#7FBC41', '#4D9221'],
+      cat_vivid: ['#D7191C', '#FDAE61', '#FFFFBF', '#A6D96A', '#1A9641', '#377EB8', '#984EA3'],
+      cat_springfield: ['#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0', '#5AAE61'],
+      cat_cowells: ['#8C510A', '#BF812D', '#DFC27D', '#F6E8C3', '#C7EAE5', '#80CDC1', '#35978F'],
+      cat_organic: ['#40004B', '#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0'],
+      cat_lighthouse: ['#8C510A', '#D8B365', '#F6E8C3', '#F5F5F5', '#C7EAE5', '#5AB4AC', '#01665E'],
+      cat_taos: ['#D73027', '#F46D43', '#FDAE61', '#FEE08B', '#D9EF8B', '#A6D96A', '#66BD63'],
+      cat_sonoma: ['#762A83', '#AF8DC3', '#E7D4E8', '#F7F7F7', '#D9F0D3', '#7FBF7B', '#1B7837'],
+      cat_casual: ['#D7191C', '#FDAE61', '#FFFFBF', '#ABD9E9', '#2C7BB6', '#A6D96A', '#1A9641'],
+      cat_sunset: ['#C51B7D', '#E7298A', '#F781BF', '#FDE0DD', '#E6F5D0', '#B8E186', '#7FBC41'],
+      cat_ashland: ['#01665E', '#35978F', '#80CDC1', '#C7EAE5', '#F6E8C3', '#DFC27D', '#BF812D'],
+      cat_oasis: ['#2166AC', '#4393C3', '#92C5DE', '#D1E5F0', '#FDDBC7', '#F4A582', '#D6604D'],
+      cat_dalton: ['#40004B', '#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0'],
+      cat_legacy: ['#E41A1C', '#377EB8', '#4DAF4A', '#984EA3', '#FF7F00', '#FFFF33', '#A65628'],
+      // Sequential palettes
+      seq_shoreline: ['#E8F4F8', '#C0E5F6', '#8FC3DD', '#5C9AB4', '#1A5B87', '#0D3D5C', '#001F2F'],
+      seq_boardwalk: ['#FFF5F0', '#FEE0D2', '#FCBBA1', '#FC9272', '#FB6A4A', '#EF3B2C', '#CB181D'],
+      seq_breeze: ['#FFF7BC', '#FEE391', '#FEC44F', '#FE9929', '#EC7014', '#CC4C02', '#8C2D04'],
+      seq_vivid: ['#F7FCF5', '#E5F5E0', '#C7E9C0', '#A1D99B', '#74C476', '#41AB5D', '#238B45'],
+      seq_springfield: ['#FCFBFD', '#EFEDF5', '#DADAEB', '#BCBDDC', '#9E9AC8', '#807DBA', '#6A51A3'],
+      seq_cowells: ['#FFF5EB', '#FEE6CE', '#FDD0A2', '#FDAE6B', '#FD8D3C', '#F16913', '#D94801'],
+      seq_organic: ['#F7FCF0', '#E0F3DB', '#CCEBC5', '#A8DDB5', '#7BCCC4', '#4EB3D3', '#2B8CBE'],
+      seq_lighthouse: ['#FFFFE5', '#FFF7BC', '#FEE391', '#FEC44F', '#FE9929', '#EC7014', '#CC4C02'],
+      seq_taos: ['#FFF7EC', '#FEE8C8', '#FDD49E', '#FDBB84', '#FC8D59', '#EF6548', '#D7301F'],
+      seq_sonoma: ['#FFF7FB', '#ECE7F2', '#D0D1E6', '#A6BDDB', '#74A9CF', '#3690C0', '#0570B0'],
+      seq_casual: ['#F7FCF5', '#E5F5E0', '#C7E9C0', '#A1D99B', '#74C476', '#41AB5D', '#238B45'],
+      seq_sunset: ['#FCFBFD', '#EFEDF5', '#DADAEB', '#BCBDDC', '#9E9AC8', '#807DBA', '#6A51A3'],
+      seq_ashland: ['#F7FCF0', '#E0F3DB', '#CCEBC5', '#A8DDB5', '#7BCCC4', '#4EB3D3', '#2B8CBE'],
+      seq_oasis: ['#FFF5F0', '#FEE0D2', '#FCBBA1', '#FC9272', '#FB6A4A', '#EF3B2C', '#CB181D'],
+      seq_dalton: ['#F7FCF5', '#E5F5E0', '#C7E9C0', '#A1D99B', '#74C476', '#41AB5D', '#238B45'],
+      seq_legacy: ['#FFF7EC', '#FEE8C8', '#FDD49E', '#FDBB84', '#FC8D59', '#EF6548', '#D7301F'],
+      // Diverging palettes
+      div_shoreline: ['#D73027', '#F46D43', '#FDAE61', '#FEE08B', '#D9EF8B', '#A6D96A', '#66BD63'],
+      div_boardwalk: ['#8C510A', '#BF812D', '#DFC27D', '#F6E8C3', '#C7EAE5', '#80CDC1', '#35978F'],
+      div_breeze: ['#C51B7D', '#E7298A', '#F781BF', '#FDE0DD', '#E6F5D0', '#B8E186', '#7FBC41'],
+      div_vivid: ['#D7191C', '#FDAE61', '#FFFFBF', '#A6D96A', '#1A9641', '#66BD63', '#1A9850'],
+      div_springfield: ['#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0', '#5AAE61'],
+      div_cowells: ['#A50026', '#D73027', '#F46D43', '#FDAE61', '#FEE08B', '#D9EF8B', '#A6D96A'],
+      div_organic: ['#40004B', '#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0'],
+      div_lighthouse: ['#8C510A', '#BF812D', '#DFC27D', '#F6E8C3', '#C7EAE5', '#80CDC1', '#35978F'],
+      div_taos: ['#D73027', '#F46D43', '#FDAE61', '#FEE08B', '#D9EF8B', '#A6D96A', '#66BD63'],
+      div_sonoma: ['#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0', '#5AAE61'],
+      div_casual: ['#D7191C', '#FDAE61', '#FFFFBF', '#A6D96A', '#1A9641', '#66BD63', '#1A9850'],
+      div_sunset: ['#C51B7D', '#E7298A', '#F781BF', '#FDE0DD', '#E6F5D0', '#B8E186', '#7FBC41'],
+      div_ashland: ['#01665E', '#35978F', '#80CDC1', '#C7EAE5', '#F5F5F5', '#F6E8C3', '#DFC27D'],
+      div_oasis: ['#2166AC', '#4393C3', '#92C5DE', '#D1E5F0', '#FDDBC7', '#F4A582', '#D6604D'],
+      div_dalton: ['#40004B', '#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0'],
+      div_legacy: ['#A50026', '#D73027', '#F46D43', '#FDAE61', '#FEE08B', '#D9EF8B', '#A6D96A'],
+      // Original scales
       green_scale: ['#F1F8E9', '#C5E1A5', '#9CCC65', '#7CB342', '#558B2F', '#33691E'],
       blue_scale: ['#E3F2FD', '#90CAF9', '#42A5F5', '#1E88E5', '#1565C0', '#0D47A1'],
       red_scale: ['#FFEBEE', '#FFCDD2', '#EF9A9A', '#E57373', '#EF5350', '#F44336', '#E53935', '#D32F2F'],
       purple_scale: ['#F3E5F5', '#CE93D8', '#AB47BC', '#8E24AA', '#6A1B9A', '#4A148C'],
       orange_scale: ['#FFF3E0', '#FFE0B2', '#FFCC80', '#FFB74D', '#FFA726', '#FF9800', '#FB8C00', '#F57C00'],
-      viridis: ['#440154', '#414487', '#2A788E', '#22A884', '#7AD151', '#FDE725'],
-      warm: ['#FFF5EB', '#FDD0A2', '#FD8D3C', '#E6550D', '#A63603'],
-      cool: ['#F0F9FF', '#DEEBF7', '#C6DBEF', '#9ECAE1', '#6BAED6', '#4292C6', '#2171B5', '#08519C', '#08306B']
+      // Brand palette
+      chantelle: ['#E8D5D0', '#B89B96', '#C85A54', '#8B7A72', '#A63C3A', '#4A4543', '#F5EBE7']
     };
 
     // Handle series_labels - it's a comma-separated string like "Label1,Label2,Label3"
     const customLabelsArray = config.series_labels && typeof config.series_labels === 'string' && config.series_labels.trim() !== ''
-      ? config.series_labels.split(',').map(label => label.trim())
+      ? config.series_labels.split(',').map(label => label.trim()).filter(label => label !== '')
       : [];
 
     console.log('Custom labels array:', customLabelsArray);
@@ -1528,9 +1625,10 @@ looker.plugins.visualizations.add({
     }
 
     // Track if critical options changed that require full re-render
+    // ONLY destroy/recreate for major structural changes, not rule toggles
     const criticalOptionsChanged = this.chart && (
-      this._lastConditionalFormatting !== config.conditional_formatting_enabled ||
-      this._lastSeriesPositioning !== config.series_positioning
+      this._lastSeriesPositioning !== config.series_positioning ||
+      this._lastChartType !== config.chart_type
     );
 
     if (!this.chart || criticalOptionsChanged) {
@@ -1542,14 +1640,43 @@ looker.plugins.visualizations.add({
       }
       this.chart = Highcharts.chart(this._chartContainer, chartOptions);
     } else {
-      console.log('[CHART UPDATE] Updating existing chart with new options (deep merge: true).');
-      // Use (true, true) to ensure a deep update and immediate redraw.
-      this.chart.update(chartOptions, true, true);
+      console.log('[CHART UPDATE] Updating existing chart with new options.');
+      // When updating, ensure trendline is preserved if it exists in new options
+      const hasTrendlineInOptions = chartOptions.series.some(s => s.id === 'trend-line-series');
+      const hasTrendlineInChart = this.chart.get('trend-line-series');
+
+      console.log('[CHART UPDATE] hasTrendlineInOptions:', hasTrendlineInOptions, 'hasTrendlineInChart:', !!hasTrendlineInChart);
+
+      // Remove existing trendline if present but not in new options
+      if (hasTrendlineInChart && !hasTrendlineInOptions) {
+        console.log('[CHART UPDATE] Removing trendline from chart.');
+        hasTrendlineInChart.remove(false);
+      }
+
+      // Update with new options (redraw: false to prevent flicker)
+      this.chart.update(chartOptions, false, true);
+
+      // Add or update trendline after main update
+      if (hasTrendlineInOptions) {
+        const trendlineData = chartOptions.series.find(s => s.id === 'trend-line-series');
+        const existingTrendline = this.chart.get('trend-line-series');
+
+        if (existingTrendline) {
+          console.log('[CHART UPDATE] Updating existing trendline.');
+          existingTrendline.setData(trendlineData.data, false);
+        } else {
+          console.log('[CHART UPDATE] Adding new trendline.');
+          this.chart.addSeries(trendlineData, false);
+        }
+      }
+
+      // Final redraw
+      this.chart.redraw();
     }
 
     // Store last state
-    this._lastConditionalFormatting = config.conditional_formatting_enabled;
     this._lastSeriesPositioning = config.series_positioning;
+    this._lastChartType = config.chart_type;
 
     console.log('=== TRENDLINE CHECK END ===');
     done();

@@ -822,6 +822,13 @@ looker.plugins.visualizations.add({
     `;
     this._chartContainer = element.querySelector('#chart-container');
     this.chart = null;
+
+    // Initialize state tracking variables
+    this._lastConditionalFormatting = null;
+    this._lastReverseColors = null;
+    this._lastSeriesPositioning = null;
+    this._lastChartType = null;
+
     this._resizeObserver = new ResizeObserver(() => {
       if (this.chart) { this.chart.reflow(); }
     });

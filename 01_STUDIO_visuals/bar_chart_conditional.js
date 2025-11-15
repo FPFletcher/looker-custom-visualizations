@@ -819,61 +819,58 @@ looker.plugins.visualizations.add({
 
       // PRIORITY 2: AUTO uses LookML's rendered value if available
       if (formatType === 'auto') {
-        // First try to use the rendered value passed from Looker
+        console.log('AUTO FORMAT - value:', value, 'renderedValue:', renderedValue, 'field:', field ? field.name : 'none');
+
+        // First try to use the rendered value passed from Looker data
         if (renderedValue !== null && renderedValue !== undefined) {
+          console.log('AUTO FORMAT - using renderedValue:', renderedValue);
           return renderedValue;
         }
-        // Fallback: parse field.value_format if available
+
+        // Fallback: parse field.value_format for common patterns
         if (field && field.value_format) {
-          try {
-            const fmt = field.value_format;
-            const num = Number(value);
+          console.log('AUTO FORMAT - value_format:', field.value_format);
+          const fmt = field.value_format;
+          const num = Number(value);
 
-            // Handle common Looker format patterns
-            // Pattern: "$#,##0.0,\"K\"" or "#,##0.0,\"K\"" -> thousands with K suffix
-            if (fmt.includes(',\"K\"') || fmt.includes(",'K'")) {
-              const hasDecimal = fmt.match(/0\.([0#]+)/);
-              const decimals = hasDecimal ? hasDecimal[1].length : 0;
-              const thousands = (num / 1000).toFixed(decimals);
-              return (fmt.startsWith('$') ? '$' : '') + thousands + 'k';
-            }
+          // Pattern: "$#,##0.0,\"K\"" or similar -> thousands with k suffix
+          if (fmt.includes(',\"K\"') || fmt.includes(",'K'")) {
+            const decimals = (fmt.match(/0\.([0#]+)/) || [])[1]?.length || 0;
+            const result = (fmt.startsWith('$') ? '$' : '') + (num / 1000).toFixed(decimals) + ' k';
+            console.log('AUTO FORMAT - K pattern result:', result);
+            return result;
+          }
 
-            // Pattern: "$#,##0.0,,\"M\"" -> millions with M suffix
-            if (fmt.includes(',,\"M\"') || fmt.includes(",,'M'")) {
-              const hasDecimal = fmt.match(/0\.([0#]+)/);
-              const decimals = hasDecimal ? hasDecimal[1].length : 0;
-              const millions = (num / 1000000).toFixed(decimals);
-              return (fmt.startsWith('$') ? '$' : '') + millions + 'M';
-            }
+          // Pattern: millions
+          if (fmt.includes(',,\"M\"') || fmt.includes(",,'M'")) {
+            const decimals = (fmt.match(/0\.([0#]+)/) || [])[1]?.length || 0;
+            const result = (fmt.startsWith('$') ? '$' : '') + (num / 1000000).toFixed(decimals) + ' M';
+            console.log('AUTO FORMAT - M pattern result:', result);
+            return result;
+          }
 
-            // Pattern: "0.0%" -> percentage
-            if (fmt.includes('%')) {
-              const hasDecimal = fmt.match(/0\.([0#]+)/);
-              const decimals = hasDecimal ? hasDecimal[1].length : 1;
-              return (num * 100).toFixed(decimals) + '%';
-            }
+          // Pattern: percentage
+          if (fmt.includes('%')) {
+            const decimals = (fmt.match(/0\.([0#]+)/) || [])[1]?.length || 1;
+            const result = (num * 100).toFixed(decimals) + '%';
+            console.log('AUTO FORMAT - % pattern result:', result);
+            return result;
+          }
 
-            // Pattern: "$#,##0.00" -> currency with decimals
-            if (fmt.startsWith('$')) {
-              const hasDecimal = fmt.match(/0\.([0#]+)/);
-              const decimals = hasDecimal ? hasDecimal[1].length : 0;
-              return '$' + num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-            }
+          // Pattern: currency
+          if (fmt.startsWith('$')) {
+            const decimals = (fmt.match(/0\.([0#]+)/) || [])[1]?.length || 0;
+            const result = '$' + num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+            console.log('AUTO FORMAT - $ pattern result:', result);
+            return result;
+          }
 
-            // Pattern: "#,##0" or "#,##0.00" -> number with commas
-            if (fmt.includes('#,##0')) {
-              const hasDecimal = fmt.match(/0\.([0#]+)/);
-              const decimals = hasDecimal ? hasDecimal[1].length : 0;
-              return num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-            }
-
-            // Fallback: try textForCell with just the value
-            const formatted = LookerCharts.Utils.textForCell({ value: value });
-            if (formatted !== null && formatted !== undefined && formatted !== String(value)) {
-              return formatted;
-            }
-          } catch (e) {
-            // Fall through to default
+          // Pattern: number with commas
+          if (fmt.includes('#,##0')) {
+            const decimals = (fmt.match(/0\.([0#]+)/) || [])[1]?.length || 0;
+            const result = num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+            console.log('AUTO FORMAT - number pattern result:', result);
+            return result;
           }
         }
       }
@@ -1128,6 +1125,8 @@ looker.plugins.visualizations.add({
             const formatType = config.x_axis_value_format || 'auto';
             const customFormat = config.x_axis_value_format_custom || '';
 
+            console.log('X-AXIS FORMATTER - pos:', this.pos, 'value:', this.value, 'formatType:', formatType, 'customFormat:', customFormat);
+
             // If auto and no custom format, use the pre-formatted category
             if (formatType === 'auto' && customFormat.trim() === '') {
               return this.value;
@@ -1135,11 +1134,15 @@ looker.plugins.visualizations.add({
 
             // Otherwise, apply formatting to the raw dimension value
             const rawValue = rawDimensionValues[this.pos];
+            console.log('X-AXIS FORMATTER - rawValue:', rawValue);
+
             if (rawValue === undefined || rawValue === null) {
               return this.value;
             }
 
-            return formatValue(rawValue, formatType, customFormat, dimensionField);
+            const result = formatValue(rawValue, formatType, customFormat, dimensionField);
+            console.log('X-AXIS FORMATTER - result:', result);
+            return result;
           }
         },
         tickInterval: tickInterval,
@@ -1297,6 +1300,10 @@ looker.plugins.visualizations.add({
     };
 
     // TRENDLINE
+    console.log('=== TRENDLINE CHECK ===');
+    console.log('config.trend_line_enabled:', config.trend_line_enabled);
+    console.log('seriesData.length:', seriesData.length);
+
     if (config.trend_line_enabled) {
       //console.log('=== TRENDLINE ENABLED ===');
       //console.log('seriesData length:', seriesData.length);
@@ -1489,6 +1496,11 @@ looker.plugins.visualizations.add({
 
 
   getColors: function(values, config, baseColor) {
+  console.log('=== getColors called ===');
+  console.log('values:', values);
+  console.log('config.conditional_formatting_enabled:', config.conditional_formatting_enabled);
+  console.log('baseColor:', baseColor);
+
   const palettes = {
     google: ['#4285F4', '#EA4335', '#FBBC04', '#34A853', '#FF6D00', '#46BDC6', '#AB47BC'],
     looker: ['#7FCDAE', '#7ED09C', '#7DD389', '#85D67C', '#9AD97B', '#B1DB7A'],

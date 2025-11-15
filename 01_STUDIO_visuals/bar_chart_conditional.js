@@ -835,6 +835,91 @@ looker.plugins.visualizations.add({
     this._resizeObserver.observe(element);
   },
 
+  // --- NEW: Centralized Palette Getter ---
+  getPalette: function(config) {
+    const palettes = {
+      google: ['#4285F4', '#EA4335', '#FBBC04', '#34A853', '#FF6D00', '#46BDC6', '#AB47BC'],
+      looker: ['#7FCDAE', '#7ED09C', '#7DD389', '#85D67C', '#9AD97B', '#B1DB7A'],
+      // Categorical palettes
+      cat_shoreline: ['#1A5B87', '#5C9AB4', '#8FC3DD', '#C0E5F6', '#FFA726', '#FF7043', '#E91E63'],
+      cat_boardwalk: ['#A0522D', '#CD853F', '#DEB887', '#F5DEB3', '#5F9EA0', '#4682B4', '#B0C4DE'],
+      cat_breeze: ['#C51B7D', '#E7298A', '#F781BF', '#FDE0DD', '#B8E186', '#7FBC41', '#4D9221'],
+      cat_vivid: ['#D7191C', '#FDAE61', '#FFFFBF', '#A6D96A', '#1A9641', '#377EB8', '#984EA3'],
+      cat_springfield: ['#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0', '#5AAE61'],
+      cat_cowells: ['#8C510A', '#BF812D', '#DFC27D', '#F6E8C3', '#C7EAE5', '#80CDC1', '#35978F'],
+      cat_organic: ['#40004B', '#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0'],
+      cat_lighthouse: ['#8C510A', '#D8B365', '#F6E8C3', '#F5F5F5', '#C7EAE5', '#5AB4AC', '#01665E'],
+      cat_taos: ['#D73027', '#F46D43', '#FDAE61', '#FEE08B', '#D9EF8B', '#A6D96A', '#66BD63'],
+      cat_sonoma: ['#762A83', '#AF8DC3', '#E7D4E8', '#F7F7F7', '#D9F0D3', '#7FBF7B', '#1B7837'],
+      cat_casual: ['#D7191C', '#FDAE61', '#FFFFBF', '#ABD9E9', '#2C7BB6', '#A6D96A', '#1A9641'],
+      cat_sunset: ['#C51B7D', '#E7298A', '#F781BF', '#FDE0DD', '#E6F5D0', '#B8E186', '#7FBC41'],
+      cat_ashland: ['#01665E', '#35978F', '#80CDC1', '#C7EAE5', '#F6E8C3', '#DFC27D', '#BF812D'],
+      cat_oasis: ['#2166AC', '#4393C3', '#92C5DE', '#D1E5F0', '#FDDBC7', '#F4A582', '#D6604D'],
+      cat_dalton: ['#40004B', '#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0'],
+      cat_legacy: ['#E41A1C', '#377EB8', '#4DAF4A', '#984EA3', '#FF7F00', '#FFFF33', '#A65628'],
+      // Sequential palettes
+      seq_shoreline: ['#E8F4F8', '#C0E5F6', '#8FC3DD', '#5C9AB4', '#1A5B87', '#0D3D5C', '#001F2F'],
+      seq_boardwalk: ['#FFF5F0', '#FEE0D2', '#FCBBA1', '#FC9272', '#FB6A4A', '#EF3B2C', '#CB181D'],
+      seq_breeze: ['#FFF7BC', '#FEE391', '#FEC44F', '#FE9929', '#EC7014', '#CC4C02', '#8C2D04'],
+      seq_vivid: ['#F7FCF5', '#E5F5E0', '#C7E9C0', '#A1D99B', '#74C476', '#41AB5D', '#238B45'],
+      seq_springfield: ['#FCFBFD', '#EFEDF5', '#DADAEB', '#BCBDDC', '#9E9AC8', '#807DBA', '#6A51A3'],
+      seq_cowells: ['#FFF5EB', '#FEE6CE', '#FDD0A2', '#FDAE6B', '#FD8D3C', '#F16913', '#D94801'],
+      seq_organic: ['#F7FCF0', '#E0F3DB', '#CCEBC5', '#A8DDB5', '#7BCCC4', '#4EB3D3', '#2B8CBE'],
+      seq_lighthouse: ['#FFFFE5', '#FFF7BC', '#FEE391', '#FEC44F', '#FE9929', '#EC7014', '#CC4C02'],
+      seq_taos: ['#FFF7EC', '#FEE8C8', '#FDD49E', '#FDBB84', '#FC8D59', '#EF6548', '#D7301F'],
+      seq_sonoma: ['#FFF7FB', '#ECE7F2', '#D0D1E6', '#A6BDDB', '#74A9CF', '#3690C0', '#0570B0'],
+      seq_casual: ['#F7FCF5', '#E5F5E0', '#C7E9C0', '#A1D99B', '#74C476', '#41AB5D', '#238B45'],
+      seq_sunset: ['#FCFBFD', '#EFEDF5', '#DADAEB', '#BCBDDC', '#9E9AC8', '#807DBA', '#6A51A3'],
+      seq_ashland: ['#F7FCF0', '#E0F3DB', '#CCEBC5', '#A8DDB5', '#7BCCC4', '#4EB3D3', '#2B8CBE'],
+      seq_oasis: ['#FFF5F0', '#FEE0D2', '#FCBBA1', '#FC9272', '#FB6A4A', '#EF3B2C', '#CB181D'],
+      seq_dalton: ['#F7FCF5', '#E5F5E0', '#C7E9C0', '#A1D99B', '#74C476', '#41AB5D', '#238B45'],
+      seq_legacy: ['#FFF7EC', '#FEE8C8', '#FDD49E', '#FDBB84', '#FC8D59', '#EF6548', '#D7301F'],
+      // Diverging palettes
+      div_shoreline: ['#D73027', '#F46D43', '#FDAE61', '#FEE08B', '#D9EF8B', '#A6D96A', '#66BD63'],
+      div_boardwalk: ['#8C510A', '#BF812D', '#DFC27D', '#F6E8C3', '#C7EAE5', '#80CDC1', '#35978F'],
+      div_breeze: ['#C51B7D', '#E7298A', '#F781BF', '#FDE0DD', '#E6F5D0', '#B8E186', '#7FBC41'],
+      div_vivid: ['#D7191C', '#FDAE61', '#FFFFBF', '#A6D96A', '#1A9641', '#66BD63', '#1A9850'],
+      div_springfield: ['#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0', '#5AAE61'],
+      div_cowells: ['#A50026', '#D73027', '#F46D43', '#FDAE61', '#FEE08B', '#D9EF8B', '#A6D96A'],
+      div_organic: ['#40004B', '#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0'],
+      div_lighthouse: ['#8C510A', '#BF812D', '#DFC27D', '#F6E8C3', '#C7EAE5', '#80CDC1', '#35978F'],
+      div_taos: ['#D73027', '#F46D43', '#FDAE61', '#FEE08B', '#D9EF8B', '#A6D96A', '#66BD63'],
+      div_sonoma: ['#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0', '#5AAE61'],
+      div_casual: ['#D7191C', '#FDAE61', '#FFFFBF', '#A6D96A', '#1A9641', '#66BD63', '#1A9850'],
+      div_sunset: ['#C51B7D', '#E7298A', '#F781BF', '#FDE0DD', '#E6F5D0', '#B8E186', '#7FBC41'],
+      div_ashland: ['#01665E', '#35978F', '#80CDC1', '#C7EAE5', '#F5F5F5', '#F6E8C3', '#DFC27D'],
+      div_oasis: ['#2166AC', '#4393C3', '#92C5DE', '#D1E5F0', '#FDDBC7', '#F4A582', '#D6604D'],
+      div_dalton: ['#40004B', '#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0'],
+      div_legacy: ['#A50026', '#D73027', '#F46D43', '#FDAE61', '#FEE08B', '#D9EF8B', '#A6D96A'],
+      // Original scales
+      green_scale: ['#F1F8E9', '#C5E1A5', '#9CCC65', '#7CB342', '#558B2F', '#33691E'],
+      blue_scale: ['#E3F2FD', '#90CAF9', '#42A5F5', '#1E88E5', '#1565C0', '#0D47A1'],
+      red_scale: ['#FFEBEE', '#FFCDD2', '#EF9A9A', '#E57373', '#EF5350', '#F44336', '#E53935', '#D32F2F'],
+      purple_scale: ['#F3E5F5', '#CE93D8', '#AB47BC', '#8E24AA', '#6A1B9A', '#4A148C'],
+      orange_scale: ['#FFF3E0', '#FFE0B2', '#FFCC80', '#FFB74D', '#FFA726', '#FF9800', '#FB8C00', '#F57C00'],
+      // Brand palette
+      chantelle: ['#E8D5D0', '#B89B96', '#C85A54', '#8B7A72', '#A63C3A', '#4A4543', '#F5EBE7']
+    };
+
+    let palette = palettes[config.color_collection] || palettes.google;
+
+    // Custom colors override the collection entirely
+    const customColors = config.series_colors ? String(config.series_colors).split(',').map(c => c.trim()) : null;
+    if (customColors) {
+        palette = customColors;
+    }
+
+    if (config.reverse_colors) {
+      // Return a new reversed array
+      return [...palette].reverse();
+    }
+
+    // Return the default palette
+    return palette;
+  },
+  // --- END: Centralized Palette Getter ---
+
+
   updateAsync: function(data, element, config, queryResponse, details, done) {
     this.clearErrors();
 
@@ -965,69 +1050,10 @@ looker.plugins.visualizations.add({
     const measureFields = queryResponse.fields.measures;
     const hasPivot = queryResponse.fields.pivots && queryResponse.fields.pivots.length > 0;
 
-    const palettes = {
-      google: ['#4285F4', '#EA4335', '#FBBC04', '#34A853', '#FF6D00', '#46BDC6', '#AB47BC'],
-      looker: ['#7FCDAE', '#7ED09C', '#7DD389', '#85D67C', '#9AD97B', '#B1DB7A'],
-      // Categorical palettes
-      cat_shoreline: ['#1A5B87', '#5C9AB4', '#8FC3DD', '#C0E5F6', '#FFA726', '#FF7043', '#E91E63'],
-      cat_boardwalk: ['#A0522D', '#CD853F', '#DEB887', '#F5DEB3', '#5F9EA0', '#4682B4', '#B0C4DE'],
-      cat_breeze: ['#C51B7D', '#E7298A', '#F781BF', '#FDE0DD', '#B8E186', '#7FBC41', '#4D9221'],
-      cat_vivid: ['#D7191C', '#FDAE61', '#FFFFBF', '#A6D96A', '#1A9641', '#377EB8', '#984EA3'],
-      cat_springfield: ['#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0', '#5AAE61'],
-      cat_cowells: ['#8C510A', '#BF812D', '#DFC27D', '#F6E8C3', '#C7EAE5', '#80CDC1', '#35978F'],
-      cat_organic: ['#40004B', '#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0'],
-      cat_lighthouse: ['#8C510A', '#D8B365', '#F6E8C3', '#F5F5F5', '#C7EAE5', '#5AB4AC', '#01665E'],
-      cat_taos: ['#D73027', '#F46D43', '#FDAE61', '#FEE08B', '#D9EF8B', '#A6D96A', '#66BD63'],
-      cat_sonoma: ['#762A83', '#AF8DC3', '#E7D4E8', '#F7F7F7', '#D9F0D3', '#7FBF7B', '#1B7837'],
-      cat_casual: ['#D7191C', '#FDAE61', '#FFFFBF', '#ABD9E9', '#2C7BB6', '#A6D96A', '#1A9641'],
-      cat_sunset: ['#C51B7D', '#E7298A', '#F781BF', '#FDE0DD', '#E6F5D0', '#B8E186', '#7FBC41'],
-      cat_ashland: ['#01665E', '#35978F', '#80CDC1', '#C7EAE5', '#F6E8C3', '#DFC27D', '#BF812D'],
-      cat_oasis: ['#2166AC', '#4393C3', '#92C5DE', '#D1E5F0', '#FDDBC7', '#F4A582', '#D6604D'],
-      cat_dalton: ['#40004B', '#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0'],
-      cat_legacy: ['#E41A1C', '#377EB8', '#4DAF4A', '#984EA3', '#FF7F00', '#FFFF33', '#A65628'],
-      // Sequential palettes
-      seq_shoreline: ['#E8F4F8', '#C0E5F6', '#8FC3DD', '#5C9AB4', '#1A5B87', '#0D3D5C', '#001F2F'],
-      seq_boardwalk: ['#FFF5F0', '#FEE0D2', '#FCBBA1', '#FC9272', '#FB6A4A', '#EF3B2C', '#CB181D'],
-      seq_breeze: ['#FFF7BC', '#FEE391', '#FEC44F', '#FE9929', '#EC7014', '#CC4C02', '#8C2D04'],
-      seq_vivid: ['#F7FCF5', '#E5F5E0', '#C7E9C0', '#A1D99B', '#74C476', '#41AB5D', '#238B45'],
-      seq_springfield: ['#FCFBFD', '#EFEDF5', '#DADAEB', '#BCBDDC', '#9E9AC8', '#807DBA', '#6A51A3'],
-      seq_cowells: ['#FFF5EB', '#FEE6CE', '#FDD0A2', '#FDAE6B', '#FD8D3C', '#F16913', '#D94801'],
-      seq_organic: ['#F7FCF0', '#E0F3DB', '#CCEBC5', '#A8DDB5', '#7BCCC4', '#4EB3D3', '#2B8CBE'],
-      seq_lighthouse: ['#FFFFE5', '#FFF7BC', '#FEE391', '#FEC44F', '#FE9929', '#EC7014', '#CC4C02'],
-      seq_taos: ['#FFF7EC', '#FEE8C8', '#FDD49E', '#FDBB84', '#FC8D59', '#EF6548', '#D7301F'],
-      seq_sonoma: ['#FFF7FB', '#ECE7F2', '#D0D1E6', '#A6BDDB', '#74A9CF', '#3690C0', '#0570B0'],
-      seq_casual: ['#F7FCF5', '#E5F5E0', '#C7E9C0', '#A1D99B', '#74C476', '#41AB5D', '#238B45'],
-      seq_sunset: ['#FCFBFD', '#EFEDF5', '#DADAEB', '#BCBDDC', '#9E9AC8', '#807DBA', '#6A51A3'],
-      seq_ashland: ['#F7FCF0', '#E0F3DB', '#CCEBC5', '#A8DDB5', '#7BCCC4', '#4EB3D3', '#2B8CBE'],
-      seq_oasis: ['#FFF5F0', '#FEE0D2', '#FCBBA1', '#FC9272', '#FB6A4A', '#EF3B2C', '#CB181D'],
-      seq_dalton: ['#F7FCF5', '#E5F5E0', '#C7E9C0', '#A1D99B', '#74C476', '#41AB5D', '#238B45'],
-      seq_legacy: ['#FFF7EC', '#FEE8C8', '#FDD49E', '#FDBB84', '#FC8D59', '#EF6548', '#D7301F'],
-      // Diverging palettes
-      div_shoreline: ['#D73027', '#F46D43', '#FDAE61', '#FEE08B', '#D9EF8B', '#A6D96A', '#66BD63'],
-      div_boardwalk: ['#8C510A', '#BF812D', '#DFC27D', '#F6E8C3', '#C7EAE5', '#80CDC1', '#35978F'],
-      div_breeze: ['#C51B7D', '#E7298A', '#F781BF', '#FDE0DD', '#E6F5D0', '#B8E186', '#7FBC41'],
-      div_vivid: ['#D7191C', '#FDAE61', '#FFFFBF', '#A6D96A', '#1A9641', '#66BD63', '#1A9850'],
-      div_springfield: ['#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0', '#5AAE61'],
-      div_cowells: ['#A50026', '#D73027', '#F46D43', '#FDAE61', '#FEE08B', '#D9EF8B', '#A6D96A'],
-      div_organic: ['#40004B', '#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0'],
-      div_lighthouse: ['#8C510A', '#BF812D', '#DFC27D', '#F6E8C3', '#C7EAE5', '#80CDC1', '#35978F'],
-      div_taos: ['#D73027', '#F46D43', '#FDAE61', '#FEE08B', '#D9EF8B', '#A6D96A', '#66BD63'],
-      div_sonoma: ['#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0', '#5AAE61'],
-      div_casual: ['#D7191C', '#FDAE61', '#FFFFBF', '#A6D96A', '#1A9641', '#66BD63', '#1A9850'],
-      div_sunset: ['#C51B7D', '#E7298A', '#F781BF', '#FDE0DD', '#E6F5D0', '#B8E186', '#7FBC41'],
-      div_ashland: ['#01665E', '#35978F', '#80CDC1', '#C7EAE5', '#F5F5F5', '#F6E8C3', '#DFC27D'],
-      div_oasis: ['#2166AC', '#4393C3', '#92C5DE', '#D1E5F0', '#FDDBC7', '#F4A582', '#D6604D'],
-      div_dalton: ['#40004B', '#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0'],
-      div_legacy: ['#A50026', '#D73027', '#F46D43', '#FDAE61', '#FEE08B', '#D9EF8B', '#A6D96A'],
-      // Original scales
-      green_scale: ['#F1F8E9', '#C5E1A5', '#9CCC65', '#7CB342', '#558B2F', '#33691E'],
-      blue_scale: ['#E3F2FD', '#90CAF9', '#42A5F5', '#1E88E5', '#1565C0', '#0D47A1'],
-      red_scale: ['#FFEBEE', '#FFCDD2', '#EF9A9A', '#E57373', '#EF5350', '#F44336', '#E53935', '#D32F2F'],
-      purple_scale: ['#F3E5F5', '#CE93D8', '#AB47BC', '#8E24AA', '#6A1B9A', '#4A148C'],
-      orange_scale: ['#FFF3E0', '#FFE0B2', '#FFCC80', '#FFB74D', '#FFA726', '#FF9800', '#FB8C00', '#F57C00'],
-      // Brand palette
-      chantelle: ['#E8D5D0', '#B89B96', '#C85A54', '#8B7A72', '#A63C3A', '#4A4543', '#F5EBE7']
-    };
+    // --- REPLACED: Moved palette definitions to getPalette() ---
+    const palette = this.getPalette(config);
+    console.log(`[UPDATE] Final Palette (reversed=${config.reverse_colors}): ${palette.slice(0, 5).join(', ')}...`);
+    // --- END REPLACED ---
 
     // Handle series_labels - it's a comma-separated string like "Label1,Label2,Label3"
     const customLabelsArray = config.series_labels && typeof config.series_labels === 'string' && config.series_labels.trim() !== ''
@@ -1044,16 +1070,9 @@ looker.plugins.visualizations.add({
       return defaultLabel;
     };
 
-    let palette = palettes[config.color_collection] || palettes.google;
-
-    // Preserve the original palette order for determining the base color index, then reverse the working copy.
-    const originalPalette = [...palette];
-
-    if (config.reverse_colors) {
-      palette = [...palette].reverse();
-    }
-
+    // Custom colors are already incorporated into 'palette' via getPalette
     const customColors = config.series_colors ? String(config.series_colors).split(',').map(c => c.trim()) : null;
+
 
     let seriesData = [];
     if (hasPivot) {
@@ -1076,8 +1095,10 @@ looker.plugins.visualizations.add({
 
           console.log(`Pivot series ${seriesIndex}: measureName=${measureName}, defaultName=${defaultName}, seriesName=${seriesName}`);
 
-          // Determine series base color using the potentially reversed palette/custom colors
-          const baseColor = customColors ? customColors[seriesIndex % customColors.length] : palette[seriesIndex % palette.length];
+          // Determine series base color using the potentially reversed palette
+          const baseColor = palette[seriesIndex % palette.length];
+          console.log(`[BASE COLOR PIVOT] Series ${seriesIndex} (Index % Length = ${seriesIndex % palette.length}): Color=${baseColor}`);
+
 
           // Conditional formatting logic for pivoted data (only first measure/pivot combo is currently supported for 'first')
           const shouldApplyFormatting = config.conditional_formatting_enabled &&
@@ -1086,10 +1107,8 @@ looker.plugins.visualizations.add({
           if (shouldApplyFormatting) {
             const rawValues = values.map(v => v.y);
 
-            // CRITICAL FIX: Pass the potentially reversed palette to getColors for correct gradient/color fallback.
-            // If custom colors are used, we pass the custom color array as the palette for base color lookup.
-            const colorPaletteForFallback = customColors || palette;
-            const colors = this.getColors(rawValues, config, baseColor, colorPaletteForFallback, seriesIndex, config.reverse_colors);
+            // Pass the entire palette (which is already reversed if needed)
+            const colors = this.getColors(rawValues, config, baseColor, palette, seriesIndex, config.reverse_colors, 'Pivot');
 
             seriesData.push({
               name: seriesName,
@@ -1124,7 +1143,9 @@ looker.plugins.visualizations.add({
         const shouldApplyFormatting = config.conditional_formatting_enabled &&
                                       (config.conditional_formatting_apply_to === 'all' || config.conditional_formatting_apply_to === 'first' && index === 0);
 
-        const baseColor = customColors ? customColors[index % customColors.length] : palette[index % palette.length];
+        const baseColor = palette[index % palette.length];
+        console.log(`[BASE COLOR NON-PIVOT] Series ${index} (Index % Length = ${index % palette.length}): Color=${baseColor}`);
+
 
         const measureName = measure;
         const defaultName = queryResponse.fields.measures[index].label_short || queryResponse.fields.measures[index].label;
@@ -1136,9 +1157,8 @@ looker.plugins.visualizations.add({
           // Apply conditional formatting
           const rawValues = values.map(v => v.y);
 
-          // CRITICAL FIX: Pass the potentially reversed palette to getColors for correct gradient/color fallback.
-          const colorPaletteForFallback = customColors || palette;
-          const colors = this.getColors(rawValues, config, baseColor, colorPaletteForFallback, index, config.reverse_colors);
+          // Pass the entire palette (which is already reversed if needed)
+          const colors = this.getColors(rawValues, config, baseColor, palette, index, config.reverse_colors, 'Non-Pivot');
 
           seriesData.push({
             name: seriesName,
@@ -1194,7 +1214,7 @@ looker.plugins.visualizations.add({
 
             // If this is *not* the first measure, and formatting is set to 'first',
             // we strip explicit point colors and rely on the base series color.
-            const baseColor = customColors ? customColors[index % customColors.length] : palette[index % palette.length];
+            const baseColor = palette[index % palette.length];
 
             return {
                 ...series,
@@ -1781,7 +1801,7 @@ looker.plugins.visualizations.add({
 
   getColors: function(values, config, baseColor, paletteForFallback, seriesIndex, isReversed, callerInfo = 'unknown') {
   console.log(`[getColors] Called from: ${callerInfo}, baseColor: ${baseColor}, seriesIndex: ${seriesIndex}, isReversed: ${isReversed}`);
-  console.log(`[getColors] Palette for Fallback: ${paletteForFallback.slice(0, 5).join(', ')}...`); // Log the first few colors
+  console.log(`[getColors] Palette for Fallback (First 5): ${paletteForFallback.slice(0, 5).join(', ')}...`); // Log the first few colors
 
   if (!config.conditional_formatting_enabled) {
     return values.map(() => baseColor);
@@ -1831,6 +1851,7 @@ looker.plugins.visualizations.add({
         if (config[`rule${ruleNum}_enabled`] && config[`rule${ruleNum}_type`] !== 'gradient') {
             if (checkDiscrete(val, ruleNum, values)) {
                 matchedColor = config[`rule${ruleNum}_color`];
+                console.log(`[getColors] Match found for index ${index}, Rule ${ruleNum}. Color: ${matchedColor}`);
                 break;
             }
         }
@@ -1846,23 +1867,19 @@ looker.plugins.visualizations.add({
             const max = Math.max(...numericValues);
             const ratio = (max === min) ? 0.5 : (val - min) / (max - min);
 
-            // Conditional Fallback Logic:
-            // If the user hasn't specified a color (rule1_color / rule1_color2 are empty),
-            // and we are in reverse mode, we need to manually pull the base color
-            // from the correct (reversed) palette position for the gradient.
-
             let color1 = config[`rule${ruleNum}_color`] || baseColor;
             let color2 = config[`rule${ruleNum}_color2`] || baseColor;
 
-            // This is the core of the fix: if colors are reversed and no custom gradient colors are set,
-            // we rely on the *correct* baseColor determined in updateAsync, which is already reversed.
-            // The previous issue was that baseColor was sometimes incorrectly calculated, and that has been fixed in updateAsync by passing the full palette.
-
-            return this.interpolateColor(color1, color2, ratio);
+            // If the user specified a gradient color, use it. Otherwise, use the series baseColor as a fallback for both ends.
+            // Since baseColor is derived from the reversed palette in updateAsync, this is correct.
+            const resultColor = this.interpolateColor(color1, color2, ratio);
+            console.log(`[getColors] Gradient applied for index ${index}, Rule ${ruleNum}. Ratio: ${ratio.toFixed(2)}, Color: ${resultColor}`);
+            return resultColor;
         }
     }
 
     // 3. No rule matched - use the series base color.
+    console.log(`[getColors] No rule matched for index ${index}. Falling back to baseColor: ${baseColor}`);
     return baseColor;
   });
 },

@@ -72,6 +72,15 @@ looker.plugins.visualizations.add({
       order: 9
     },
 
+    // RESTORED: Hide Legend with Formatting
+    hide_legend_with_formatting: {
+      type: "boolean",
+      label: "Hide Series Legend (conditional only)",
+      default: false,
+      section: "Plot",
+      order: 9.5
+    },
+
     conditional_formatting_apply_to: {
       type: "string",
       label: "Apply Formatting To",
@@ -93,15 +102,6 @@ looker.plugins.visualizations.add({
       section: "Plot",
       default: "",
       order: 11
-    },
-
-    // RESTORED: Hide Legend with Formatting
-    hide_legend_with_formatting: {
-      type: "boolean",
-      label: "Hide Series Legend (conditional only)",
-      default: false,
-      section: "Plot",
-      order: 11.5
     },
 
     conditional_formatting_help_2: {
@@ -1027,7 +1027,7 @@ looker.plugins.visualizations.add({
       ? config.series_labels.split(',').map(label => label.trim()).filter(label => label !== '')
       : [];
 
-    console.log('Custom labels array:', customLabelsArray);
+    //console.log('Custom labels array:', customLabelsArray);
 
     // Helper to get label for a series by index
     const getSeriesLabel = (index, defaultLabel) => {
@@ -1060,7 +1060,7 @@ looker.plugins.visualizations.add({
           const defaultName = `${queryResponse.fields.measures[measureIndex].label_short || queryResponse.fields.measures[measureIndex].label} - ${pivotValue.key}`;
           const seriesName = getSeriesLabel(seriesIndex, defaultName);
 
-          console.log(`Pivot series ${seriesIndex}: measureName=${measureName}, defaultName=${defaultName}, seriesName=${seriesName}`);
+          //console.log(`Pivot series ${seriesIndex}: measureName=${measureName}, defaultName=${defaultName}, seriesName=${seriesName}`);
 
           // Determine series base color
           const baseColor = customColors ? customColors[seriesIndex % customColors.length] : finalPalette[seriesIndex % finalPalette.length];
@@ -1112,7 +1112,7 @@ looker.plugins.visualizations.add({
         const defaultName = queryResponse.fields.measures[index].label_short || queryResponse.fields.measures[index].label;
         const seriesName = getSeriesLabel(index, defaultName);
 
-        console.log(`Series ${index}: measureName=${measureName}, defaultName=${defaultName}, seriesName=${seriesName}`);
+        //console.log(`Series ${index}: measureName=${measureName}, defaultName=${defaultName}, seriesName=${seriesName}`);
 
         if (shouldApplyFormatting) {
           // Apply conditional formatting
@@ -1465,9 +1465,9 @@ looker.plugins.visualizations.add({
     };
 
     // TRENDLINE
-    console.log('=== TRENDLINE CHECK START ===');
-    console.log('config.trend_line_enabled:', config.trend_line_enabled);
-    console.log('seriesData.length:', seriesData.length);
+    //console.log('=== TRENDLINE CHECK START ===');
+    //console.log('config.trend_line_enabled:', config.trend_line_enabled);
+    //console.log('seriesData.length:', seriesData.length);
 
     if (config.trend_line_enabled) {
       if (seriesData.length > 0) {
@@ -1618,17 +1618,17 @@ looker.plugins.visualizations.add({
               }
             };
 
-            console.log('[TRENDLINE DEBUG] Trend Series generated successfully. Pushing to chartOptions.');
+            //console.log('[TRENDLINE DEBUG] Trend Series generated successfully. Pushing to chartOptions.');
             chartOptions.series.push(trendSeries);
 
           } else {
-             console.log('[TRENDLINE DEBUG] Not enough valid points (<= 1) to draw trendline.');
+             //console.log('[TRENDLINE DEBUG] Not enough valid points (<= 1) to draw trendline.');
           }
         } catch (error) {
           console.error('[TRENDLINE ERROR] Error calculating trendline:', error);
         }
       } else {
-         console.log('[TRENDLINE DEBUG] No series data available.');
+         //console.log('[TRENDLINE DEBUG] No series data available.');
       }
     }
 
@@ -1641,23 +1641,23 @@ looker.plugins.visualizations.add({
 
     if (!this.chart || criticalOptionsChanged) {
       if (criticalOptionsChanged) {
-        console.log('[CHART REINIT] Critical options changed. Destroying and recreating chart.');
+        //console.log('[CHART REINIT] Critical options changed. Destroying and recreating chart.');
         this.chart.destroy();
       } else {
-        console.log('[CHART INIT] Creating new chart instance.');
+        //console.log('[CHART INIT] Creating new chart instance.');
       }
       this.chart = Highcharts.chart(this._chartContainer, chartOptions);
     } else {
-      console.log('[CHART UPDATE] Updating existing chart with new options.');
+      //console.log('[CHART UPDATE] Updating existing chart with new options.');
       // When updating, ensure trendline is preserved if it exists in new options
       const hasTrendlineInOptions = chartOptions.series.some(s => s.id === 'trend-line-series');
       const hasTrendlineInChart = this.chart.get('trend-line-series');
 
-      console.log('[CHART UPDATE] hasTrendlineInOptions:', hasTrendlineInOptions, 'hasTrendlineInChart:', !!hasTrendlineInChart);
+      //console.log('[CHART UPDATE] hasTrendlineInOptions:', hasTrendlineInOptions, 'hasTrendlineInChart:', !!hasTrendlineInChart);
 
       // Remove existing trendline if present but not in new options
       if (hasTrendlineInChart && !hasTrendlineInOptions) {
-        console.log('[CHART UPDATE] Removing trendline from chart.');
+        //console.log('[CHART UPDATE] Removing trendline from chart.');
         hasTrendlineInChart.remove(false);
       }
 
@@ -1670,10 +1670,10 @@ looker.plugins.visualizations.add({
         const existingTrendline = this.chart.get('trend-line-series');
 
         if (existingTrendline) {
-          console.log('[CHART UPDATE] Updating existing trendline.');
+          //console.log('[CHART UPDATE] Updating existing trendline.');
           existingTrendline.setData(trendlineData.data, false);
         } else {
-          console.log('[CHART UPDATE] Adding new trendline.');
+          //console.log('[CHART UPDATE] Adding new trendline.');
           this.chart.addSeries(trendlineData, false);
         }
       }
@@ -1687,7 +1687,7 @@ looker.plugins.visualizations.add({
     this._lastSeriesPositioning = config.series_positioning;
     this._lastChartType = config.chart_type;
 
-    console.log('=== TRENDLINE CHECK END ===');
+    //console.log('=== TRENDLINE CHECK END ===');
     done();
   },
 
@@ -1758,7 +1758,7 @@ looker.plugins.visualizations.add({
   },
 
   getColors: function(values, config, baseColor, callerInfo = 'unknown') {
-  console.log(`[getColors] Called from: ${callerInfo}, baseColor: ${baseColor}`);
+  //console.log(`[getColors] Called from: ${callerInfo}, baseColor: ${baseColor}`);
 
   if (!config.conditional_formatting_enabled) {
     return values.map(() => baseColor);

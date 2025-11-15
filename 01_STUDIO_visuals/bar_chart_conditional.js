@@ -1102,12 +1102,12 @@ looker.plugins.visualizations.add({
             // Apply Conditional Formatting
             const rawValues = values.map(v => v.y);
 
-            // Note: Removed paletteForFallback argument as it's no longer used in getColors
-            const colors = this.getColors(rawValues, config, baseColor, seriesIndex, config.reverse_colors, 'Pivot');
+            // Call getColors, which uses baseColor as the fallback
+            const colors = this.getColors(rawValues, config, baseColor, 'Pivot');
 
             seriesData.push({
               name: seriesName,
-              data: values.map((v, i) => ({ ...v, color: colors[i] })),
+              data: values.map((v, i) => ({ ...v, color: colors[i] })), // Point colors defined here
               showInLegend: true,
               color: baseColor // Series color needed for area/line fill and legend entry
             });
@@ -1115,7 +1115,7 @@ looker.plugins.visualizations.add({
             // No conditional formatting applied (either disabled globally or not targeted)
             seriesData.push({
               name: seriesName,
-              data: values,
+              data: values.map(v => ({...v, color: null})), // CRITICAL FIX: Force null point colors
               color: baseColor, // Use the correct reversed/unreversed series color
               showInLegend: true
             });
@@ -1152,8 +1152,8 @@ looker.plugins.visualizations.add({
           // Apply Conditional Formatting
           const rawValues = values.map(v => v.y);
 
-          // Note: Removed paletteForFallback argument as it's no longer used in getColors
-          const colors = this.getColors(rawValues, config, baseColor, index, config.reverse_colors, 'Non-Pivot');
+          // Call getColors, which uses baseColor as the fallback
+          const colors = this.getColors(rawValues, config, baseColor, 'Non-Pivot');
 
           seriesData.push({
             name: seriesName,
@@ -1165,7 +1165,7 @@ looker.plugins.visualizations.add({
           // No conditional formatting applied (either disabled globally or not targeted)
           seriesData.push({
             name: seriesName,
-            data: values,
+            data: values.map(v => ({...v, color: null})), // CRITICAL FIX: Force null point colors
             color: baseColor,
             showInLegend: true
           });
@@ -1211,9 +1211,9 @@ looker.plugins.visualizations.add({
                 ...series,
                 data: series.data.map(point => ({
                     ...point,
-                    color: baseColor // Explicitly reset point color to series default
+                    color: null // CRITICAL FIX: Ensure no residual point color is set here
                 })),
-                color: baseColor // Ensure series color is also the default
+                color: baseColor // Ensure series color is the default
             };
         });
     }

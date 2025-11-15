@@ -56,15 +56,6 @@ looker.plugins.visualizations.add({
       order: 4
     },
 
-    conditional_formatting_divider_1: {
-      type: "string",
-      label: "─────────────────────────────",
-      display: "divider",
-      section: "Plot",
-      default: "",
-      order: 5
-    },
-
     conditional_formatting_enabled: {
       type: "boolean",
       label: "Enable Conditional Formatting",
@@ -89,20 +80,11 @@ looker.plugins.visualizations.add({
 
     conditional_formatting_help: {
       type: "string",
-      label: "ℹ️ First Measure: colors only the first series | All Measures: colors each series independently | Stacked Measures: colors all bars based on their combined total.",
-      display: "divider",
+      label: "ℹ️ Top/Bottom N use Value 1 as N, Between uses both, Gradient uses both colors",
+      display: "text",
       section: "Plot",
       default: "",
       order: 11
-    },
-
-    conditional_formatting_help_2: {
-      type: "string",
-      label: "Top/Bottom N use Value 1 as N, Between uses both, Gradient uses both colors. Rule 1 overwrite Rule 2 that overwrite Rule 3.If your changes are not applied, try refreshing your page.",
-      display: "divider",
-      section: "Plot",
-      default: "",
-      order: 12
     },
 
     // Rule 1
@@ -111,7 +93,7 @@ looker.plugins.visualizations.add({
       label: "Rule 1: Enabled",
       default: false,
       section: "Plot",
-      order: 13
+      order: 12
     },
     rule1_type: {
       type: "string",
@@ -128,7 +110,7 @@ looker.plugins.visualizations.add({
       ],
       default: "gt",
       section: "Plot",
-      order: 14
+      order: 13
     },
     rule1_value: {
       type: "number",
@@ -136,14 +118,14 @@ looker.plugins.visualizations.add({
       placeholder: "Enter value or N",
       default: 5,
       section: "Plot",
-      order: 15
+      order: 14
     },
     rule1_value2: {
       type: "number",
       label: "Value 2 (Between only)",
       default: 100,
       section: "Plot",
-      order: 16
+      order: 15
     },
     rule1_color: {
       type: "string",
@@ -151,7 +133,7 @@ looker.plugins.visualizations.add({
       default: "#EA4335",
       display: "color",
       section: "Plot",
-      order: 17
+      order: 16
     },
     rule1_color2: {
       type: "string",
@@ -159,23 +141,14 @@ looker.plugins.visualizations.add({
       default: "#34A853",
       display: "color",
       section: "Plot",
-      order: 18
+      order: 17
     },
     rule1_legend_label: {
       type: "string",
       label: "Legend Label (optional)",
       placeholder: "e.g., High Performers",
       section: "Plot",
-      order: 19
-    },
-
-    conditional_formatting_divider_2: {
-      type: "string",
-      label: "─────────────────────────────",
-      display: "divider",
-      section: "Plot",
-      default: "",
-      order: 20
+      order: 18
     },
 
     // Rule 2
@@ -240,15 +213,6 @@ looker.plugins.visualizations.add({
       placeholder: "e.g., Medium Performers",
       section: "Plot",
       order: 27
-    },
-
-    conditional_formatting_divider_3: {
-      type: "string",
-      label: "─────────────────────────────",
-      display: "divider",
-      section: "Plot",
-      default: "",
-      order: 28
     },
 
     // Rule 3
@@ -347,7 +311,6 @@ looker.plugins.visualizations.add({
       type: "string",
       label: "Custom Series Labels (comma-separated)",
       placeholder: "Sales,Returns,Profit",
-      default: "",
       section: "Series",
       order: 3
     },
@@ -523,15 +486,6 @@ looker.plugins.visualizations.add({
       order: 5
     },
 
-    reference_line_divider_1: {
-      type: "string",
-      label: "─────────────────────────────",
-      display: "divider",
-      section: "Y",
-      default: "",
-      order: 6
-    },
-
     // Reference Lines
     ref_line_enabled: {
       type: "boolean",
@@ -553,14 +507,6 @@ looker.plugins.visualizations.add({
       section: "Y",
       order: 11
     },
-    reference_line_help: {
-      type: "string",
-      label: "ℹ️ First Measure: calculates from the first series only | All Measures: calculates from all series combined | Stacked Measures: calculates from the sum of all series at each point. If your changes are not applied, try refreshing your page.",
-      display: "divider",
-      section: "Y",
-      default: "",
-      order: 12
-    },
     ref_line_type: {
       type: "string",
       label: "Reference Type",
@@ -574,12 +520,20 @@ looker.plugins.visualizations.add({
       ],
       default: "custom",
       section: "Y",
-      order: 13
+      order: 12
     },
     ref_line_value: {
       type: "number",
       label: "Reference Value",
       default: 0,
+      section: "Y",
+      order: 13
+    },
+    ref_line_title: {
+      type: "string",
+      label: "Reference Title",
+      placeholder: "Auto (based on type)",
+      default: "",  // empty string (will be calculated dynamically)
       section: "Y",
       order: 14
     },
@@ -591,30 +545,13 @@ looker.plugins.visualizations.add({
       section: "Y",
       order: 15
     },
-    ref_line_title: {
-      type: "string",
-      label: "Reference Title",
-      placeholder: "Auto (based on type)",
-      default: "",  // empty string (will be calculated dynamically)
-      section: "Y",
-      order: 16
-    },
     ref_line_title_bg: {
       type: "string",
       label: "Title Background Color",
       default: "#FFFFFF",
       display: "color",
       section: "Y",
-      order: 17
-    },
-
-    reference_line_divider_2: {
-      type: "string",
-      label: "─────────────────────────────",
-      display: "divider",
-      section: "Y",
-      default: "",
-      order: 18
+      order: 16
     },
 
     // Trend Line
@@ -638,14 +575,6 @@ looker.plugins.visualizations.add({
       section: "Y",
       order: 21
     },
-    trend_line_help: {
-      type: "string",
-      label: "ℹ️ First Measure: trend follows the first series only | All Measures: trend follows the average of all series | Stacked Measures: trend follows the sum of all series. If your changes are not applied, try refreshing your page.",
-      display: "divider",
-      section: "Y",
-      default: "",
-      order: 22
-    },
     trend_line_type: {
       type: "string",
       label: "Trend Type",
@@ -656,7 +585,7 @@ looker.plugins.visualizations.add({
       ],
       default: "linear",
       section: "Y",
-      order: 23
+      order: 22
     },
     trend_line_period: {
       type: "number",
@@ -665,7 +594,7 @@ looker.plugins.visualizations.add({
       min: 2,
       max: 20,
       section: "Y",
-      order: 24
+      order: 23
     },
     trend_line_color: {
       type: "string",
@@ -673,14 +602,7 @@ looker.plugins.visualizations.add({
       default: "#4285F4",
       display: "color",
       section: "Y",
-      order: 25
-    },
-    trend_line_show_label: {
-      type: "boolean",
-      label: "Show Value Labels",
-      default: false,
-      section: "Y",
-      order: 26
+      order: 24
     },
     trend_line_label_color: {
       type: "string",
@@ -688,7 +610,7 @@ looker.plugins.visualizations.add({
       default: "#4285F4",
       display: "color",
       section: "Y",
-      order: 27
+      order: 25
     },
     trend_line_title: {
       type: "string",
@@ -696,7 +618,7 @@ looker.plugins.visualizations.add({
       placeholder: "Auto (based on type)",  // placeholder
       default: "",  // empty string (will be calculated dynamically)
       section: "Y",
-      order: 28
+      order: 26
     },
     trend_line_title_bg: {
       type: "string",
@@ -704,8 +626,15 @@ looker.plugins.visualizations.add({
       default: "#FFFFFF",
       display: "color",
       section: "Y",
-      order: 29
+      order: 27
     },
+    trend_line_show_label: {
+      type: "boolean",
+      label: "Show Value Labels",
+      default: false,
+      section: "Y",
+      order: 28
+    }
   },
 
   create: function(element, config) {
@@ -754,10 +683,7 @@ looker.plugins.visualizations.add({
       cool: ['#F0F9FF', '#DEEBF7', '#C6DBEF', '#9ECAE1', '#6BAED6', '#4292C6', '#2171B5', '#08519C', '#08306B']
     };
 
-    // Handle series_labels - Looker passes it as an object like {"measure.name": "Custom Label"}
-    const customLabels = config.series_labels && typeof config.series_labels === 'object'
-      ? config.series_labels
-      : null;
+    const customLabels = config.series_labels ? String(config.series_labels).split(',').map(l => l.trim()) : null;
     const palette = palettes[config.color_collection] || palettes.google;
     const customColors = config.series_colors ? String(config.series_colors).split(',').map(c => c.trim()) : null;
 
@@ -771,12 +697,8 @@ looker.plugins.visualizations.add({
             return { y: cell && cell.value !== null ? Number(cell.value) : null, drillLinks: cell ? cell.links : [], categoryIndex: i };
           });
           const seriesIndex = pivotIndex * measures.length + measureIndex;
-          const measureName = measure;
-          const defaultName = `${queryResponse.fields.measures[measureIndex].label_short || queryResponse.fields.measures[measureIndex].label} - ${pivotValue.key}`;
-          const seriesName = (customLabels && customLabels[measureName]) || defaultName;
-
           seriesData.push({
-            name: seriesName,
+            name: customLabels && customLabels[seriesIndex] ? customLabels[seriesIndex] : `${queryResponse.fields.measures[measureIndex].label_short || queryResponse.fields.measures[measureIndex].label} - ${pivotValue.key}`,
             data: values,
             color: customColors ? customColors[seriesIndex % customColors.length] : palette[seriesIndex % palette.length]
           });
@@ -795,17 +717,13 @@ looker.plugins.visualizations.add({
 
         const baseColor = customColors ? customColors[index % customColors.length] : palette[index % palette.length];
 
-        const measureName = measure;
-        const defaultName = queryResponse.fields.measures[index].label_short || queryResponse.fields.measures[index].label;
-        const seriesName = (customLabels && customLabels[measureName]) || defaultName;
-
         if (shouldApplyFormatting) {
           // Apply conditional formatting
           const rawValues = values.map(v => v.y);
           const colors = this.getColors(rawValues, config, baseColor);  // PASS baseColor
 
           seriesData.push({
-            name: seriesName,
+            name: customLabels && customLabels[index] ? customLabels[index] : queryResponse.fields.measures[index].label_short || queryResponse.fields.measures[index].label,
             data: values.map((v, i) => ({ ...v, color: colors[i] })),
             // DON'T set a series-level color when using conditional formatting
             showInLegend: true
@@ -813,7 +731,7 @@ looker.plugins.visualizations.add({
         } else {
           // No conditional formatting - use normal series color
           seriesData.push({
-            name: seriesName,
+            name: customLabels && customLabels[index] ? customLabels[index] : queryResponse.fields.measures[index].label_short || queryResponse.fields.measures[index].label,
             data: values,
             color: baseColor,
             showInLegend: true
@@ -869,20 +787,128 @@ looker.plugins.visualizations.add({
 
     // Build legend items for rules
     const ruleLegendItems = [];
-
-    // Add legend items for each enabled rule with a legend label
+    // Apply conditional formatting
     if (config.conditional_formatting_enabled) {
-      for (let ruleNum = 1; ruleNum <= 3; ruleNum++) {
-        if (config[`rule${ruleNum}_enabled`] && config[`rule${ruleNum}_legend_label`] && config[`rule${ruleNum}_legend_label`].trim() !== '') {
-          ruleLegendItems.push({
-            name: config[`rule${ruleNum}_legend_label`],
-            color: config[`rule${ruleNum}_color`] || '#EA4335'
-          });
+  const applyTo = config.conditional_formatting_apply_to || 'first';
+
+  seriesData.forEach((series, seriesIndex) => {
+    // Determine if we should apply formatting to this series
+    const shouldApply = applyTo === 'all' ||
+                       (applyTo === 'first' && seriesIndex === 0) ||
+                       (applyTo === 'stacked');
+
+    if (!shouldApply && applyTo !== 'stacked') return;
+
+    series.data = series.data.map((point, pointIndex) => {
+      if (typeof point !== 'object') {
+        point = { y: point };
+      }
+
+      // Calculate the value to check against rules
+      let valueToCheck = point.y;
+
+      // For "stacked" mode, sum all visible series values for this point
+      if (applyTo === 'stacked') {
+        valueToCheck = 0;
+        seriesData.forEach(s => {
+          if (s.visible !== false) {
+            const dataPoint = s.data[pointIndex];
+            const yValue = typeof dataPoint === 'object' ? dataPoint.y : dataPoint;
+            valueToCheck += (yValue || 0);
+          }
+        });
+      }
+
+      // Check rules in order (1, 2, 3)
+      for (let i = 1; i <= 3; i++) {
+        if (!config[`rule${i}_enabled`]) continue;
+
+        const ruleType = config[`rule${i}_type`];
+        const value1 = parseFloat(config[`rule${i}_value`]) || 0;
+        const value2 = parseFloat(config[`rule${i}_value2`]) || 0;
+        const color1 = config[`rule${i}_color`] || '#EA4335';
+        const color2 = config[`rule${i}_color2`] || '#34A853';
+
+        let matchesRule = false;
+        let finalColor = color1;
+
+        // Rule matching logic
+        if (ruleType === 'gt' && valueToCheck > value1) matchesRule = true;
+        else if (ruleType === 'lt' && valueToCheck < value1) matchesRule = true;
+        else if (ruleType === 'eq' && valueToCheck === value1) matchesRule = true;
+        else if (ruleType === 'between' && valueToCheck >= value1 && valueToCheck <= value2) matchesRule = true;
+        else if (ruleType === 'topn' || ruleType === 'bottomn') {
+          // Get all values for ranking
+          const allValues = seriesData[applyTo === 'stacked' ? 0 : seriesIndex].data
+            .map(d => typeof d === 'object' ? d.y : d)
+            .filter(v => v != null);
+
+          if (applyTo === 'stacked') {
+            // For stacked, calculate sums
+            const stackedValues = allValues.map((_, idx) => {
+              let sum = 0;
+              seriesData.forEach(s => {
+                if (s.visible !== false) {
+                  const dp = s.data[idx];
+                  sum += typeof dp === 'object' ? (dp.y || 0) : (dp || 0);
+                }
+              });
+              return sum;
+            });
+            const sorted = [...stackedValues].sort((a, b) => ruleType === 'topn' ? b - a : a - b);
+            const threshold = sorted[Math.min(value1 - 1, sorted.length - 1)];
+            matchesRule = ruleType === 'topn' ? valueToCheck >= threshold : valueToCheck <= threshold;
+          } else {
+            const sorted = [...allValues].sort((a, b) => ruleType === 'topn' ? b - a : a - b);
+            const threshold = sorted[Math.min(value1 - 1, sorted.length - 1)];
+            matchesRule = ruleType === 'topn' ? valueToCheck >= threshold : valueToCheck <= threshold;
+          }
+        }
+        else if (ruleType === 'gradient') {
+          const allValues = seriesData[applyTo === 'stacked' ? 0 : seriesIndex].data
+            .map(d => typeof d === 'object' ? d.y : d)
+            .filter(v => v != null);
+
+          if (applyTo === 'stacked') {
+            const stackedValues = allValues.map((_, idx) => {
+              let sum = 0;
+              seriesData.forEach(s => {
+                if (s.visible !== false) {
+                  const dp = s.data[idx];
+                  sum += typeof dp === 'object' ? (dp.y || 0) : (dp || 0);
+                }
+              });
+              return sum;
+            });
+            const min = Math.min(...stackedValues);
+            const max = Math.max(...stackedValues);
+            const ratio = max > min ? (valueToCheck - min) / (max - min) : 0;
+            finalColor = this.interpolateColor(color1, color2, ratio);
+          } else {
+            const min = Math.min(...allValues);
+            const max = Math.max(...allValues);
+            const ratio = max > min ? (valueToCheck - min) / (max - min) : 0;
+            finalColor = this.interpolateColor(color1, color2, ratio);
+          }
+          matchesRule = true;
+        }
+
+        if (matchesRule) {
+          point.color = finalColor;
+          break; // Stop checking rules once one matches
         }
       }
-    }
 
-    // Apply conditional formatting
+      // If no rules matched and formatting is enabled, use default color
+      if (!point.color && config.conditional_formatting_enabled) {
+        point.color = config.default_color || '#9AA0A6';
+      }
+
+      return point;
+    });
+  });
+}
+
     const chartOptions = {
       chart: { type: baseType, backgroundColor: 'transparent', spacing: [10, 10, 10, 10] },
       title: { text: null },

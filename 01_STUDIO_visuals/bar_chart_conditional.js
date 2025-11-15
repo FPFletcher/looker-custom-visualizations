@@ -1124,7 +1124,7 @@ looker.plugins.visualizations.add({
 
     // Determine if the series legend should be enabled
     let seriesLegendEnabled = seriesData.length > 1;
-    // FIX 2: Correct legend visibility logic
+    // FIX: Correct legend visibility logic
     if (config.conditional_formatting_enabled && config.hide_legend_with_formatting) {
         // If conditional formatting is enabled AND the user chose to hide the series legend,
         // the series legend is explicitly disabled.

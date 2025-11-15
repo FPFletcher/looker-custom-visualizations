@@ -61,7 +61,6 @@ looker.plugins.visualizations.add({
       label: "─────────────────────────────",
       display: "divider",
       section: "Plot",
-      default: "",
       order: 5
     },
 
@@ -1142,6 +1141,7 @@ looker.plugins.visualizations.add({
         // FIX 1: Add a simple reflow/redraw on animation complete to prevent trendline from being hidden by chart updates
         events: {
           load: function() {
+            console.log('[HIGHCHARTS EVENT] Load. Checking trendline state...');
             // Ensure trendline title labels are visible after chart loads
             const trendSeries = this.get('trend-line-series');
             if (trendSeries && trendSeries.points) {
@@ -1153,15 +1153,17 @@ looker.plugins.visualizations.add({
               });
             }
           },
-          // This helps stabilize chart elements when rules are changed, but we rely mostly on the update call parameters below.
           redraw: function() {
+              console.log('[HIGHCHARTS EVENT] Redraw. Forcing trendline to front.');
               const trendSeries = this.get('trend-line-series');
               if (trendSeries) {
-                  trendSeries.setVisible(true, false); // Ensure visible without animation
+                  // Ensure visibility and zIndex after redraw
+                  trendSeries.setVisible(true, false);
+                  trendSeries.update({ zIndex: 10 }, false);
                   if (trendSeries.points) {
                     trendSeries.points.forEach(point => {
                       if (point.dataLabel) {
-                        point.dataLabel.toFront(); // Always bring label to front
+                        point.dataLabel.toFront();
                       }
                     });
                   }
@@ -1366,7 +1368,7 @@ looker.plugins.visualizations.add({
     };
 
     // TRENDLINE
-    console.log('=== TRENDLINE CHECK ===');
+    console.log('=== TRENDLINE CHECK START ===');
     console.log('config.trend_line_enabled:', config.trend_line_enabled);
     console.log('seriesData.length:', seriesData.length);
 
@@ -1517,21 +1519,31 @@ looker.plugins.visualizations.add({
               }
             };
 
+            console.log('[TRENDLINE DEBUG] Trend Series generated successfully. Pushing to chartOptions.');
             chartOptions.series.push(trendSeries);
 
+          } else {
+             console.log('[TRENDLINE DEBUG] Not enough valid points (<= 1) to draw trendline.');
           }
         } catch (error) {
-          console.error('Error calculating trendline:', error);
+          console.error('[TRENDLINE ERROR] Error calculating trendline:', error);
         }
+      } else {
+         console.log('[TRENDLINE DEBUG] No series data available.');
       }
     }
 
     if (!this.chart) {
+      console.log('[CHART INIT] Creating new chart instance.');
       this.chart = Highcharts.chart(this._chartContainer, chartOptions);
     } else {
-      // FIX: Force immediate redraw and deep merge to clear persistent coloring issues.
+      console.log('[CHART UPDATE] Updating existing chart with new options (deep merge: true).');
+      // FIX 1: We use (true, true) to ensure a deep update and immediate redraw.
+      // Highcharts is known to have visibility issues if series are added/removed/updated frequently,
+      // but this is the recommended way to handle Looker update cycles. The 'redraw' event handler should stabilize visibility.
       this.chart.update(chartOptions, true, true);
     }
+    console.log('=== TRENDLINE CHECK END ===');
     done();
   },
 

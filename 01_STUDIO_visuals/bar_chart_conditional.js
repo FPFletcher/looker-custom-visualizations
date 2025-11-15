@@ -919,9 +919,29 @@ looker.plugins.visualizations.add({
     };
 
     // Handle series_labels - Looker passes it as an object like {"measure.name": "Custom Label"}
+    // Sometimes it's nested as {"measure.name": {"value": "Custom Label"}}
     const customLabels = config.series_labels && typeof config.series_labels === 'object'
       ? config.series_labels
       : null;
+
+    // Helper to extract label string from potentially nested object
+    const getSeriesLabel = (measureName, defaultLabel) => {
+      if (!customLabels || !customLabels[measureName]) return defaultLabel;
+      const label = customLabels[measureName];
+      // If it's a string, use it directly
+      if (typeof label === 'string') return label;
+      // If it's an object, try to extract the value
+      if (typeof label === 'object') {
+        // Try common patterns
+        if (label.value) return label.value;
+        if (label.label) return label.label;
+        // If it's an object with keys, take the first value
+        const values = Object.values(label);
+        if (values.length > 0 && typeof values[0] === 'string') return values[0];
+      }
+      return defaultLabel;
+    };
+
     const palette = palettes[config.color_collection] || palettes.google;
     const customColors = config.series_colors ? String(config.series_colors).split(',').map(c => c.trim()) : null;
 
@@ -942,7 +962,7 @@ looker.plugins.visualizations.add({
           const seriesIndex = pivotIndex * measures.length + measureIndex;
           const measureName = measure;
           const defaultName = `${queryResponse.fields.measures[measureIndex].label_short || queryResponse.fields.measures[measureIndex].label} - ${pivotValue.key}`;
-          const seriesName = (customLabels && customLabels[measureName]) || defaultName;
+          const seriesName = getSeriesLabel(measureName, defaultName);
 
           // Determine series base color
           const baseColor = customColors ? customColors[seriesIndex % customColors.length] : palette[seriesIndex % palette.length];
@@ -992,7 +1012,7 @@ looker.plugins.visualizations.add({
 
         const measureName = measure;
         const defaultName = queryResponse.fields.measures[index].label_short || queryResponse.fields.measures[index].label;
-        const seriesName = (customLabels && customLabels[measureName]) || defaultName;
+        const seriesName = getSeriesLabel(measureName, defaultName);
 
         if (shouldApplyFormatting) {
           // Apply conditional formatting
@@ -1512,14 +1532,30 @@ looker.plugins.visualizations.add({
       }
     }
 
-    if (!this.chart) {
-      console.log('[CHART INIT] Creating new chart instance.');
+    // Track if critical options changed that require full re-render
+    const criticalOptionsChanged = this.chart && (
+      this._lastConditionalFormatting !== config.conditional_formatting_enabled ||
+      this._lastSeriesPositioning !== config.series_positioning
+    );
+
+    if (!this.chart || criticalOptionsChanged) {
+      if (criticalOptionsChanged) {
+        console.log('[CHART REINIT] Critical options changed. Destroying and recreating chart.');
+        this.chart.destroy();
+      } else {
+        console.log('[CHART INIT] Creating new chart instance.');
+      }
       this.chart = Highcharts.chart(this._chartContainer, chartOptions);
     } else {
       console.log('[CHART UPDATE] Updating existing chart with new options (deep merge: true).');
       // Use (true, true) to ensure a deep update and immediate redraw.
       this.chart.update(chartOptions, true, true);
     }
+
+    // Store last state
+    this._lastConditionalFormatting = config.conditional_formatting_enabled;
+    this._lastSeriesPositioning = config.series_positioning;
+
     console.log('=== TRENDLINE CHECK END ===');
     done();
   },

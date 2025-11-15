@@ -899,42 +899,36 @@ looker.plugins.visualizations.add({
       if (formatType === 'number') return value.toLocaleString();
 
       // Date formats - handle both Date objects and date strings
-      if (formatType === 'date_ymd') {
-        try {
-          const d = new Date(value);
-          if (isNaN(d.getTime())) return String(value);
+      const isDateType = ['date_ymd', 'date_mdy', 'date_ym', 'date_y'].includes(formatType);
+
+      if (isDateType) {
+        let d;
+        // Attempt to parse the value as a Date. If it's a string, it might be an ISO date or just 'YYYY-MM-DD'.
+        if (typeof value === 'string') {
+            d = new Date(value);
+        } else if (value instanceof Date) {
+            d = value;
+        } else {
+            // If it's a number, assume it's a timestamp (though unlikely for Looker dimension)
+            d = new Date(value);
+        }
+
+        if (isNaN(d.getTime())) {
+            // If parsing failed, return the original value as string
+            return String(value);
+        }
+
+        if (formatType === 'date_ymd') {
           return d.toISOString().split('T')[0];
-        } catch (e) {
-          return String(value);
         }
-      }
-      if (formatType === 'date_mdy') {
-        try {
-          const d = new Date(value);
-          if (isNaN(d.getTime())) return String(value);
+        if (formatType === 'date_mdy') {
           return `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
-        } catch (e) {
-          return String(value);
         }
-      }
-      if (formatType === 'date_ym') {
-        try {
-          // Use slice for month/year consistency if input is standard ISO format
-          return String(value).slice(0, 7);
-        } catch (e) {
-          // Fallback if it's not a parsable date string
-          const d = new Date(value);
-          if (isNaN(d.getTime())) return String(value);
-          return d.toISOString().slice(0, 7);
+        if (formatType === 'date_ym') {
+          // Use Date object methods for reliability instead of string slicing the original value
+          return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`;
         }
-      }
-      if (formatType === 'date_y') {
-        try {
-          // Use slice for year consistency if input is standard ISO format
-          return String(value).slice(0, 4);
-        } catch (e) {
-          const d = new Date(value);
-          if (isNaN(d.getTime())) return String(value);
+        if (formatType === 'date_y') {
           return String(d.getFullYear());
         }
       }
@@ -1185,8 +1179,9 @@ looker.plugins.visualizations.add({
             const customFormat = config.x_axis_value_format_custom || '';
             const rawValue = rawDimensionValues[this.pos];
 
-            // **X-AXIS FORMAT FIX**: If dimension is a string/date, apply date formatters.
-            // If the category value itself is used as the raw value, it helps maintain look of dates/strings
+            // FIX 2: Only use the Looker pre-rendered category value if "Auto" is selected
+            // AND there is no custom format string. If a preset (like date_ymd) is selected,
+            // we must explicitly call formatValue to apply the requested formatting.
             if (formatType === 'auto' && customFormat.trim() === '') {
                 return this.value; // Use Looker's pre-rendered category value
             }
@@ -1195,8 +1190,7 @@ looker.plugins.visualizations.add({
               return this.value;
             }
 
-            // Since dimensions in Looker data sometimes don't provide rendered values easily for the axis formatter,
-            // relying on custom/preset formatters with the raw value is necessary.
+            // Rely on custom/preset formatters with the raw value.
             return formatValue(rawValue, formatType, customFormat, dimensionField);
           }
         },
@@ -1518,11 +1512,12 @@ looker.plugins.visualizations.add({
     if (!this.chart) {
       this.chart = Highcharts.chart(this._chartContainer, chartOptions);
     } else {
-      // Use second parameter false to prevent instant redraw which sometimes conflicts
-      // with complex config updates and can cause stability issues (like the disappearing trendline).
-      this.chart.update(chartOptions, false, true);
-      this.chart.redraw(); // Force redraw after update
-      this.chart.reflow();
+      // FIX 1: Forcing a non-animated, full redraw on update can resolve
+      // persistent coloring issues when conditional formatting logic changes.
+      // Use second parameter true to force an immediate redraw.
+      // Use third parameter true (oneToOne) to force replacement of arrays (like series)
+      // which is key to clearing persistent state when conditional formatting is switched.
+      this.chart.update(chartOptions, true, true);
     }
     done();
   },

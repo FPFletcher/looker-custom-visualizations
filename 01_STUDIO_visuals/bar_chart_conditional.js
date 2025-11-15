@@ -1123,11 +1123,15 @@ looker.plugins.visualizations.add({
 
     // Determine if the series legend should be enabled
     let seriesLegendEnabled = seriesData.length > 1;
+    // FIX 2: Correct legend visibility logic
     if (config.conditional_formatting_enabled && config.hide_legend_with_formatting) {
         // If conditional formatting is enabled AND the user chose to hide the series legend,
-        // we only enable the legend if there are rule items to display.
+        // the series legend is explicitly disabled.
         seriesLegendEnabled = false;
     }
+    // Final legend status: enabled if the series are visible OR if there are rule items to show.
+    const finalLegendEnabled = seriesLegendEnabled || (ruleLegendItems.length > 0 && config.conditional_formatting_enabled);
+
 
     // Apply conditional formatting
     const chartOptions = {
@@ -1135,6 +1139,7 @@ looker.plugins.visualizations.add({
         type: baseType,
         backgroundColor: 'transparent',
         spacing: [10, 10, 10, 10],
+        // FIX 1: Add a simple reflow/redraw on animation complete to prevent trendline from being hidden by chart updates
         events: {
           load: function() {
             // Ensure trendline title labels are visible after chart loads
@@ -1147,6 +1152,20 @@ looker.plugins.visualizations.add({
                 }
               });
             }
+          },
+          // This helps stabilize chart elements when rules are changed, but we rely mostly on the update call parameters below.
+          redraw: function() {
+              const trendSeries = this.get('trend-line-series');
+              if (trendSeries) {
+                  trendSeries.setVisible(true, false); // Ensure visible without animation
+                  if (trendSeries.points) {
+                    trendSeries.points.forEach(point => {
+                      if (point.dataLabel) {
+                        point.dataLabel.toFront(); // Always bring label to front
+                      }
+                    });
+                  }
+              }
           }
         }
       },
@@ -1171,7 +1190,8 @@ looker.plugins.visualizations.add({
                   return this.value;
               }
               // For X-axis, formatType is often null, forcing usage of customFormat
-              return formatValue(rawValue, 'auto', customFormat, dimensionField);
+              // We pass 'number' type just as a hint, but rely on customFormat for output logic
+              return formatValue(rawValue, 'number', customFormat, dimensionField);
             }
 
             return this.value; // Use Looker's default rendering
@@ -1317,7 +1337,7 @@ looker.plugins.visualizations.add({
       },
       legend: {
         // FIX 2: Only hide series legend if hide_legend_with_formatting is true, but always show if there are rule items.
-        enabled: seriesLegendEnabled || ruleLegendItems.length > 0,
+        enabled: finalLegendEnabled,
         // If series legend is hidden, align should be based on rule items presence.
         // We'll keep it simple: if *anything* is in the legend, show it.
         // We ensure that the data for ruleLegendItems is always added to the chart options.
@@ -1325,9 +1345,15 @@ looker.plugins.visualizations.add({
         verticalAlign: 'bottom'
       },
       series: [
-        // Only include seriesData if the series legend is enabled OR if we are not hiding it,
-        // OR if conditional formatting is disabled.
-        ...seriesData,
+        // Filter out series data if the series legend is disabled AND conditional formatting is active,
+        // to prevent duplicate legend entries if rule labels are shown.
+        // HACK: To hide the series legend visually while allowing the series objects (which carry data)
+        // to exist, we control `showInLegend` for the individual series objects based on `seriesLegendEnabled`.
+        ...seriesData.map(s => ({
+            ...s,
+            showInLegend: seriesLegendEnabled
+        })),
+        // Rule legend items are independent and always show in legend if enabled (showInLegend: true)
         ...ruleLegendItems.map(item => ({
           name: item.name,
           color: item.color,

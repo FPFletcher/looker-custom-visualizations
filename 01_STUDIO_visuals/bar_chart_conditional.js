@@ -834,9 +834,7 @@ looker.plugins.visualizations.add({
             const decimals = (customFormat.match(/0\.([0#]+)/) || [])[1]?.length || 0;
             return value.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
         }
-        // NOTE: Returning a non-number here causes Highcharts to recursively call the formatter.
-        // We ensure we return a string representation of the value if it was not handled as a known numeric or date custom format.
-        return String(value);
+        return customFormat.replace(/0+/g, value.toLocaleString());
       }
 
       if (isNaN(value)) return String(value);
@@ -1124,7 +1122,7 @@ looker.plugins.visualizations.add({
 
     // Determine if the series legend should be enabled
     let seriesLegendEnabled = seriesData.length > 1;
-    // FIX: Correct legend visibility logic
+    // FIX 2: Correct legend visibility logic
     if (config.conditional_formatting_enabled && config.hide_legend_with_formatting) {
         // If conditional formatting is enabled AND the user chose to hide the series legend,
         // the series legend is explicitly disabled.
@@ -1177,7 +1175,6 @@ looker.plugins.visualizations.add({
               }
               // For X-axis, formatType is often null, forcing usage of customFormat
               // We pass 'number' type just as a hint, but rely on customFormat for output logic
-              // NOTE: Use 'number' here to hint to formatValue to handle it as a potential numerical/date value.
               return formatValue(rawValue, 'number', customFormat, dimensionField);
             }
 
@@ -1476,6 +1473,8 @@ looker.plugins.visualizations.add({
               stacking: undefined,
               stack: null,
 
+              // Removed redundant and dangerous afterAnimate events from trendSeries itself
+
               dataLabels: {
                 enabled: config.trend_line_show_label === true,
                 allowOverlap: true,
@@ -1513,30 +1512,14 @@ looker.plugins.visualizations.add({
       }
     }
 
-    // --- AGGRESSIVE STABILITY CHECK ---
-    const changedFields = details && details.changed ? details.changed : [];
-
-    const chartNeedsRebuild = changedFields.includes('conditional_formatting_enabled') ||
-                              changedFields.includes('trend_line_enabled') ||
-                              changedFields.includes('series_positioning');
-
-    if (this.chart) {
-      if (chartNeedsRebuild) {
-          console.log('[CHART REBUILD] Detected feature toggle (CF/Trend/Stacking), destroying and recreating chart.');
-          // Ensure we destroy the chart completely to clear all Highcharts artifacts
-          this.chart.destroy();
-          this.chart = Highcharts.chart(this._chartContainer, chartOptions);
-      } else {
-          console.log('[CHART UPDATE] Updating existing chart with new options (deep merge: true).');
-          // Use (true, true) to ensure a deep update and immediate redraw.
-          this.chart.update(chartOptions, true, true);
-      }
-    } else {
+    if (!this.chart) {
       console.log('[CHART INIT] Creating new chart instance.');
       this.chart = Highcharts.chart(this._chartContainer, chartOptions);
+    } else {
+      console.log('[CHART UPDATE] Updating existing chart with new options (deep merge: true).');
+      // Use (true, true) to ensure a deep update and immediate redraw.
+      this.chart.update(chartOptions, true, true);
     }
-    // ----------------------------------
-
     console.log('=== TRENDLINE CHECK END ===');
     done();
   },
@@ -1580,8 +1563,7 @@ looker.plugins.visualizations.add({
 
     // Apply rules in priority order: Rule 1 > Rule 2 > Rule 3
     return values.map((val, index) => {
-        // FIX: Return null immediately if non-numeric
-        if (val === null || val === undefined || isNaN(val)) return null;
+        if (val === null || val === undefined || isNaN(val)) return null; // Return null if not numeric, so updateAsync uses base series color
 
         // 1. Check discrete rules first (R1 > R2 > R3)
         for (let ruleNum = 1; ruleNum <= 3; ruleNum++) {

@@ -96,6 +96,15 @@ looker.plugins.visualizations.add({
       order: 11
     },
 
+    // RESTORED: Hide Legend with Formatting
+    hide_legend_with_formatting: {
+      type: "boolean",
+      label: "Hide Series Legend (conditional only)",
+      default: false,
+      section: "Plot",
+      order: 11.5
+    },
+
     conditional_formatting_help_2: {
       type: "string",
       label: "Top/Bottom N use Value 1 as N, Between uses both, Gradient uses both colors. Rule 1 overwrite Rule 2 that overwrite Rule 3.If your changes are not applied, try refreshing your page.",
@@ -416,6 +425,14 @@ looker.plugins.visualizations.add({
       section: "Values",
       order: 6
     },
+    // RESTORED: Custom Format String
+    value_format_custom: {
+      type: "string",
+      label: "Custom Format String",
+      placeholder: "e.g., $0.00, #,##0.0, 0.0%",
+      section: "Values",
+      order: 6.5
+    },
     show_total_labels: {
       type: "boolean",
       label: "Show Total Labels (Stacked)",
@@ -455,8 +472,7 @@ looker.plugins.visualizations.add({
       section: "X",
       order: 2
     },
-    // REMOVED: x_axis_value_format
-    // REMOVED: x_axis_value_format_custom
+    // Removed x_axis_value_format and x_axis_value_format_custom per user request
     x_axis_label_rotation: {
       type: "number",
       label: "Label Rotation",
@@ -502,6 +518,30 @@ looker.plugins.visualizations.add({
       placeholder: "Value",
       section: "Y",
       order: 2
+    },
+    // RESTORED: Y-Axis Value Format Options
+    y_axis_value_format: {
+      type: "string",
+      label: "Value Format",
+      display: "select",
+      values: [
+        {"Auto": "auto"},
+        {"Number": "number"},
+        {"Currency": "currency"},
+        {"Percent": "percent"},
+        {"Decimal (1)": "decimal1"},
+        {"Decimal (2)": "decimal2"}
+      ],
+      default: "auto",
+      section: "Y",
+      order: 2.5
+    },
+    y_axis_value_format_custom: {
+      type: "string",
+      label: "Custom Format String",
+      placeholder: "e.g., $0.00, #,##0.0",
+      section: "Y",
+      order: 2.6
     },
     y_axis_min: {
       type: "number",
@@ -794,7 +834,6 @@ looker.plugins.visualizations.add({
       if (isNaN(value)) return String(value);
 
       // PRIORITY 2: AUTO uses LookML's rendered value if available
-      // **FIX**: Rely heavily on renderedValue for LookML formats.
       if (formatType === 'auto') {
         // First try to use the rendered value passed from Looker data
         if (renderedValue !== null && renderedValue !== undefined) {
@@ -839,9 +878,6 @@ looker.plugins.visualizations.add({
       if (formatType === 'decimal2') return value.toFixed(2);
       if (formatType === 'number') return value.toLocaleString();
 
-      // Date formats are no longer supported via preset formats in this implementation
-      // as they were complex and explicitly requested to be removed.
-
       // PRIORITY 4: Auto fallback - smart number formatting
       if (value >= 1e9) return (value / 1e9).toFixed(1) + 'B';
       if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
@@ -852,7 +888,7 @@ looker.plugins.visualizations.add({
     const dimension = queryResponse.fields.dimensions[0].name;
     const dimensionField = queryResponse.fields.dimensions[0];
     const categories = data.map(row => LookerCharts.Utils.textForCell(row[dimension]));
-    // Removed rawDimensionValues as they are no longer needed for x-axis formatting.
+    // rawDimensionValues removed
     const measures = queryResponse.fields.measures.map(m => m.name);
     const measureFields = queryResponse.fields.measures;
     const hasPivot = queryResponse.fields.pivots && queryResponse.fields.pivots.length > 0;
@@ -983,7 +1019,7 @@ looker.plugins.visualizations.add({
     // If formatting applies to stacked measures, we need to apply coloring based on stackedTotals.
     if (config.conditional_formatting_enabled && config.conditional_formatting_apply_to === 'stacked') {
         const baseColor = customColors ? customColors[0] : palette[0];
-        // FIX 1: Use the dedicated stacked formatting function from the inspirer file (bar_chart_conditional (6).js)
+        // FIX: Use the dedicated stacked formatting function (getStackedColors)
         const stackedColors = this.getStackedColors(stackedTotals, config);
 
         seriesData = seriesData.map(series => {
@@ -993,9 +1029,7 @@ looker.plugins.visualizations.add({
                 ...series,
                 data: series.data.map((point, index) => ({
                     ...point,
-                    // Override point color with stacked conditional color
-                    // Ensure that if a stacked color is NOT returned (e.g., it didn't match any rule),
-                    // we fall back to the series' default color.
+                    // Override point color with stacked conditional color, falling back to series color if no rule matched (color is null)
                     color: stackedColors[index] || seriesBaseColor
                 }))
             }
@@ -1108,7 +1142,7 @@ looker.plugins.visualizations.add({
         title: { text: config.x_axis_label || null },
         labels: {
           rotation: isBar ? 0 : (config.x_axis_label_rotation || -45),
-          // FIX: Since preset formats are removed, we only use the Looker provided category text.
+          // X-Axis formatting relies on the default Looker text, as presets were removed.
           formatter: function() {
             return this.value;
           }
@@ -1124,9 +1158,10 @@ looker.plugins.visualizations.add({
         gridLineWidth: config.show_y_gridlines !== false ? 1 : 0,
         labels: {
           formatter: function() {
-            // Y-axis uses ONLY the common formatValue function without specialized y_axis options
-            const formatType = config.value_format || 'auto';
-            return formatValue(this.value, formatType, null, null); // Use common format for Y axis too
+            // Y-axis uses its own format options (which were restored) or falls back to main options
+            const formatType = config.y_axis_value_format || config.value_format || 'auto';
+            const customFormat = config.y_axis_value_format_custom || config.value_format_custom;
+            return formatValue(this.value, formatType, customFormat, measureFields[0]);
           }
         },
         stackLabels: {
@@ -1139,9 +1174,9 @@ looker.plugins.visualizations.add({
           formatter: function() {
             const num = this.total;
             if (num === undefined || num === null) return '';
-            // Stack labels use value_format ONLY (not y_axis format)
+            // Stack labels use value_format and custom format
             const formatType = config.value_format || 'auto';
-            const customFormat = null; // No custom format support for stack totals here
+            const customFormat = config.value_format_custom;
             // Use the first measure field for total format logic
             return formatValue(num, formatType, customFormat, measureFields[0]);
           }
@@ -1155,9 +1190,9 @@ looker.plugins.visualizations.add({
           label: {
             useHTML: true,
             text: (() => {
-              // Use base value format config for reference line label
-              const formatType = config.value_format || 'auto';
-              const customFormat = null;
+              // Use Y axis format config for reference line label
+              const formatType = config.y_axis_value_format || config.value_format || 'auto';
+              const customFormat = config.y_axis_value_format_custom || config.value_format_custom;
 
               const formatted = formatValue(refValue, formatType, customFormat, measureFields[0]);
 
@@ -1219,7 +1254,7 @@ looker.plugins.visualizations.add({
               const measureField = measureFields[seriesIndex % measureFields.length];
               // Access rendered value from the point's options
               const renderedValue = this.point && this.point.options && this.point.options.rendered ? this.point.options.rendered : null;
-              return formatValue(num, config.value_format || 'auto', null, measureField, renderedValue);
+              return formatValue(num, config.value_format || 'auto', config.value_format_custom, measureField, renderedValue);
             }
           },
           tooltip: {
@@ -1230,7 +1265,7 @@ looker.plugins.visualizations.add({
               const seriesIndex = this.series.index;
               const measureField = measureFields[seriesIndex % measureFields.length];
               const renderedValue = this.options && this.options.rendered ? this.options.rendered : null;
-              const formatted = formatValue(num, config.value_format || 'auto', null, measureField, renderedValue);
+              const formatted = formatValue(num, config.value_format || 'auto', config.value_format_custom, measureField, renderedValue);
               return `<span style="color:${this.color}">●</span> ${this.series.name}: <b>${formatted}</b><br/>`;
             }
           }
@@ -1251,7 +1286,7 @@ looker.plugins.visualizations.add({
         line: { marker: { enabled: true, radius: 3 } }
       },
       legend: {
-        enabled: seriesData.length > 1 || ruleLegendItems.length > 0,
+        enabled: config.hide_legend_with_formatting ? false : (seriesData.length > 1 || ruleLegendItems.length > 0),
         align: 'center',
         verticalAlign: 'bottom'
       },
@@ -1399,7 +1434,7 @@ looker.plugins.visualizations.add({
                 allowOverlap: true,
                 formatter: function() {
                   // Use the primary value format for trendline labels
-                  return formatValue(this.y, config.value_format || 'auto', null, measureFields[0]);
+                  return formatValue(this.y, config.value_format || 'auto', config.value_format_custom, measureFields[0]);
                 },
                 style: {
                   color: config.trend_line_label_color || config.trend_line_color || '#4285F4',
@@ -1411,7 +1446,7 @@ looker.plugins.visualizations.add({
               },
               tooltip: {
                 pointFormatter: function() {
-                  const formatted = formatValue(this.y, config.value_format || 'auto', null, measureFields[0]);
+                  const formatted = formatValue(this.y, config.value_format || 'auto', config.value_format_custom, measureFields[0]);
                   return `<b>${config.trend_line_title || 'Trend'}</b>: ${formatted}`;
                 }
               }
@@ -1438,9 +1473,11 @@ looker.plugins.visualizations.add({
 
   // FIX 1.2: Implement getStackedColors inspired by the provided file to ensure non-matched categories revert to their base color.
   getStackedColors: function(values, config) {
-    const defaultColor = '#EEEEEE'; // Default color if no base color is provided or needed
+    // Note: Since the core series color is handled in updateAsync and passed in via `series.color`,
+    // here we return `null` if no rule matches, signaling `updateAsync` to use the series default color.
+    const defaultColor = '#EEEEEE';
 
-    // Helper function to check discrete rules (non-gradient)
+    // Helper function to check discrete rules (non-gradient) - RE-COPIED from bar_chart_conditional (6).js
     const checkDiscrete = (val, ruleNum, allVals) => {
         if (!config[`rule${ruleNum}_enabled`]) return false;
         const type = config[`rule${ruleNum}_type`];
@@ -1458,7 +1495,6 @@ looker.plugins.visualizations.add({
             const uniqueSorted = [...new Set(numericVals)].sort((a, b) => type === 'topn' ? b - a : a - b);
 
             if (uniqueSorted.length === 0) return false;
-            // If n exceeds unique count, color everything
             if (n >= uniqueSorted.length) return true;
 
             const threshold = uniqueSorted[n - 1];
@@ -1477,7 +1513,7 @@ looker.plugins.visualizations.add({
     return values.map((val, index) => {
         if (val === null || val === undefined || isNaN(val)) return null;
 
-        // Check discrete rules first (R1 > R2 > R3)
+        // 1. Check discrete rules first (R1 > R2 > R3)
         for (let ruleNum = 1; ruleNum <= 3; ruleNum++) {
             if (config[`rule${ruleNum}_enabled`] && config[`rule${ruleNum}_type`] !== 'gradient') {
                 if (checkDiscrete(val, ruleNum, values)) {
@@ -1486,7 +1522,7 @@ looker.plugins.visualizations.add({
             }
         }
 
-        // If no discrete rule matched, check gradient rules (R1 > R2 > R3)
+        // 2. If no discrete rule matched, check gradient rules (R1 > R2 > R3)
         for (let ruleNum = 1; ruleNum <= 3; ruleNum++) {
             if (config[`rule${ruleNum}_enabled`] && config[`rule${ruleNum}_type`] === 'gradient') {
                 const numericValues = values.filter(v => typeof v === 'number' && v !== null && v !== undefined);
@@ -1497,7 +1533,7 @@ looker.plugins.visualizations.add({
             }
         }
 
-        // No rule matched - return null (this will trigger fallback to series color in updateAsync)
+        // No rule matched - return null (updateAsync handles fallback to series color)
         return null;
     });
   },

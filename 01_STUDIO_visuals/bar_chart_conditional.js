@@ -1070,11 +1070,9 @@ looker.plugins.visualizations.add({
       return defaultLabel;
     };
 
-    // Custom colors are already incorporated into 'palette' via getPalette
-    const customColors = config.series_colors ? String(config.series_colors).split(',').map(c => c.trim()) : null;
-
-
     let seriesData = [];
+    const isConditionalEnabled = config.conditional_formatting_enabled;
+
     if (hasPivot) {
       const pivotValues = queryResponse.pivots;
       pivotValues.forEach((pivotValue, pivotIndex) => {
@@ -1093,35 +1091,32 @@ looker.plugins.visualizations.add({
           const defaultName = `${queryResponse.fields.measures[measureIndex].label_short || queryResponse.fields.measures[measureIndex].label} - ${pivotValue.key}`;
           const seriesName = getSeriesLabel(seriesIndex, defaultName);
 
-          console.log(`Pivot series ${seriesIndex}: measureName=${measureName}, defaultName=${defaultName}, seriesName=${seriesName}`);
-
-          // Determine series base color using the potentially reversed palette
           const baseColor = palette[seriesIndex % palette.length];
           console.log(`[BASE COLOR PIVOT] Series ${seriesIndex} (Index % Length = ${seriesIndex % palette.length}): Color=${baseColor}`);
 
 
-          // Conditional formatting logic for pivoted data (only first measure/pivot combo is currently supported for 'first')
-          const shouldApplyFormatting = config.conditional_formatting_enabled &&
+          const shouldApplyFormatting = isConditionalEnabled &&
                                         (config.conditional_formatting_apply_to === 'all' || (config.conditional_formatting_apply_to === 'first' && seriesIndex === 0));
 
           if (shouldApplyFormatting) {
+            // Apply Conditional Formatting
             const rawValues = values.map(v => v.y);
 
-            // Pass the entire palette (which is already reversed if needed)
-            const colors = this.getColors(rawValues, config, baseColor, palette, seriesIndex, config.reverse_colors, 'Pivot');
+            // Note: Removed paletteForFallback argument as it's no longer used in getColors
+            const colors = this.getColors(rawValues, config, baseColor, seriesIndex, config.reverse_colors, 'Pivot');
 
             seriesData.push({
               name: seriesName,
               data: values.map((v, i) => ({ ...v, color: colors[i] })),
               showInLegend: true,
-              // Add a base series color (needed for area/line fill), but point colors will override bars
-              color: baseColor
+              color: baseColor // Series color needed for area/line fill and legend entry
             });
           } else {
+            // No conditional formatting applied (either disabled globally or not targeted)
             seriesData.push({
               name: seriesName,
               data: values,
-              color: baseColor,
+              color: baseColor, // Use the correct reversed/unreversed series color
               showInLegend: true
             });
           }
@@ -1140,7 +1135,7 @@ looker.plugins.visualizations.add({
         });
 
 
-        const shouldApplyFormatting = config.conditional_formatting_enabled &&
+        const shouldApplyFormatting = isConditionalEnabled &&
                                       (config.conditional_formatting_apply_to === 'all' || config.conditional_formatting_apply_to === 'first' && index === 0);
 
         const baseColor = palette[index % palette.length];
@@ -1154,21 +1149,20 @@ looker.plugins.visualizations.add({
         console.log(`Series ${index}: measureName=${measureName}, defaultName=${defaultName}, seriesName=${seriesName}`);
 
         if (shouldApplyFormatting) {
-          // Apply conditional formatting
+          // Apply Conditional Formatting
           const rawValues = values.map(v => v.y);
 
-          // Pass the entire palette (which is already reversed if needed)
-          const colors = this.getColors(rawValues, config, baseColor, palette, index, config.reverse_colors, 'Non-Pivot');
+          // Note: Removed paletteForFallback argument as it's no longer used in getColors
+          const colors = this.getColors(rawValues, config, baseColor, index, config.reverse_colors, 'Non-Pivot');
 
           seriesData.push({
             name: seriesName,
             data: values.map((v, i) => ({ ...v, color: colors[i] })),
-            // Add a base series color (needed for area/line fill), but point colors will override bars
             color: baseColor,
             showInLegend: true
           });
         } else {
-          // No conditional formatting applied to this specific series/mode
+          // No conditional formatting applied (either disabled globally or not targeted)
           seriesData.push({
             name: seriesName,
             data: values,
@@ -1179,6 +1173,7 @@ looker.plugins.visualizations.add({
       });
     }
 
+    // --- Conditional Formatting Cleanup (Stacked Measures and Reverting non-first series) ---
     // Calculate stacked totals for trendline and total labels
     const stackedTotals = categories.map((cat, i) => {
       return seriesData.reduce((sum, series) => {
@@ -1187,9 +1182,7 @@ looker.plugins.visualizations.add({
       }, 0);
     });
 
-    // **Conditional Formatting Fix (Stacked Measures)**
-    // If formatting applies to stacked measures, we need to apply coloring based on stackedTotals.
-    if (config.conditional_formatting_enabled && config.conditional_formatting_apply_to === 'stacked') {
+    if (isConditionalEnabled && config.conditional_formatting_apply_to === 'stacked') {
         const stackedColors = this.getStackedColors(stackedTotals, config);
 
         seriesData = seriesData.map(series => {
@@ -1204,16 +1197,14 @@ looker.plugins.visualizations.add({
                 }))
             }
         });
-    } else if (config.conditional_formatting_enabled && config.conditional_formatting_apply_to === 'first') {
+    } else if (isConditionalEnabled && config.conditional_formatting_apply_to === 'first') {
         // When switching back to 'first', ensure NON-first series points
         // revert to their original series color.
-
+        // This block ensures only series 0 retains point coloring.
         seriesData = seriesData.map((series, index) => {
-            // If this is the first measure, we leave it alone (it was colored above)
-            if (index === 0) return series;
+            if (index === 0) return series; // Keep series 0 as-is (it has point colors)
 
-            // If this is *not* the first measure, and formatting is set to 'first',
-            // we strip explicit point colors and rely on the base series color.
+            // For all other series (index > 0), ensure explicit point colors are removed.
             const baseColor = palette[index % palette.length];
 
             return {
@@ -1226,6 +1217,7 @@ looker.plugins.visualizations.add({
             };
         });
     }
+    // --- END Conditional Formatting Cleanup ---
 
 
     // Calculate reference value
@@ -1269,7 +1261,7 @@ looker.plugins.visualizations.add({
     const ruleLegendItems = [];
 
     // Add legend items for each enabled rule with a legend label
-    if (config.conditional_formatting_enabled) {
+    if (isConditionalEnabled) {
       for (let ruleNum = 1; ruleNum <= 3; ruleNum++) {
         if (config[`rule${ruleNum}_enabled`] && config[`rule${ruleNum}_legend_label`] && config[`rule${ruleNum}_legend_label`].trim() !== '') {
           ruleLegendItems.push({
@@ -1283,17 +1275,21 @@ looker.plugins.visualizations.add({
     // Determine if the series legend should be enabled
     let seriesLegendEnabled = seriesData.length > 1;
     // FIX 2: Correct legend visibility logic
-    if (config.conditional_formatting_enabled && config.hide_legend_with_formatting) {
+    if (isConditionalEnabled && config.hide_legend_with_formatting) {
         // If conditional formatting is enabled AND the user chose to hide the series legend,
         // the series legend is explicitly disabled.
         seriesLegendEnabled = false;
     }
     // Final legend status: enabled if the series are visible OR if there are rule items to show.
-    const finalLegendEnabled = seriesLegendEnabled || (ruleLegendItems.length > 0 && config.conditional_formatting_enabled);
+    const finalLegendEnabled = seriesLegendEnabled || (ruleLegendItems.length > 0 && isConditionalEnabled);
 
 
-    // Apply conditional formatting
+    // Apply chart options
     const chartOptions = {
+      // --- CRITICAL FIX: Pass the desired color array to Highcharts at the top level ---
+      // This forces the global palette to be the reversed/unreversed one we calculated.
+      colors: palette,
+      // ----------------------------------------------------------------------------------
       chart: {
         type: baseType,
         backgroundColor: 'transparent',
@@ -1799,11 +1795,12 @@ looker.plugins.visualizations.add({
     });
   },
 
-  getColors: function(values, config, baseColor, paletteForFallback, seriesIndex, isReversed, callerInfo = 'unknown') {
-  console.log(`[getColors] Called from: ${callerInfo}, baseColor: ${baseColor}, seriesIndex: ${seriesIndex}, isReversed: ${isReversed}`);
-  console.log(`[getColors] Palette for Fallback (First 5): ${paletteForFallback.slice(0, 5).join(', ')}...`); // Log the first few colors
+  // Note: Removed unused arguments (paletteForFallback, seriesIndex, isReversed)
+  getColors: function(values, config, baseColor, callerInfo = 'unknown') {
+  console.log(`[getColors] Called from: ${callerInfo}, baseColor: ${baseColor}.`);
 
   if (!config.conditional_formatting_enabled) {
+    // This should never happen now, but good practice to keep
     return values.map(() => baseColor);
   }
 
@@ -1851,7 +1848,6 @@ looker.plugins.visualizations.add({
         if (config[`rule${ruleNum}_enabled`] && config[`rule${ruleNum}_type`] !== 'gradient') {
             if (checkDiscrete(val, ruleNum, values)) {
                 matchedColor = config[`rule${ruleNum}_color`];
-                console.log(`[getColors] Match found for index ${index}, Rule ${ruleNum}. Color: ${matchedColor}`);
                 break;
             }
         }
@@ -1870,16 +1866,12 @@ looker.plugins.visualizations.add({
             let color1 = config[`rule${ruleNum}_color`] || baseColor;
             let color2 = config[`rule${ruleNum}_color2`] || baseColor;
 
-            // If the user specified a gradient color, use it. Otherwise, use the series baseColor as a fallback for both ends.
-            // Since baseColor is derived from the reversed palette in updateAsync, this is correct.
             const resultColor = this.interpolateColor(color1, color2, ratio);
-            console.log(`[getColors] Gradient applied for index ${index}, Rule ${ruleNum}. Ratio: ${ratio.toFixed(2)}, Color: ${resultColor}`);
             return resultColor;
         }
     }
 
     // 3. No rule matched - use the series base color.
-    console.log(`[getColors] No rule matched for index ${index}. Falling back to baseColor: ${baseColor}`);
     return baseColor;
   });
 },

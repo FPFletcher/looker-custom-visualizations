@@ -105,14 +105,6 @@ looker.plugins.visualizations.add({
       order: 12
     },
 
-    hide_legend_with_formatting: {
-      type: "boolean",
-      label: "Hide Series Legend (useful with gradients)",
-      default: false,
-      section: "Plot",
-      order: 12.5
-    },
-
     // Rule 1
     rule1_enabled: {
       type: "boolean",
@@ -331,54 +323,14 @@ looker.plugins.visualizations.add({
       values: [
         {"Google": "google"},
         {"Looker Classic": "looker"},
-        {"Categorical - Shoreline": "shoreline"},
-        {"Categorical - Boardwalk": "boardwalk"},
-        {"Categorical - Breeze": "breeze"},
-        {"Categorical - Vivid": "vivid"},
-        {"Categorical - Springfield": "springfield"},
-        {"Categorical - Cowells": "cowells"},
-        {"Categorical - Organic": "organic"},
-        {"Categorical - Lighthouse": "lighthouse"},
-        {"Categorical - Taos": "taos"},
-        {"Categorical - Sonoma": "sonoma"},
-        {"Categorical - Casual": "casual"},
-        {"Categorical - Sunset": "sunset"},
-        {"Categorical - Ashland": "ashland"},
-        {"Categorical - Oasis": "oasis"},
-        {"Categorical - Dalton": "dalton"},
-        {"Categorical - Legacy": "legacy"},
-        {"Sequential - Shoreline": "seq_shoreline"},
-        {"Sequential - Boardwalk": "seq_boardwalk"},
-        {"Sequential - Breeze": "seq_breeze"},
-        {"Sequential - Vivid": "seq_vivid"},
-        {"Sequential - Springfield": "seq_springfield"},
-        {"Sequential - Cowells": "seq_cowells"},
-        {"Sequential - Organic": "seq_organic"},
-        {"Sequential - Lighthouse": "seq_lighthouse"},
-        {"Sequential - Taos": "seq_taos"},
-        {"Sequential - Sonoma": "seq_sonoma"},
-        {"Sequential - Casual": "seq_casual"},
-        {"Sequential - Sunset": "seq_sunset"},
-        {"Sequential - Ashland": "seq_ashland"},
-        {"Sequential - Oasis": "seq_oasis"},
-        {"Sequential - Dalton": "seq_dalton"},
-        {"Sequential - Legacy": "seq_legacy"},
-        {"Diverging - Shoreline": "div_shoreline"},
-        {"Diverging - Boardwalk": "div_boardwalk"},
-        {"Diverging - Breeze": "div_breeze"},
-        {"Diverging - Vivid": "div_vivid"},
-        {"Diverging - Springfield": "div_springfield"},
-        {"Diverging - Cowells": "div_cowells"},
-        {"Diverging - Organic": "div_organic"},
-        {"Diverging - Lighthouse": "div_lighthouse"},
-        {"Diverging - Taos": "div_taos"},
-        {"Diverging - Sonoma": "div_sonoma"},
-        {"Diverging - Casual": "div_casual"},
-        {"Diverging - Sunset": "div_sunset"},
-        {"Diverging - Ashland": "div_ashland"},
-        {"Diverging - Oasis": "div_oasis"},
-        {"Diverging - Dalton": "div_dalton"},
-        {"Diverging - Legacy": "div_legacy"}
+        {"Green Scale": "green_scale"},
+        {"Blue Scale": "blue_scale"},
+        {"Red Scale": "red_scale"},
+        {"Purple Scale": "purple_scale"},
+        {"Orange Scale": "orange_scale"},
+        {"Viridis": "viridis"},
+        {"Warm": "warm"},
+        {"Cool": "cool"}
       ],
       default: "google",
       section: "Series",
@@ -458,11 +410,19 @@ looker.plugins.visualizations.add({
         {"Currency": "currency"},
         {"Percent": "percent"},
         {"Decimal (1)": "decimal1"},
-        {"Decimal (2)": "decimal2"}
+        {"Decimal (2)": "decimal2"},
+        {"Custom": "custom"}
       ],
       default: "auto",
       section: "Values",
       order: 6
+    },
+    value_format_custom: {
+      type: "string",
+      label: "Custom Format String",
+      placeholder: "e.g., $0.00, #,##0.0, 0.0%",
+      section: "Values",
+      order: 6.5
     },
     show_total_labels: {
       type: "boolean",
@@ -510,14 +470,22 @@ looker.plugins.visualizations.add({
       values: [
         {"Auto": "auto"},
         {"Number": "number"},
-        {"Currency": "currency"},
-        {"Percent": "percent"},
-        {"Decimal (1)": "decimal1"},
-        {"Decimal (2)": "decimal2"}
+        {"Date (%Y-%m-%d)": "date_ymd"},
+        {"Date (%m/%d/%Y)": "date_mdy"},
+        {"Month (%Y-%m)": "date_ym"},
+        {"Year (%Y)": "date_y"},
+        {"Custom": "custom"}
       ],
       default: "auto",
       section: "X",
       order: 2.5
+    },
+    x_axis_value_format_custom: {
+      type: "string",
+      label: "Custom Format String",
+      placeholder: "e.g., %Y-%m-%d, %b %Y",
+      section: "X",
+      order: 2.6
     },
     x_axis_label_rotation: {
       type: "number",
@@ -575,11 +543,19 @@ looker.plugins.visualizations.add({
         {"Currency": "currency"},
         {"Percent": "percent"},
         {"Decimal (1)": "decimal1"},
-        {"Decimal (2)": "decimal2"}
+        {"Decimal (2)": "decimal2"},
+        {"Custom": "custom"}
       ],
       default: "auto",
       section: "Y",
       order: 2.5
+    },
+    y_axis_value_format_custom: {
+      type: "string",
+      label: "Custom Format String",
+      placeholder: "e.g., $0.00, #,##0.0",
+      section: "Y",
+      order: 2.6
     },
     y_axis_min: {
       type: "number",
@@ -792,30 +768,12 @@ looker.plugins.visualizations.add({
     element.style.height = '100%';
     element.style.width = '100%';
     element.style.position = 'relative';
-    element.style.overflow = 'hidden';
+    element.style.overflow = 'visible';  // CHANGED: Allow labels to overflow
     element.innerHTML = `
       <style>
-        /* Hide scrollbars completely */
-        ::-webkit-scrollbar {
-          display: none;
-          width: 0 !important;
-          height: 0 !important;
-        }
-        * {
-          scrollbar-width: none; /* Firefox */
-          -ms-overflow-style: none; /* IE/Edge */
-        }
-        .highcharts-container {
-          width: 100% !important;
-          height: 100% !important;
-          overflow: hidden !important;
-        }
-        .highcharts-root {
-          width: 100% !important;
-          height: 100% !important;
-        }
+        .highcharts-container { width: 100% !important; height: 100% !important; }
       </style>
-      <div id="chart-container" style="width:100%; height:100%; position:absolute; overflow:hidden;"></div>
+      <div id="chart-container" style="width:100%; height:100%; position:absolute;"></div>
     `;
     this._chartContainer = element.querySelector('#chart-container');
     this.chart = null;
@@ -834,6 +792,56 @@ looker.plugins.visualizations.add({
       return;
     }
 
+    // Helper function to format values using LookML formats or custom
+    const formatValue = (value, formatType, customFormat, field) => {
+      if (value === null || value === undefined || isNaN(value)) return '';
+
+      // AUTO: Use LookML's native format from the field
+      if (formatType === 'auto' && field && field.value_format) {
+        return LookerCharts.Utils.textForCell({ value: value, rendered: field.value_format });
+      }
+
+      // CUSTOM: User-provided format string
+      if (formatType === 'custom' && customFormat) {
+        // For dates
+        if (customFormat.includes('%')) {
+          try {
+            const date = new Date(value);
+            return customFormat
+              .replace(/%Y/g, date.getFullYear())
+              .replace(/%m/g, String(date.getMonth() + 1).padStart(2, '0'))
+              .replace(/%d/g, String(date.getDate()).padStart(2, '0'))
+              .replace(/%b/g, date.toLocaleString('default', { month: 'short' }))
+              .replace(/%B/g, date.toLocaleString('default', { month: 'long' }));
+          } catch (e) {
+            return String(value);
+          }
+        }
+        // For numbers - basic support
+        return String(value);
+      }
+
+      // Preset formats
+      if (formatType === 'currency') return '$' + (value >= 1000 ? (value / 1000).toFixed(1) + 'K' : value.toFixed(0));
+      if (formatType === 'percent') return (value * 100).toFixed(1) + '%';
+      if (formatType === 'decimal1') return value.toFixed(1);
+      if (formatType === 'decimal2') return value.toFixed(2);
+      if (formatType === 'number') return value.toLocaleString();
+      if (formatType === 'date_ymd') return new Date(value).toISOString().split('T')[0];
+      if (formatType === 'date_mdy') {
+        const d = new Date(value);
+        return `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+      }
+      if (formatType === 'date_ym') return new Date(value).toISOString().slice(0, 7);
+      if (formatType === 'date_y') return new Date(value).getFullYear();
+
+      // Auto fallback - smart number formatting
+      if (value >= 1e9) return (value / 1e9).toFixed(1) + 'B';
+      if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
+      if (value >= 1e3) return (value / 1e3).toFixed(1) + 'K';
+      return value.toLocaleString();
+    };
+
     const dimension = queryResponse.fields.dimensions[0].name;
     const categories = data.map(row => LookerCharts.Utils.textForCell(row[dimension]));
     const measures = queryResponse.fields.measures.map(m => m.name);
@@ -842,72 +850,20 @@ looker.plugins.visualizations.add({
     const palettes = {
       google: ['#4285F4', '#EA4335', '#FBBC04', '#34A853', '#FF6D00', '#46BDC6', '#AB47BC'],
       looker: ['#7FCDAE', '#7ED09C', '#7DD389', '#85D67C', '#9AD97B', '#B1DB7A'],
-      // Categorical palettes
-      shoreline: ['#2D7CC3', '#EA4335', '#F4B400', '#34A853', '#FF6D00', '#9334E6', '#46BDC6', '#AB47BC'],
-      boardwalk: ['#2F4B7C', '#D45087', '#FF7C43', '#F95D6A', '#FFA600', '#A05195', '#665191', '#003F5C'],
-      breeze: ['#FDD835', '#F06292', '#4DD0E1', '#AED581', '#FFB74D', '#9575CD', '#4FC3F7', '#DCE775'],
-      vivid: ['#7B1FA2', '#00897B', '#F57C00', '#C62828', '#1976D2', '#00ACC1', '#43A047', '#FBC02D'],
-      springfield: ['#F4A582', '#92C5DE', '#D1E5F0', '#F7F7F7', '#FDDBC7', '#B2ABD2', '#5E3C99', '#E66101'],
-      cowells: ['#543005', '#8C510A', '#BF812D', '#DFC27D', '#F6E8C3', '#C7EAE5', '#80CDC1', '#35978F'],
-      organic: ['#66C2A5', '#FC8D62', '#8DA0CB', '#E78AC3', '#A6D854', '#FFD92F', '#E5C494', '#B3B3B3'],
-      lighthouse: ['#8DD3C7', '#FFFFB3', '#BEBADA', '#FB8072', '#80B1D3', '#FDB462', '#B3DE69', '#FCCDE5'],
-      taos: ['#E41A1C', '#FF7F00', '#984EA3', '#4DAF4A', '#377EB8', '#FFFF33', '#A65628', '#F781BF'],
-      sonoma: ['#FBB4AE', '#B3CDE3', '#CCEBC5', '#DECBE4', '#FED9A6', '#FFFFCC', '#E5D8BD', '#FDDAEC'],
-      casual: ['#1B9E77', '#D95F02', '#7570B3', '#E7298A', '#66A61E', '#E6AB02', '#A6761D', '#666666'],
-      sunset: ['#8E0152', '#C51B7D', '#DE77AE', '#F1B6DA', '#FDE0EF', '#E6F5D0', '#B8E186', '#7FBC41'],
-      ashland: ['#003C30', '#01665E', '#35978F', '#80CDC1', '#C7EAE5', '#DFC27D', '#BF812D', '#8C510A'],
-      oasis: ['#2166AC', '#4393C3', '#92C5DE', '#D1E5F0', '#F7F7F7', '#FDDBC7', '#F4A582', '#D6604D'],
-      dalton: ['#40004B', '#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0', '#5AAE61'],
-      legacy: ['#E41A1C', '#377EB8', '#4DAF4A', '#984EA3', '#FF7F00', '#FFFF33', '#A65628', '#F781BF'],
-      // Sequential palettes
-      seq_shoreline: ['#E8F4F8', '#CCE7F2', '#99D5E9', '#66C2E0', '#2D7CC3', '#1C5BA8', '#0D3A8C', '#041970'],
-      seq_boardwalk: ['#FFF5F0', '#FEE0D2', '#FCBBA1', '#FC9272', '#FB6A4A', '#EF3B2C', '#CB181D', '#99000D'],
-      seq_breeze: ['#FFF7BC', '#FEE391', '#FEC44F', '#FE9929', '#EC7014', '#CC4C02', '#993404', '#662506'],
-      seq_vivid: ['#F7FCF5', '#E5F5E0', '#C7E9C0', '#A1D99B', '#74C476', '#41AB5D', '#238B45', '#005A32'],
-      seq_springfield: ['#FCFBFD', '#EFEDF5', '#DADAEB', '#BCBDDC', '#9E9AC8', '#807DBA', '#6A51A3', '#4A1486'],
-      seq_cowells: ['#FFF5EB', '#FEE6CE', '#FDD0A2', '#FDAE6B', '#FD8D3C', '#F16913', '#D94801', '#8C2D04'],
-      seq_organic: ['#F7FCF0', '#E0F3DB', '#CCEBC5', '#A8DDB5', '#7BCCC4', '#4EB3D3', '#2B8CBE', '#08589E'],
-      seq_lighthouse: ['#FFFFE5', '#F7FCB9', '#D9F0A3', '#ADDD8E', '#78C679', '#41AB5D', '#238443', '#005A32'],
-      seq_taos: ['#FFF7EC', '#FEE8C8', '#FDD49E', '#FDBB84', '#FC8D59', '#EF6548', '#D7301F', '#990000'],
-      seq_sonoma: ['#FFF7FB', '#ECE7F2', '#D0D1E6', '#A6BDDB', '#74A9CF', '#3690C0', '#0570B0', '#034E7B'],
-      seq_casual: ['#F7FCF5', '#E5F5E0', '#C7E9C0', '#A1D99B', '#74C476', '#41AB5D', '#238B45', '#005A32'],
-      seq_sunset: ['#FCFBFD', '#EFEDF5', '#DADAEB', '#BCBDDC', '#9E9AC8', '#807DBA', '#6A51A3', '#4A1486'],
-      seq_ashland: ['#F7FCF0', '#E0F3DB', '#CCEBC5', '#A8DDB5', '#7BCCC4', '#4EB3D3', '#2B8CBE', '#08589E'],
-      seq_oasis: ['#FFF5F0', '#FEE0D2', '#FCBBA1', '#FC9272', '#FB6A4A', '#EF3B2C', '#CB181D', '#99000D'],
-      seq_dalton: ['#F7FCF5', '#E5F5E0', '#C7E9C0', '#A1D99B', '#74C476', '#41AB5D', '#238B45', '#005A32'],
-      seq_legacy: ['#FFF7EC', '#FEE8C8', '#FDD49E', '#FDBB84', '#FC8D59', '#EF6548', '#D7301F', '#990000'],
-      // Diverging palettes
-      div_shoreline: ['#D73027', '#F46D43', '#FDAE61', '#FEE090', '#E0F3F8', '#ABD9E9', '#74ADD1', '#4575B4'],
-      div_boardwalk: ['#8C510A', '#BF812D', '#DFC27D', '#F6E8C3', '#C7EAE5', '#80CDC1', '#35978F', '#01665E'],
-      div_breeze: ['#C51B7D', '#DE77AE', '#F1B6DA', '#FDE0EF', '#E6F5D0', '#B8E186', '#7FBC41', '#4D9221'],
-      div_vivid: ['#D7191C', '#FDAE61', '#FFFFBF', '#ABD9E9', '#2C7BB6'],
-      div_springfield: ['#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0', '#5AAE61', '#1B7837'],
-      div_cowells: ['#A50026', '#D73027', '#F46D43', '#FDAE61', '#FEE090', '#E0F3F8', '#ABD9E9', '#74ADD1'],
-      div_organic: ['#40004B', '#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0', '#5AAE61'],
-      div_lighthouse: ['#8C510A', '#BF812D', '#DFC27D', '#F6E8C3', '#C7EAE5', '#80CDC1', '#35978F', '#01665E'],
-      div_taos: ['#D73027', '#F46D43', '#FDAE61', '#FEE08B', '#D9EF8B', '#A6D96A', '#66BD63', '#1A9850'],
-      div_sonoma: ['#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0', '#5AAE61', '#1B7837'],
-      div_casual: ['#D7191C', '#FDAE61', '#FFFFBF', '#ABD9E9', '#2C7BB6'],
-      div_sunset: ['#C51B7D', '#DE77AE', '#F1B6DA', '#FDE0EF', '#E6F5D0', '#B8E186', '#7FBC41', '#4D9221'],
-      div_ashland: ['#01665E', '#35978F', '#80CDC1', '#C7EAE5', '#F6E8C3', '#DFC27D', '#BF812D', '#8C510A'],
-      div_oasis: ['#2166AC', '#4393C3', '#92C5DE', '#D1E5F0', '#FDDBC7', '#F4A582', '#D6604D', '#B2182B'],
-      div_dalton: ['#40004B', '#762A83', '#9970AB', '#C2A5CF', '#E7D4E8', '#D9F0D3', '#A6DBA0', '#5AAE61'],
-      div_legacy: ['#A50026', '#D73027', '#F46D43', '#FDAE61', '#FEE090', '#E0F3F8', '#ABD9E9', '#74ADD1']
+      green_scale: ['#F1F8E9', '#C5E1A5', '#9CCC65', '#7CB342', '#558B2F', '#33691E'],
+      blue_scale: ['#E3F2FD', '#90CAF9', '#42A5F5', '#1E88E5', '#1565C0', '#0D47A1'],
+      red_scale: ['#FFEBEE', '#FFCDD2', '#EF9A9A', '#E57373', '#EF5350', '#F44336', '#E53935', '#D32F2F'],
+      purple_scale: ['#F3E5F5', '#CE93D8', '#AB47BC', '#8E24AA', '#6A1B9A', '#4A148C'],
+      orange_scale: ['#FFF3E0', '#FFE0B2', '#FFCC80', '#FFB74D', '#FFA726', '#FF9800', '#FB8C00', '#F57C00'],
+      viridis: ['#440154', '#414487', '#2A788E', '#22A884', '#7AD151', '#FDE725'],
+      warm: ['#FFF5EB', '#FDD0A2', '#FD8D3C', '#E6550D', '#A63603'],
+      cool: ['#F0F9FF', '#DEEBF7', '#C6DBEF', '#9ECAE1', '#6BAED6', '#4292C6', '#2171B5', '#08519C', '#08306B']
     };
 
-    // Handle series_labels - can be:
-    // 1. A string from manual input: "Label1,Label2,Label3"
-    // 2. An object from Looker UI: {"measure.name": "Custom Label"}
-    let customLabels = null;
-    if (config.series_labels) {
-      if (typeof config.series_labels === 'string') {
-        // Manual comma-separated input
-        customLabels = config.series_labels.split(',').map(l => l.trim());
-      } else if (typeof config.series_labels === 'object') {
-        // Looker's built-in series_labels object
-        customLabels = config.series_labels;
-      }
-    }
+    // Handle series_labels - Looker passes it as an object like {"measure.name": "Custom Label"}
+    const customLabels = config.series_labels && typeof config.series_labels === 'object'
+      ? config.series_labels
+      : null;
     const palette = palettes[config.color_collection] || palettes.google;
     const customColors = config.series_colors ? String(config.series_colors).split(',').map(c => c.trim()) : null;
 
@@ -923,51 +879,13 @@ looker.plugins.visualizations.add({
           const seriesIndex = pivotIndex * measures.length + measureIndex;
           const measureName = measure;
           const defaultName = `${queryResponse.fields.measures[measureIndex].label_short || queryResponse.fields.measures[measureIndex].label} - ${pivotValue.key}`;
+          const seriesName = (customLabels && customLabels[measureName]) || defaultName;
 
-          let seriesName = defaultName;
-          if (customLabels) {
-            if (Array.isArray(customLabels)) {
-              // Array format: use index
-              seriesName = customLabels[seriesIndex] || defaultName;
-            } else {
-              // Object format: use measure name as key
-              seriesName = customLabels[measureName] || defaultName;
-            }
-          }
-
-          const baseColor = customColors ? customColors[seriesIndex % customColors.length] : palette[seriesIndex % palette.length];
-
-          console.log(`=== PIVOT Series ${seriesIndex}: ${defaultName} ===`);
-          console.log(`  pivotIndex: ${pivotIndex}, measureIndex: ${measureIndex}`);
-          console.log(`  baseColor: ${baseColor}`);
-          console.log(`  palette:`, palette);
-          console.log(`  customColors:`, customColors);
-
-          // Apply conditional formatting to pivots (but not in stacked mode - that's done later)
-          const shouldApplyFormatting = config.conditional_formatting_enabled &&
-                                        config.conditional_formatting_apply_to !== 'stacked' &&
-                                        (config.conditional_formatting_apply_to === 'all' || seriesIndex === 0);
-
-          console.log(`  shouldApplyFormatting: ${shouldApplyFormatting}`);
-
-          if (shouldApplyFormatting) {
-            const rawValues = values.map(v => v.y);
-            const colors = this.getColors(rawValues, config, baseColor, `pivot-series-${seriesIndex}`);
-
-            seriesData.push({
-              name: seriesName,
-              data: values.map((v, i) => ({ ...v, color: colors[i] })),
-              color: baseColor,  // Fallback color for legend and any points without explicit colors
-              showInLegend: true
-            });
-          } else {
-            seriesData.push({
-              name: seriesName,
-              data: values,
-              color: baseColor,
-              showInLegend: true
-            });
-          }
+          seriesData.push({
+            name: seriesName,
+            data: values,
+            color: customColors ? customColors[seriesIndex % customColors.length] : palette[seriesIndex % palette.length]
+          });
         });
       });
     } else {
@@ -979,54 +897,30 @@ looker.plugins.visualizations.add({
 
 
         const shouldApplyFormatting = config.conditional_formatting_enabled &&
-                                      config.conditional_formatting_apply_to !== 'stacked' &&
                                       (config.conditional_formatting_apply_to === 'all' || index === 0);
 
         const baseColor = customColors ? customColors[index % customColors.length] : palette[index % palette.length];
 
-        console.log(`=== Series ${index}: ${measure} ===`);
-        console.log(`  shouldApplyFormatting: ${shouldApplyFormatting}`);
-        console.log(`  baseColor: ${baseColor}`);
-        console.log(`  conditional_formatting_enabled: ${config.conditional_formatting_enabled}`);
-        console.log(`  conditional_formatting_apply_to: ${config.conditional_formatting_apply_to}`);
-
         const measureName = measure;
         const defaultName = queryResponse.fields.measures[index].label_short || queryResponse.fields.measures[index].label;
-
-        let seriesName = defaultName;
-        if (customLabels) {
-          if (Array.isArray(customLabels)) {
-            // Array format: use index
-            seriesName = customLabels[index] || defaultName;
-          } else {
-            // Object format: use measure name as key
-            seriesName = customLabels[measureName] || defaultName;
-          }
-        }
+        const seriesName = (customLabels && customLabels[measureName]) || defaultName;
 
         if (shouldApplyFormatting) {
           // Apply conditional formatting
           const rawValues = values.map(v => v.y);
-          const colors = this.getColors(rawValues, config, baseColor, `series-${index}-${measureName}`);  // PASS baseColor
-
-          console.log(`  First 5 raw values:`, rawValues.slice(0, 5));
-          console.log(`  First 5 colors returned:`, colors.slice(0, 5));
+          const colors = this.getColors(rawValues, config, baseColor);  // PASS baseColor
 
           seriesData.push({
             name: seriesName,
             data: values.map((v, i) => ({ ...v, color: colors[i] })),
-            color: baseColor,  // Fallback color for legend and any points without explicit colors
+            // DON'T set a series-level color when using conditional formatting
             showInLegend: true
           });
-
-          console.log(`  First data point:`, values[0], '-> color:', colors[0]);
         } else {
           // No conditional formatting - use normal series color
-          console.log(`  Using series color: ${baseColor} (no conditional formatting)`);
-
           seriesData.push({
             name: seriesName,
-            data: values.map(v => ({ y: v.y, drillLinks: v.drillLinks, categoryIndex: v.categoryIndex })),  // Don't carry over any color property
+            data: values,
             color: baseColor,
             showInLegend: true
           });
@@ -1041,107 +935,6 @@ looker.plugins.visualizations.add({
         return sum + val;
       }, 0);
     });
-
-    // Apply conditional formatting for stacked measures mode
-    if (config.conditional_formatting_enabled && config.conditional_formatting_apply_to === 'stacked') {
-      console.log('[STACKED MODE] Applying conditional formatting based on stacked totals');
-
-      // First pass: Check discrete rules for each category
-      stackedTotals.forEach((total, categoryIndex) => {
-        let matchedColor = null;
-
-        // Check discrete rules in priority order (Rule 1 > Rule 2 > Rule 3)
-        for (let ruleNum = 1; ruleNum <= 3; ruleNum++) {
-          if (!config[`rule${ruleNum}_enabled`]) continue;
-
-          const ruleType = config[`rule${ruleNum}_type`];
-          if (ruleType === 'gradient') continue; // Skip gradients in this pass
-
-          const value1 = parseFloat(config[`rule${ruleNum}_value`]) || 0;
-          const value2 = parseFloat(config[`rule${ruleNum}_value2`]) || 0;
-          const color1 = config[`rule${ruleNum}_color`] || '#EA4335';
-
-          // Check if this discrete rule matches
-          let matches = false;
-          if (ruleType === 'gt') matches = total > value1;
-          else if (ruleType === 'lt') matches = total < value1;
-          else if (ruleType === 'eq') matches = total === value1;
-          else if (ruleType === 'between') matches = total >= value1 && total <= value2;
-          else if (ruleType === 'topn' || ruleType === 'bottomn') {
-            const n = Math.max(1, Math.floor(value1 || 5));
-            const sorted = [...stackedTotals].sort((a, b) => ruleType === 'topn' ? b - a : a - b);
-            const threshold = sorted[Math.min(n - 1, sorted.length - 1)];
-            matches = ruleType === 'topn' ? total >= threshold : total <= threshold;
-          }
-
-          if (matches) {
-            matchedColor = color1;
-            console.log(`[STACKED MODE] Category ${categoryIndex}: total=${total} matched discrete rule ${ruleNum}, color=${matchedColor}`);
-            break; // Use first matching discrete rule
-          }
-        }
-
-        // Apply matched discrete rule color
-        if (matchedColor) {
-          seriesData.forEach(series => {
-            if (series.data[categoryIndex]) {
-              const point = series.data[categoryIndex];
-              if (typeof point === 'object') {
-                series.data[categoryIndex] = { ...point, color: matchedColor };
-              } else {
-                series.data[categoryIndex] = { y: point, color: matchedColor };
-              }
-            }
-          });
-        }
-      });
-
-      // Second pass: Apply gradient to categories that didn't match any discrete rule
-      // Check for gradient rules in priority order (Rule 1 > Rule 2 > Rule 3)
-      let gradientRule = null;
-      for (let ruleNum = 1; ruleNum <= 3; ruleNum++) {
-        if (config[`rule${ruleNum}_enabled`] && config[`rule${ruleNum}_type`] === 'gradient') {
-          gradientRule = ruleNum;
-          break;
-        }
-      }
-
-      if (gradientRule) {
-        console.log(`[STACKED MODE] Applying gradient rule ${gradientRule} to unmatched categories`);
-        const min = Math.min(...stackedTotals);
-        const max = Math.max(...stackedTotals);
-        const startColor = config[`rule${gradientRule}_color`] || '#F1F8E9';
-        const endColor = config[`rule${gradientRule}_color2`] || '#33691E';
-
-        stackedTotals.forEach((total, categoryIndex) => {
-          // Check if this category already has a color from discrete rules
-          const firstSeries = seriesData[0];
-          const hasDiscreteColor = firstSeries &&
-                                   firstSeries.data[categoryIndex] &&
-                                   firstSeries.data[categoryIndex].color;
-
-          if (!hasDiscreteColor) {
-            // Apply gradient only to categories without discrete rule match
-            const ratio = (max === min) ? 0.5 : (total - min) / (max - min);
-            const gradientColor = this.interpolateColor(startColor, endColor, ratio);
-            console.log(`[STACKED MODE] Category ${categoryIndex}: total=${total}, ratio=${ratio.toFixed(2)}, gradient color=${gradientColor}`);
-
-            seriesData.forEach(series => {
-              if (series.data[categoryIndex]) {
-                const point = series.data[categoryIndex];
-                if (typeof point === 'object') {
-                  series.data[categoryIndex] = { ...point, color: gradientColor };
-                } else {
-                  series.data[categoryIndex] = { y: point, color: gradientColor };
-                }
-              }
-            });
-          } else {
-            console.log(`[STACKED MODE] Category ${categoryIndex}: skipping gradient (discrete rule already applied)`);
-          }
-        });
-      }
-    }
 
     // Calculate reference value
     let refValue = config.ref_line_value || 0;
@@ -1197,41 +990,11 @@ looker.plugins.visualizations.add({
 
     // Apply conditional formatting
     const chartOptions = {
-      chart: {
-        type: baseType,
-        backgroundColor: 'transparent',
-        spacing: [10, 10, 10, 10],
-        reflow: false  // Prevent auto-reflow that causes width issues
-      },
+      chart: { type: baseType, backgroundColor: 'transparent', spacing: [10, 10, 10, 10] },
       title: { text: null },
       credits: { enabled: false },
       tooltip: {
-        useHTML: true,
-        formatter: function() {
-          const format = config.value_format || 'auto';
-          const formatValue = (num) => {
-            if (format === 'currency') return '$' + (num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toFixed(0));
-            if (format === 'percent') return (num * 100).toFixed(1) + '%';
-            if (format === 'decimal1') return num.toFixed(1);
-            if (format === 'decimal2') return num.toFixed(2);
-            if (format === 'number') return num.toLocaleString();
-            if (num >= 1e9) return (num / 1e9).toFixed(1) + 'B';
-            if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
-            if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
-            return num.toLocaleString();
-          };
-
-          let html = `<b>${this.x}</b><br/>`;
-          if (this.points) {
-            this.points.forEach(point => {
-              html += `<span style="color:${point.color}">●</span> ${point.series.name}: <b>${formatValue(point.y)}</b><br/>`;
-            });
-          } else {
-            html += `<span style="color:${this.color}">●</span> ${this.series.name}: <b>${formatValue(this.y)}</b>`;
-          }
-          return html;
-        },
-        shared: true
+        shared: false  // CRITICAL: Individual tooltips per element, not grouped
       },
       xAxis: {
         categories: categories,
@@ -1380,21 +1143,18 @@ looker.plugins.visualizations.add({
         line: { marker: { enabled: true, radius: 3 } }
       },
       legend: {
-        enabled: config.hide_legend_with_formatting ? (ruleLegendItems.length > 0) : (seriesData.length > 1 || ruleLegendItems.length > 0),
+        enabled: seriesData.length > 1 || ruleLegendItems.length > 0,
         align: 'center',
         verticalAlign: 'bottom'
       },
-      series: [
-        ...seriesData.map(s => ({...s, showInLegend: config.hide_legend_with_formatting ? false : (s.showInLegend !== false)})),
-        ...ruleLegendItems.map(item => ({
-          name: item.name,
-          color: item.color,
-          type: 'line',
-          data: [],
-          showInLegend: true,
-          enableMouseTracking: false
-        }))
-      ]
+      series: [...seriesData, ...ruleLegendItems.map(item => ({
+        name: item.name,
+        color: item.color,
+        type: 'line',
+        data: [],
+        showInLegend: true,
+        enableMouseTracking: false
+      }))]
     };
 
     // TRENDLINE
@@ -1612,89 +1372,28 @@ looker.plugins.visualizations.add({
   }
 }
 
-    // Check if Highcharts is available
-    if (typeof Highcharts === 'undefined') {
-      console.error('Highcharts not loaded');
-      this.addError({ title: 'Highcharts Error', message: 'Highcharts library failed to load. Please refresh the page.' });
-      done();
-      return;
-    }
-
-    // Destroy existing chart to prevent memory leaks when switching modes rapidly
-    if (this.chart) {
-      try {
-        this.chart.destroy();
-        this.chart = null;
-      } catch (e) {
-        console.warn('Error destroying chart:', e);
-      }
-    }
-
-    try {
+    if (!this.chart) {
       this.chart = Highcharts.chart(this._chartContainer, chartOptions);
-    } catch (error) {
-      console.error('Error creating chart:', error);
-      this.addError({ title: 'Chart Error', message: 'Failed to create chart: ' + error.message });
+    } else {
+      this.chart.update(chartOptions, true, true);
+      this.chart.reflow();
     }
-
     done();
   },
 
 
-  getColors: function(values, config, baseColor, callerInfo = 'unknown') {
-  console.log(`[getColors] Called from: ${callerInfo}, baseColor: ${baseColor}`);
+  getColors: function(values, config, baseColor) {
   const palettes = {
     google: ['#4285F4', '#EA4335', '#FBBC04', '#34A853', '#FF6D00', '#46BDC6', '#AB47BC'],
     looker: ['#7FCDAE', '#7ED09C', '#7DD389', '#85D67C', '#9AD97B', '#B1DB7A'],
-    // Just need first colors from each palette for baseColor fallback
-    shoreline: ['#2D7CC3', '#EA4335', '#F4B400', '#34A853', '#FF6D00', '#9334E6'],
-    boardwalk: ['#2F4B7C', '#D45087', '#FF7C43', '#F95D6A', '#FFA600', '#A05195'],
-    breeze: ['#FDD835', '#F06292', '#4DD0E1', '#AED581', '#FFB74D', '#9575CD'],
-    vivid: ['#7B1FA2', '#00897B', '#F57C00', '#C62828', '#1976D2', '#00ACC1'],
-    springfield: ['#F4A582', '#92C5DE', '#D1E5F0', '#F7F7F7'],
-    cowells: ['#543005', '#8C510A', '#BF812D', '#DFC27D'],
-    organic: ['#66C2A5', '#FC8D62', '#8DA0CB', '#E78AC3'],
-    lighthouse: ['#8DD3C7', '#FFFFB3', '#BEBADA', '#FB8072'],
-    taos: ['#E41A1C', '#FF7F00', '#984EA3', '#4DAF4A'],
-    sonoma: ['#FBB4AE', '#B3CDE3', '#CCEBC5', '#DECBE4'],
-    casual: ['#1B9E77', '#D95F02', '#7570B3', '#E7298A'],
-    sunset: ['#8E0152', '#C51B7D', '#DE77AE', '#F1B6DA'],
-    ashland: ['#003C30', '#01665E', '#35978F', '#80CDC1'],
-    oasis: ['#2166AC', '#4393C3', '#92C5DE', '#D1E5F0'],
-    dalton: ['#40004B', '#762A83', '#9970AB', '#C2A5CF'],
-    legacy: ['#E41A1C', '#377EB8', '#4DAF4A', '#984EA3'],
-    seq_shoreline: ['#E8F4F8'],
-    seq_boardwalk: ['#FFF5F0'],
-    seq_breeze: ['#FFF7BC'],
-    seq_vivid: ['#F7FCF5'],
-    seq_springfield: ['#FCFBFD'],
-    seq_cowells: ['#FFF5EB'],
-    seq_organic: ['#F7FCF0'],
-    seq_lighthouse: ['#FFFFE5'],
-    seq_taos: ['#FFF7EC'],
-    seq_sonoma: ['#FFF7FB'],
-    seq_casual: ['#F7FCF5'],
-    seq_sunset: ['#FCFBFD'],
-    seq_ashland: ['#F7FCF0'],
-    seq_oasis: ['#FFF5F0'],
-    seq_dalton: ['#F7FCF5'],
-    seq_legacy: ['#FFF7EC'],
-    div_shoreline: ['#D73027'],
-    div_boardwalk: ['#8C510A'],
-    div_breeze: ['#C51B7D'],
-    div_vivid: ['#D7191C'],
-    div_springfield: ['#762A83'],
-    div_cowells: ['#A50026'],
-    div_organic: ['#40004B'],
-    div_lighthouse: ['#8C510A'],
-    div_taos: ['#D73027'],
-    div_sonoma: ['#762A83'],
-    div_casual: ['#D7191C'],
-    div_sunset: ['#C51B7D'],
-    div_ashland: ['#01665E'],
-    div_oasis: ['#2166AC'],
-    div_dalton: ['#40004B'],
-    div_legacy: ['#A50026']
+    green_scale: ['#F1F8E9', '#C5E1A5', '#9CCC65', '#7CB342', '#558B2F', '#33691E'],
+    blue_scale: ['#E3F2FD', '#90CAF9', '#42A5F5', '#1E88E5', '#1565C0', '#0D47A1'],
+    red_scale: ['#FFEBEE', '#FFCDD2', '#EF9A9A', '#E57373', '#EF5350', '#F44336', '#E53935', '#D32F2F'],
+    purple_scale: ['#F3E5F5', '#CE93D8', '#AB47BC', '#8E24AA', '#6A1B9A', '#4A148C'],
+    orange_scale: ['#FFF3E0', '#FFE0B2', '#FFCC80', '#FFB74D', '#FFA726', '#FF9800', '#FB8C00', '#F57C00'],
+    viridis: ['#440154', '#414487', '#2A788E', '#22A884', '#7AD151', '#FDE725'],
+    warm: ['#FFF5EB', '#FDD0A2', '#FD8D3C', '#E6550D', '#A63603'],
+    cool: ['#F0F9FF', '#DEEBF7', '#C6DBEF', '#9ECAE1', '#6BAED6', '#4292C6', '#2171B5', '#08519C', '#08306B']
   };
 
   // Use passed baseColor, or fallback to first color in palette
@@ -1754,106 +1453,52 @@ looker.plugins.visualizations.add({
   return values.map((val, index) => {
     if (typeof val !== 'number') return baseColor;
 
-    // RULE 1 - Highest Priority (check discrete FIRST, then gradient)
-    if (config.rule1_enabled) {
-      if (config.rule1_type !== 'gradient' && checkDiscrete(val, 1, values)) {
-        // Rule 1 discrete match - highest priority
-        return config.rule1_color;
-      }
-    }
-
-    // RULE 2 - Medium Priority (check discrete FIRST, then gradient)
-    if (config.rule2_enabled) {
-      if (config.rule2_type !== 'gradient' && checkDiscrete(val, 2, values)) {
-        // Rule 2 discrete match
-        return config.rule2_color;
-      }
-    }
-
-    // RULE 3 - Check discrete before gradient
-    if (config.rule3_enabled) {
-      if (config.rule3_type !== 'gradient' && checkDiscrete(val, 3, values)) {
-        // Rule 3 discrete match
-        return config.rule3_color;
-      }
-    }
-
-    // Now apply gradients in priority order (only if no discrete rule matched)
-    if (config.rule1_enabled && config.rule1_type === 'gradient') {
-      const numericValues = values.filter(v => typeof v === 'number');
-      const min = Math.min(...numericValues);
-      const max = Math.max(...numericValues);
-      const ratio = (max === min) ? 0.5 : (val - min) / (max - min);
-      return this.interpolateColor(config.rule1_color || '#F1F8E9', config.rule1_color2 || '#33691E', ratio);
-    }
-
-    if (config.rule2_enabled && config.rule2_type === 'gradient') {
-      const numericValues = values.filter(v => typeof v === 'number');
-      const min = Math.min(...numericValues);
-      const max = Math.max(...numericValues);
-      const ratio = (max === min) ? 0.5 : (val - min) / (max - min);
-      return this.interpolateColor(config.rule2_color || '#F1F8E9', config.rule2_color2 || '#33691E', ratio);
-    }
-
-    if (config.rule3_enabled && config.rule3_type === 'gradient') {
-      const numericValues = values.filter(v => typeof v === 'number');
-      const min = Math.min(...numericValues);
-      const max = Math.max(...numericValues);
-      const ratio = (max === min) ? 0.5 : (val - min) / (max - min);
-      return this.interpolateColor(config.rule3_color || '#F1F8E9', config.rule3_color2 || '#33691E', ratio);
-    }
-
-    // No rule matched - use base series color
-    console.log(`[getColors] Value ${val} at index ${index} -> no rule matched, returning baseColor: ${baseColor}`);
-    return baseColor;
-  });
-
-  console.log(`[getColors] Returning ${values.length} colors. First 5:`, values.slice(0, 5).map((val, i) => {
-    const color = values.map((v, idx) => {
-      if (typeof v !== 'number') return baseColor;
-      if (config.rule1_enabled && config.rule1_type !== 'gradient' && checkDiscrete(v, 1, values)) return config.rule1_color;
-      if (config.rule2_enabled && config.rule2_type !== 'gradient' && checkDiscrete(v, 2, values)) return config.rule2_color;
-      if (config.rule3_enabled && config.rule3_type !== 'gradient' && checkDiscrete(v, 3, values)) return config.rule3_color;
-      return baseColor;
-    })[i];
-    return `val:${val} -> color:${color}`;
-  }));
-
-  return values.map((val, index) => {
-    if (typeof val !== 'number') return baseColor;
+    // RULE 1 - Highest Priority
     if (config.rule1_enabled) {
       if (config.rule1_type === 'gradient') {
+        // If Rule 1 is gradient, calculate gradient color
         const numericValues = values.filter(v => typeof v === 'number');
         const min = Math.min(...numericValues);
         const max = Math.max(...numericValues);
         const ratio = (max === min) ? 0.5 : (val - min) / (max - min);
         return this.interpolateColor(config.rule1_color || '#F1F8E9', config.rule1_color2 || '#33691E', ratio);
       } else if (checkDiscrete(val, 1, values)) {
+        // Rule 1 discrete match
         return config.rule1_color;
       }
     }
+
+    // RULE 2 - Medium Priority (only if Rule 1 didn't match)
     if (config.rule2_enabled) {
       if (config.rule2_type === 'gradient') {
+        // If Rule 2 is gradient, calculate gradient color
         const numericValues = values.filter(v => typeof v === 'number');
         const min = Math.min(...numericValues);
         const max = Math.max(...numericValues);
         const ratio = (max === min) ? 0.5 : (val - min) / (max - min);
         return this.interpolateColor(config.rule2_color || '#F1F8E9', config.rule2_color2 || '#33691E', ratio);
       } else if (checkDiscrete(val, 2, values)) {
+        // Rule 2 discrete match
         return config.rule2_color;
       }
     }
+
+    // RULE 3 - Lowest Priority (only if Rules 1 & 2 didn't match)
     if (config.rule3_enabled) {
       if (config.rule3_type === 'gradient') {
+        // If Rule 3 is gradient, calculate gradient color
         const numericValues = values.filter(v => typeof v === 'number');
         const min = Math.min(...numericValues);
         const max = Math.max(...numericValues);
         const ratio = (max === min) ? 0.5 : (val - min) / (max - min);
         return this.interpolateColor(config.rule3_color || '#F1F8E9', config.rule3_color2 || '#33691E', ratio);
       } else if (checkDiscrete(val, 3, values)) {
+        // Rule 3 discrete match
         return config.rule3_color;
       }
     }
+
+    // No rule matched - use base series color
     return baseColor;
   });
 },

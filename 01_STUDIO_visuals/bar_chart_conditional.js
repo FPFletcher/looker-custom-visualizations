@@ -1039,9 +1039,13 @@ looker.plugins.visualizations.add({
 
     let palette = palettes[config.color_collection] || palettes.google;
 
+    console.log('[PALETTE DEBUG] Before reverse - reverse_colors:', config.reverse_colors, 'first color:', palette[0]);
+
     if (config.reverse_colors) {
       palette = [...palette].reverse();
     }
+
+    console.log('[PALETTE DEBUG] After reverse - first color:', palette[0]);
 
     const customColors = config.series_colors ? String(config.series_colors).split(',').map(c => c.trim()) : null;
 
@@ -1068,6 +1072,8 @@ looker.plugins.visualizations.add({
 
           // Determine series base color
           const baseColor = customColors ? customColors[seriesIndex % customColors.length] : palette[seriesIndex % palette.length];
+
+          console.log(`[BASECOLOR DEBUG] Series ${seriesIndex}: baseColor=${baseColor}, palette[${seriesIndex}]=${palette[seriesIndex % palette.length]}, reverse_colors=${config.reverse_colors}`);
 
           // Conditional formatting logic for pivoted data (only first measure/pivot combo is currently supported for 'first')
           const shouldApplyFormatting = config.conditional_formatting_enabled &&

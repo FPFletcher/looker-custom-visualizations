@@ -1514,13 +1514,16 @@ looker.plugins.visualizations.add({
     }
 
     // --- AGGRESSIVE STABILITY CHECK ---
-    const chartNeedsRebuild = details.changed.includes('conditional_formatting_enabled') ||
-                              details.changed.includes('trend_line_enabled') ||
-                              details.changed.includes('series_positioning');
+    const changedFields = details && details.changed ? details.changed : [];
+
+    const chartNeedsRebuild = changedFields.includes('conditional_formatting_enabled') ||
+                              changedFields.includes('trend_line_enabled') ||
+                              changedFields.includes('series_positioning');
 
     if (this.chart) {
       if (chartNeedsRebuild) {
           console.log('[CHART REBUILD] Detected feature toggle (CF/Trend/Stacking), destroying and recreating chart.');
+          // Ensure we destroy the chart completely to clear all Highcharts artifacts
           this.chart.destroy();
           this.chart = Highcharts.chart(this._chartContainer, chartOptions);
       } else {

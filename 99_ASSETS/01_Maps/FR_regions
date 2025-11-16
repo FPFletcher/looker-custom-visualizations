@@ -1,80 +1,174 @@
 {
-  "Île-de-France": {
-    "min_lat": 48.120,
-    "max_lat": 49.241,
-    "min_lon": 1.446,
-    "max_lon": 3.558
-  },
-  "Auvergne-Rhône-Alpes": {
-    "min_lat": 44.117,
-    "max_lat": 46.801,
-    "min_lon": 2.053,
-    "max_lon": 7.179
-  },
-  "Provence-Alpes-Côte d'Azur": {
-    "min_lat": 42.982,
-    "max_lat": 44.882,
-    "min_lon": 4.228,
-    "max_lon": 7.720
-  },
-  "Nouvelle-Aquitaine": {
-    "min_lat": 42.777,
-    "max_lat": 46.788,
-    "min_lon": -2.557,
-    "max_lon": 2.920
-  },
-  "Occitanie": {
-    "min_lat": 42.333,
-    "max_lat": 45.046,
-    "min_lon": -0.323,
-    "max_lon": 4.841
-  },
-  "Hauts-de-France": {
-    "min_lat": 49.013,
-    "max_lat": 51.089,
-    "min_lon": 1.373,
-    "max_lon": 4.236
-  },
-  "Grand Est": {
-    "min_lat": 47.419,
-    "max_lat": 50.179,
-    "min_lon": 3.391,
-    "max_lon": 8.233
-  },
-  "Pays de la Loire": {
-    "min_lat": 46.265,
-    "max_lat": 48.575,
-    "min_lon": -2.557,
-    "max_lon": 1.021
-  },
-  "Bretagne": {
-    "min_lat": 47.279,
-    "max_lat": 48.891,
-    "min_lon": -5.140,
-    "max_lon": -0.967
-  },
-  "Normandie": {
-    "min_lat": 48.180,
-    "max_lat": 50.077,
-    "min_lon": -1.995,
-    "max_lon": 1.798
-  },
-  "Centre-Val de Loire": {
-    "min_lat": 46.352,
-    "max_lat": 48.976,
-    "min_lon": 0.065,
-    "max_lon": 3.145
-  },
-  "Bourgogne-Franche-Comté": {
-    "min_lat": 46.160,
-    "max_lat": 48.406,
-    "min_lon": 2.839,
-    "max_lon": 7.161
-  },
-  "Corse": {
-    "min_lat": 41.333,
-    "max_lat": 43.028,
-    "min_lon": 8.538,
-    "max_lon": 9.560
-  }
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "11",
+        "nom": "Île-de-France"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [1.446, 49.241], [1.446, 48.120], [3.558, 48.120], [3.558, 49.241], [1.446, 49.241]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "84",
+        "nom": "Auvergne-Rhône-Alpes"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [2.053, 46.801], [2.053, 44.117], [7.179, 44.117], [7.179, 46.801], [2.053, 46.801]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "93",
+        "nom": "Provence-Alpes-Côte d'Azur"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [4.228, 44.882], [4.228, 42.982], [7.720, 42.982], [7.720, 44.882], [4.228, 44.882]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "75",
+        "nom": "Nouvelle-Aquitaine"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-2.557, 46.788], [-2.557, 42.777], [2.920, 42.777], [2.920, 46.788], [-2.557, 46.788]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "76",
+        "nom": "Occitanie"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-0.323, 45.046], [-0.323, 42.333], [4.841, 42.333], [4.841, 45.046], [-0.323, 45.046]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "32",
+        "nom": "Hauts-de-France"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [1.373, 51.089], [1.373, 49.013], [4.236, 49.013], [4.236, 51.089], [1.373, 51.089]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "44",
+        "nom": "Grand Est"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [3.391, 50.179], [3.391, 47.419], [8.233, 47.419], [8.233, 50.179], [3.391, 50.179]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "52",
+        "nom": "Pays de la Loire"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-2.557, 48.575], [-2.557, 46.265], [1.021, 46.265], [1.021, 48.575], [-2.557, 48.575]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "53",
+        "nom": "Bretagne"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-5.140, 48.891], [-5.140, 47.279], [-0.967, 47.279], [-0.967, 48.891], [-5.140, 48.891]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "28",
+        "nom": "Normandie"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-1.995, 50.077], [-1.995, 48.180], [1.798, 48.180], [1.798, 50.077], [-1.995, 50.077]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "24",
+        "nom": "Centre-Val de Loire"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [0.065, 48.976], [0.065, 46.352], [3.145, 46.352], [3.145, 48.976], [0.065, 48.976]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "27",
+        "nom": "Bourgogne-Franche-Comté"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [2.839, 48.406], [2.839, 46.160], [7.161, 46.160], [7.161, 48.406], [2.839, 48.406]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "94",
+        "nom": "Corse"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [8.538, 43.028], [8.538, 41.333], [9.560, 41.333], [9.560, 43.028], [8.538, 43.028]
+        ]]
+      }
+    }
+  ]
 }

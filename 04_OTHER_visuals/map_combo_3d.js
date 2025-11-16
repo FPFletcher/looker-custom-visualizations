@@ -503,27 +503,57 @@ looker.plugins.visualizations.add({
    * Update and render the visualization
    */
   updateAsync: function(data, element, config, queryResponse, details, done) {
-    console.log('[3D MAP] UpdateAsync called', {
-      dataRows: data.length,
-      config: config,
-      queryResponse: queryResponse
-    });
+    console.log('[3D MAP] ========== UpdateAsync START ==========');
+    console.log('[3D MAP] Data rows:', data.length);
+    console.log('[3D MAP] Config:', config);
+    console.log('[3D MAP] Query response:', queryResponse);
 
     // Clear errors
     this.clearErrors();
 
+    // Enhanced dependency checking with detailed logging
+    console.log('[3D MAP] Checking dependencies...');
+    console.log('[3D MAP] - deck.gl available?', typeof deck !== 'undefined');
+    console.log('[3D MAP] - mapboxgl available?', typeof mapboxgl !== 'undefined');
+    console.log('[3D MAP] - d3 available?', typeof d3 !== 'undefined');
+
+    if (typeof deck !== 'undefined') {
+      console.log('[3D MAP] - deck.gl version:', deck.VERSION || 'unknown');
+    }
+    if (typeof mapboxgl !== 'undefined') {
+      console.log('[3D MAP] - mapboxgl version:', mapboxgl.version);
+    }
+    if (typeof d3 !== 'undefined') {
+      console.log('[3D MAP] - d3 version:', d3.version);
+    }
+
     // Check for required libraries
     if (typeof deck === 'undefined' || typeof mapboxgl === 'undefined' || typeof d3 === 'undefined') {
+      const missing = [];
+      if (typeof deck === 'undefined') missing.push('Deck.gl');
+      if (typeof mapboxgl === 'undefined') missing.push('Mapbox GL JS');
+      if (typeof d3 === 'undefined') missing.push('D3.js');
+
+      console.error('[3D MAP] Missing dependencies:', missing);
       this.addError({
         title: "Missing Dependencies",
-        message: "This visualization requires Deck.gl, Mapbox GL JS, and D3. Please add these libraries to your Looker instance."
+        message: `Missing required libraries: ${missing.join(', ')}. Please check your manifest file dependencies.`
       });
       done();
       return;
     }
 
+    console.log('[3D MAP] All dependencies loaded successfully');
+
     // Validate Mapbox token
+    console.log('[3D MAP] Checking Mapbox token...');
+    console.log('[3D MAP] Token provided?', !!config.mapbox_token);
+    if (config.mapbox_token) {
+      console.log('[3D MAP] Token starts with:', config.mapbox_token.substring(0, 10) + '...');
+    }
+
     if (!config.mapbox_token) {
+      console.error('[3D MAP] No Mapbox token provided');
       this.addError({
         title: "Mapbox Token Required",
         message: "Please provide a Mapbox access token in the visualization settings."
@@ -534,8 +564,13 @@ looker.plugins.visualizations.add({
 
     try {
       // Parse query response
+      console.log('[3D MAP] Parsing query response...');
       const dimensions = queryResponse.fields.dimension_like;
       const measures = queryResponse.fields.measure_like;
+      console.log('[3D MAP] Dimensions found:', dimensions.length);
+      console.log('[3D MAP] Measures found:', measures.length);
+      console.log('[3D MAP] Dimension fields:', dimensions.map(d => d.name));
+      console.log('[3D MAP] Measure fields:', measures.map(m => m.name));
 
       // Find geo fields (lat/lng or location name)
       const latField = dimensions.find(d =>
@@ -752,10 +787,14 @@ looker.plugins.visualizations.add({
    * Update the map with layers
    */
   _updateMap: function(processedData, config, element) {
-    console.log('[3D MAP] Updating map...');
+    console.log('[3D MAP] ========== _updateMap START ==========');
+    console.log('[3D MAP] Processed data:', processedData);
+    console.log('[3D MAP] Point count:', processedData.points.length);
 
     // Set Mapbox token
+    console.log('[3D MAP] Setting Mapbox token...');
     mapboxgl.accessToken = config.mapbox_token;
+    console.log('[3D MAP] Mapbox token set successfully');
 
     // Determine initial view state
     const viewPresets = {
@@ -775,9 +814,13 @@ looker.plugins.visualizations.add({
       };
     }
 
+    console.log('[3D MAP] Initial view preset:', config.initial_view_state);
+    console.log('[3D MAP] Initial view coords:', initialView);
+
     // Add pitch for 3D effect
     if (config.enable_3d_tilt) {
       initialView.pitch = config.tilt_angle || 45;
+      console.log('[3D MAP] 3D tilt enabled, pitch:', initialView.pitch);
     }
 
     const INITIAL_VIEW_STATE = {
@@ -787,61 +830,133 @@ looker.plugins.visualizations.add({
       maxZoom: 20
     };
 
+    console.log('[3D MAP] Final view state:', INITIAL_VIEW_STATE);
+
     // Build layers
+    console.log('[3D MAP] Building layers...');
     const layers = [];
 
     // Layer 1: Heatmap/Choropleth
     if (config.layer1_enabled && config.layer1_measure) {
+      console.log('[3D MAP] Creating Layer 1 (type:', config.layer1_type, ')');
       const layer1 = this._createLayer1(processedData, config);
-      if (layer1) layers.push(layer1);
+      if (layer1) {
+        console.log('[3D MAP] Layer 1 created successfully');
+        layers.push(layer1);
+      } else {
+        console.warn('[3D MAP] Layer 1 returned null');
+      }
+    } else {
+      console.log('[3D MAP] Layer 1 disabled or no measure specified');
     }
 
     // Layer 2: 3D Columns
     if (config.layer2_enabled && config.layer2_measure) {
+      console.log('[3D MAP] Creating Layer 2 (type:', config.layer2_type, ')');
       const layer2 = this._createLayer2(processedData, config);
-      if (layer2) layers.push(layer2);
+      if (layer2) {
+        console.log('[3D MAP] Layer 2 created successfully');
+        layers.push(layer2);
+      } else {
+        console.warn('[3D MAP] Layer 2 returned null');
+      }
+    } else {
+      console.log('[3D MAP] Layer 2 disabled or no measure specified');
     }
 
     // Layer 3: Points
     if (config.layer3_enabled && config.layer3_measure) {
+      console.log('[3D MAP] Creating Layer 3 (type:', config.layer3_type, ')');
       const layer3 = this._createLayer3(processedData, config);
-      if (layer3) layers.push(layer3);
+      if (layer3) {
+        console.log('[3D MAP] Layer 3 created successfully');
+        layers.push(layer3);
+      } else {
+        console.warn('[3D MAP] Layer 3 returned null');
+      }
+    } else {
+      console.log('[3D MAP] Layer 3 disabled or no measure specified');
     }
 
-    console.log('[3D MAP] Created layers:', layers.length);
+    console.log('[3D MAP] Total layers created:', layers.length);
+
+    // TEST: Add a simple scatter layer to verify Deck.gl is working
+    console.log('[3D MAP] Adding test scatter layer for debugging...');
+    const testLayer = new deck.ScatterplotLayer({
+      id: 'test-scatter-layer',
+      data: [
+        {position: [-95.7129, 37.0902]}, // Center of US
+        {position: [-118.2437, 34.0522]}, // LA
+        {position: [-73.9352, 40.7306]}, // NYC
+        {position: [2.3522, 48.8566]} // Paris
+      ],
+      getPosition: d => d.position,
+      getRadius: 100000,
+      getFillColor: [255, 0, 0, 200],
+      pickable: true
+    });
+    layers.push(testLayer);
+    console.log('[3D MAP] Test layer added. Total layers now:', layers.length);
 
     // Create or update Deck.gl instance
     if (this._deckgl) {
+      console.log('[3D MAP] Updating existing Deck.gl instance');
       this._deckgl.setProps({
         layers: layers,
         initialViewState: INITIAL_VIEW_STATE
       });
     } else {
-      this._deckgl = new deck.DeckGL({
-        container: this._mapContainer,
-        mapStyle: config.map_style,
-        initialViewState: INITIAL_VIEW_STATE,
-        controller: true,
-        layers: layers,
-        getTooltip: ({object}) => this._getTooltip(object, config),
-        onClick: ({object}) => this._handleClick(object, config)
-      });
+      console.log('[3D MAP] Creating NEW Deck.gl instance');
+      console.log('[3D MAP] Container element:', this._mapContainer);
+      console.log('[3D MAP] Map style:', config.map_style);
 
-      // Auto-rotation if enabled
-      if (config.enable_rotation) {
-        this._startRotation(config.rotation_speed);
+      try {
+        // Note: Deck.gl exposes DeckGL at top level, not deck.DeckGL
+        const DeckGL = deck.DeckGL || window.DeckGL;
+        console.log('[3D MAP] DeckGL constructor:', DeckGL);
+
+        this._deckgl = new DeckGL({
+          container: this._mapContainer,
+          mapStyle: config.map_style,
+          initialViewState: INITIAL_VIEW_STATE,
+          controller: true,
+          layers: layers,
+          getTooltip: ({object}) => this._getTooltip(object, config),
+          onClick: ({object}) => this._handleClick(object, config),
+          onLoad: () => {
+            console.log('[3D MAP] Deck.gl onLoad fired - map rendered successfully!');
+          },
+          onError: (error) => {
+            console.error('[3D MAP] Deck.gl error:', error);
+          }
+        });
+
+        console.log('[3D MAP] Deck.gl instance created:', this._deckgl);
+
+        // Auto-rotation if enabled
+        if (config.enable_rotation) {
+          console.log('[3D MAP] Starting auto-rotation');
+          this._startRotation(config.rotation_speed);
+        }
+      } catch (error) {
+        console.error('[3D MAP] ERROR creating Deck.gl:', error);
+        console.error('[3D MAP] Error stack:', error.stack);
       }
     }
+
+    console.log('[3D MAP] ========== _updateMap END ==========');
   },
 
   /**
    * Create Layer 1: Heatmap/Choropleth
    */
   _createLayer1: function(data, config) {
+    console.log('[3D MAP] _createLayer1 called, type:', config.layer1_type);
     const measureField = config.layer1_measure;
 
     if (config.layer1_type === 'heatmap') {
       // HeatmapLayer
+      console.log('[3D MAP] Creating HeatmapLayer');
       return new deck.HeatmapLayer({
         id: 'heatmap-layer',
         data: data.points,
@@ -854,6 +969,7 @@ looker.plugins.visualizations.add({
       });
     } else if (config.layer1_type === 'hexagon') {
       // HexagonLayer for aggregated heatmap
+      console.log('[3D MAP] Creating HexagonLayer for heatmap');
       return new deck.HexagonLayer({
         id: 'hexagon-heatmap-layer',
         data: data.points,
@@ -867,8 +983,7 @@ looker.plugins.visualizations.add({
       });
     } else {
       // GeoJsonLayer for state/region fills
-      // Note: This requires GeoJSON data - would need to be loaded separately
-      // For now, return null - implement with proper GeoJSON data source
+      console.log('[3D MAP] GeoJSON layer requested but not implemented yet');
       return null;
     }
   },
@@ -877,10 +992,12 @@ looker.plugins.visualizations.add({
    * Create Layer 2: 3D Columns
    */
   _createLayer2: function(data, config) {
+    console.log('[3D MAP] _createLayer2 called, type:', config.layer2_type);
     const measureField = config.layer2_measure;
 
     if (config.layer2_type === 'hexagon') {
       // 3D Hexagon aggregation
+      console.log('[3D MAP] Creating 3D HexagonLayer');
       return new deck.HexagonLayer({
         id: '3d-hexagon-layer',
         data: data.points,
@@ -896,6 +1013,7 @@ looker.plugins.visualizations.add({
       });
     } else {
       // Column Grid Layer
+      console.log('[3D MAP] Creating ColumnLayer');
       return new deck.ColumnLayer({
         id: '3d-column-layer',
         data: data.points,
@@ -918,10 +1036,12 @@ looker.plugins.visualizations.add({
    * Create Layer 3: Points/Bubbles
    */
   _createLayer3: function(data, config) {
+    console.log('[3D MAP] _createLayer3 called, type:', config.layer3_type);
     const measureField = config.layer3_measure;
 
     if (config.layer3_type === 'bubble') {
       // ScatterplotLayer with variable radius
+      console.log('[3D MAP] Creating ScatterplotLayer (bubbles)');
       return new deck.ScatterplotLayer({
         id: 'bubble-layer',
         data: data.points,
@@ -936,6 +1056,7 @@ looker.plugins.visualizations.add({
       });
     } else if (config.layer3_type === 'column') {
       // 3D columns for points
+      console.log('[3D MAP] Creating ColumnLayer for points');
       return new deck.ColumnLayer({
         id: 'point-column-layer',
         data: data.points,
@@ -952,6 +1073,7 @@ looker.plugins.visualizations.add({
       });
     } else {
       // Simple scatter points
+      console.log('[3D MAP] Creating ScatterplotLayer (simple points)');
       return new deck.ScatterplotLayer({
         id: 'scatter-layer',
         data: data.points,

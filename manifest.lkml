@@ -46,12 +46,13 @@ visualization: {
 
 visualization: {
   id: "combo_map_3d"
-  label: "Combo Map"
+  label: "Combo Map 3D"
   file: "04_OTHER_visuals/map_combo_3d.js"
 
   dependencies: [
     "https://unpkg.com/deck.gl@^8.9.0/dist.min.js",
     "https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js",
+    "https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css",
     "https://d3js.org/d3.v7.min.js"
   ]
 }

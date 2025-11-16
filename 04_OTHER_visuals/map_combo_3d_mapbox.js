@@ -1,14 +1,18 @@
 /**
- * Multi-Layer 3D Map for Looker - Enhanced with Region Support
+ * Multi-Layer 3D Map for Looker - Fixed US States Support
  *
- * Supports multiple data modes:
- * - Point data (lat/lng coordinates)
- * - Region data (choropleth with built-in or custom map layers)
+ * IMPORTANT: Add these to your manifest dependencies:
+ * - https://unpkg.com/topojson-client@3
  *
- * Layer Types:
- * - Layer 1: Heatmap/Hexagon/Choropleth (GeoJSON)
- * - Layer 2: 3D Columns
- * - Layer 3: Points/Bubbles
+ * Manifest example:
+ * {
+ *   "dependencies": {
+ *     "deck.gl": "https://unpkg.com/deck.gl@latest/dist.min.js",
+ *     "mapbox-gl": "https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js",
+ *     "mapbox-gl-css": "https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css",
+ *     "topojson": "https://unpkg.com/topojson-client@3"
+ *   }
+ * }
  */
 
 looker.plugins.visualizations.add({
@@ -105,23 +109,8 @@ looker.plugins.visualizations.add({
         {"US States": "us_states"},
         {"US Counties": "us_counties"},
         {"Countries": "countries"},
-        {"UK Postcode Areas": "uk_postcode_areas"},
-        {"UK Postcode Districts": "uk_postcode_districts"},
-        {"UK Postcode Sectors": "uk_postcode_sectors"},
-        {"Canadian Provinces": "canada_provinces"},
-        {"Canadian FSA": "canada_fsa"},
-        {"French Departments": "france_departments"},
-        {"French Regions": "france_regions"},
-        {"German States": "germany_states"},
-        {"Italian Regions": "italy_regions"},
-        {"Italian Provinces": "italy_provinces"},
-        {"Spanish Provinces": "spain_provinces"},
-        {"Spanish Regions": "spain_regions"},
-        {"Brazil States": "brazil_states"},
-        {"Japan Prefectures": "japan_prefectures"},
-        {"Australia States": "australia_states"},
-        {"China Provinces": "china_provinces"},
-        {"India States": "india_states"}
+        {"France Departments": "france_departments"},
+        {"France Regions": "france_regions"}
       ],
       default: "custom",
       section: "Layer 1"
@@ -137,19 +126,13 @@ looker.plugins.visualizations.add({
       label: "GeoJSON Property to Match",
       default: "name",
       section: "Layer 1",
-      placeholder: "Property name in GeoJSON (e.g., 'name', 'id', 'code')"
+      placeholder: "Property name in GeoJSON (e.g., 'name', 'id', 'NAME')"
     },
     layer1_region_dimension: {
       type: "string",
       label: "Region Dimension Name",
       section: "Layer 1",
       placeholder: "Leave empty to auto-detect"
-    },
-    layer1_measure: {
-      type: "string",
-      label: "Measure for Color",
-      section: "Layer 1",
-      placeholder: "Leave empty to use first measure"
     },
     layer1_color_start: {
       type: "string",
@@ -201,12 +184,6 @@ looker.plugins.visualizations.add({
       display: "color",
       section: "Layer 2"
     },
-    layer2_measure: {
-      type: "string",
-      label: "Measure for Height",
-      section: "Layer 2",
-      placeholder: "Leave empty to use second measure"
-    },
 
     // LAYER 3
     layer3_enabled: {
@@ -227,29 +204,22 @@ looker.plugins.visualizations.add({
       default: "#EA4335",
       display: "color",
       section: "Layer 3"
-    },
-    layer3_measure: {
-      type: "string",
-      label: "Measure for Size",
-      section: "Layer 3",
-      placeholder: "Leave empty to use third measure"
     }
   },
 
   create: function(element, config) {
-    console.log('[MAP] Creating visualization');
+    console.log('[MAP] Creating');
     element.innerHTML = '<div id="map" style="width:100%;height:100%;"></div>';
     this._container = element.querySelector('#map');
     this._geojsonCache = {};
   },
 
   updateAsync: function(data, element, config, queryResponse, details, done) {
-    console.log('[MAP] ========== UPDATE START ==========');
-    console.log('[MAP] Data mode:', config.data_mode);
+    console.log('[MAP] ========== UPDATE ==========');
 
     this.clearErrors();
 
-    // Validate dependencies
+    // Check dependencies
     if (typeof deck === 'undefined' || typeof mapboxgl === 'undefined') {
       this.addError({ title: "Missing Dependencies", message: "Deck.gl or Mapbox GL not loaded" });
       done();
@@ -257,19 +227,12 @@ looker.plugins.visualizations.add({
     }
 
     if (!config.mapbox_token) {
-      this.addError({ title: "Mapbox Token Required", message: "Add token in settings" });
+      this.addError({ title: "Mapbox Token Required", message: "Add token in Map settings" });
       done();
       return;
     }
 
     try {
-      const dims = queryResponse.fields.dimension_like;
-      const measures = queryResponse.fields.measure_like;
-
-      console.log('[MAP] Dimensions:', dims.map(d => d.name));
-      console.log('[MAP] Measures:', measures.map(m => m.name));
-
-      // Set Mapbox token
       mapboxgl.accessToken = config.mapbox_token;
 
       if (config.data_mode === 'regions') {
@@ -286,28 +249,22 @@ looker.plugins.visualizations.add({
   },
 
   _updatePointMode: function(data, config, queryResponse, done) {
-    console.log('[MAP] Point mode');
-
     const dims = queryResponse.fields.dimension_like;
     const measures = queryResponse.fields.measure_like;
 
-    // Find lat/lng
     const latF = dims.find(d => d.type === 'latitude' || d.name.toLowerCase().includes('lat'));
     const lngF = dims.find(d => d.type === 'longitude' || d.name.toLowerCase().includes('lon'));
 
     if (!latF || !lngF) {
-      this.addError({ title: "Need Lat/Lng", message: "Add latitude and longitude dimensions" });
+      this.addError({ title: "Need Lat/Lng", message: "Add latitude/longitude dimensions" });
       done();
       return;
     }
 
-    // Process points
     const points = data.map(row => ({
       position: [parseFloat(row[lngF.name].value), parseFloat(row[latF.name].value)],
       values: measures.map(m => parseFloat(row[m.name]?.value) || 0)
     })).filter(p => !isNaN(p.position[0]) && !isNaN(p.position[1]));
-
-    console.log('[MAP] Valid points:', points.length);
 
     const layers = this._buildPointLayers(points, config, measures);
     this._renderMap(layers, config, done);
@@ -320,43 +277,35 @@ looker.plugins.visualizations.add({
     const measures = queryResponse.fields.measure_like;
 
     // Find region dimension
-    let regionDim = null;
-    if (config.layer1_region_dimension) {
-      regionDim = dims.find(d => d.name === config.layer1_region_dimension);
-    } else {
-      // Auto-detect: first string dimension
-      regionDim = dims.find(d => d.type === 'string');
-    }
+    let regionDim = config.layer1_region_dimension ?
+      dims.find(d => d.name === config.layer1_region_dimension) :
+      dims.find(d => d.type === 'string');
 
     if (!regionDim) {
-      this.addError({ title: "No Region Dimension", message: "Add a region/location dimension" });
+      this.addError({ title: "No Region Dimension", message: "Add a location dimension" });
       done();
       return;
     }
 
     console.log('[MAP] Region dimension:', regionDim.name);
 
-    // Get GeoJSON URL
     const geojsonUrl = this._getGeoJSONUrl(config);
 
     if (!geojsonUrl) {
-      this.addError({
-        title: "GeoJSON Required",
-        message: "Select built-in map layer or provide custom GeoJSON URL"
-      });
+      this.addError({ title: "GeoJSON Required", message: "Select map layer or provide URL" });
       done();
       return;
     }
 
-    console.log('[MAP] Loading GeoJSON:', geojsonUrl);
+    console.log('[MAP] Loading:', geojsonUrl);
 
-    // Load GeoJSON and render
     this._loadGeoJSON(geojsonUrl).then(geojson => {
+      console.log('[MAP] GeoJSON loaded, features:', geojson.features.length);
       const layers = this._buildRegionLayers(data, geojson, config, queryResponse, regionDim, measures);
       this._renderMap(layers, config, done);
     }).catch(error => {
-      console.error('[MAP] GeoJSON load error:', error);
-      this.addError({ title: "GeoJSON Error", message: error.message });
+      console.error('[MAP] Load error:', error);
+      this.addError({ title: "Load Error", message: error.message });
       done();
     });
   },
@@ -366,23 +315,12 @@ looker.plugins.visualizations.add({
       return config.layer1_geojson_url;
     }
 
-    // Built-in Looker map layers - using common public sources
     const builtInMaps = {
-      'us_states': 'https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json',
-      'us_counties': 'https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json',
-      'countries': 'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson',
-      'uk_postcode_areas': 'https://raw.githubusercontent.com/missinglink/uk-postcode-polygons/master/geojson/postcode_areas.geojson',
+      'us_states': 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json',
+      'us_counties': 'https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json',
+      'countries': 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json',
       'france_departments': 'https://france-geojson.gregoiredavid.fr/repo/departements.geojson',
-      'france_regions': 'https://france-geojson.gregoiredavid.fr/repo/regions.geojson',
-      'germany_states': 'https://raw.githubusercontent.com/isellsoap/deutschlandGeoJSON/main/2_bundeslaender/4_niedrig.geo.json',
-      'italy_regions': 'https://raw.githubusercontent.com/openpolis/geojson-italy/master/geojson/limits_IT_regions.geojson',
-      'spain_provinces': 'https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/spain-provinces.geojson',
-      'canada_provinces': 'https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/canada.geojson',
-      'brazil_states': 'https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson',
-      'japan_prefectures': 'https://raw.githubusercontent.com/dataofjapan/land/master/japan.geojson',
-      'australia_states': 'https://raw.githubusercontent.com/tonywr71/GeoJson-Data/master/australian-states.json',
-      'china_provinces': 'https://raw.githubusercontent.com/longwosion/geojson-map-china/master/china.json',
-      'india_states': 'https://raw.githubusercontent.com/Subhash9325/GeoJson-Data-of-Indian-States/master/Indian_States'
+      'france_regions': 'https://france-geojson.gregoiredavid.fr/repo/regions.geojson'
     };
 
     return builtInMaps[config.layer1_map_layer] || config.layer1_geojson_url;
@@ -390,21 +328,21 @@ looker.plugins.visualizations.add({
 
   _loadGeoJSON: async function(url) {
     if (this._geojsonCache[url]) {
-      console.log('[MAP] Using cached GeoJSON');
       return this._geojsonCache[url];
     }
 
     const response = await fetch(url);
-    if (!response.ok) throw new Error(`Failed to load: ${response.status}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}: ${url}`);
 
     const data = await response.json();
 
     // Handle TopoJSON
     if (data.type === 'Topology') {
       if (typeof topojson === 'undefined') {
-        throw new Error('TopoJSON library required but not loaded');
+        throw new Error('TopoJSON library not loaded - add to manifest');
       }
       const objectKey = Object.keys(data.objects)[0];
+      console.log('[MAP] Converting TopoJSON object:', objectKey);
       const geojson = topojson.feature(data, data.objects[objectKey]);
       this._geojsonCache[url] = geojson;
       return geojson;
@@ -417,7 +355,6 @@ looker.plugins.visualizations.add({
   _buildPointLayers: function(points, config, measures) {
     const layers = [];
 
-    // Layer 1
     if (config.layer1_enabled && config.layer1_type !== 'geojson') {
       if (config.layer1_type === 'heatmap') {
         layers.push(new deck.HeatmapLayer({
@@ -425,8 +362,7 @@ looker.plugins.visualizations.add({
           data: points,
           getPosition: d => d.position,
           getWeight: d => d.values[0] || 1,
-          radiusPixels: 60,
-          opacity: 0.9
+          radiusPixels: 60
         }));
       } else {
         layers.push(new deck.HexagonLayer({
@@ -437,13 +373,12 @@ looker.plugins.visualizations.add({
           elevationScale: 0,
           radius: 10000,
           colorRange: this._getColorRange(config.layer1_color_start, config.layer1_color_end),
-          opacity: config.layer1_opacity || 0.7,
+          opacity: config.layer1_opacity,
           pickable: true
         }));
       }
     }
 
-    // Layer 2: Columns
     if (config.layer2_enabled) {
       const idx = measures.length > 1 ? 1 : 0;
       layers.push(new deck.ColumnLayer({
@@ -462,7 +397,6 @@ looker.plugins.visualizations.add({
       }));
     }
 
-    // Layer 3: Points
     if (config.layer3_enabled) {
       const idx = measures.length > 2 ? 2 : 0;
       layers.push(new deck.ScatterplotLayer({
@@ -480,11 +414,9 @@ looker.plugins.visualizations.add({
   },
 
   _buildRegionLayers: function(data, geojson, config, queryResponse, regionDim, measures) {
-    console.log('[MAP] Building region layers');
-
     const layers = [];
 
-    // Create data lookup
+    // Build data lookup
     const dataMap = {};
     data.forEach(row => {
       const region = row[regionDim.name].value;
@@ -492,23 +424,52 @@ looker.plugins.visualizations.add({
       dataMap[region] = values;
     });
 
-    console.log('[MAP] Data map keys:', Object.keys(dataMap).slice(0, 5));
-    console.log('[MAP] GeoJSON features:', geojson.features.length);
+    console.log('[MAP] Data regions (first 10):', Object.keys(dataMap).slice(0, 10));
+    console.log('[MAP] GeoJSON sample properties:', geojson.features[0]?.properties);
 
-    // Get measure for coloring
-    const measureIdx = config.layer1_measure ?
-      measures.findIndex(m => m.name === config.layer1_measure) : 0;
-
-    // Calculate value range for color scaling
+    // Get value range
+    const measureIdx = 0;
     const allValues = Object.values(dataMap).map(v => v[measureIdx] || 0);
     const minValue = Math.min(...allValues);
     const maxValue = Math.max(...allValues);
 
-    console.log('[MAP] Value range:', minValue, 'to', maxValue);
+    // Property matching function
+    const property = config.layer1_geojson_property || 'name';
+    const getDataForFeature = (feature) => {
+      const props = feature.properties;
+
+      // Try exact match on specified property
+      if (dataMap[props[property]]) {
+        return dataMap[props[property]];
+      }
+
+      // Try case-insensitive match on all data keys
+      const propValue = (props[property] || '').toLowerCase();
+      for (let key in dataMap) {
+        if (key.toLowerCase() === propValue) {
+          return dataMap[key];
+        }
+      }
+
+      // Try all properties in GeoJSON
+      for (let prop in props) {
+        if (dataMap[props[prop]]) {
+          return dataMap[props[prop]];
+        }
+        const lowerProp = (props[prop] || '').toString().toLowerCase();
+        for (let key in dataMap) {
+          if (key.toLowerCase() === lowerProp) {
+            return dataMap[key];
+          }
+        }
+      }
+
+      return null;
+    };
 
     // Layer 1: Choropleth
     if (config.layer1_enabled && config.layer1_type === 'geojson') {
-      const property = config.layer1_geojson_property || 'name';
+      let matchCount = 0;
 
       layers.push(new deck.GeoJsonLayer({
         id: 'geojson',
@@ -516,15 +477,15 @@ looker.plugins.visualizations.add({
         filled: true,
         stroked: true,
         pickable: true,
-        opacity: config.layer1_opacity || 0.7,
+        opacity: config.layer1_opacity,
         getLineColor: [255, 255, 255, 100],
         getLineWidth: 1,
         getFillColor: f => {
-          const regionName = f.properties[property];
-          const values = dataMap[regionName];
+          const values = getDataForFeature(f);
 
           if (!values) return [200, 200, 200, 100];
 
+          matchCount++;
           const value = values[measureIdx] || 0;
           const ratio = maxValue > minValue ? (value - minValue) / (maxValue - minValue) : 0;
 
@@ -535,17 +496,30 @@ looker.plugins.visualizations.add({
           );
         }
       }));
+
+      console.log('[MAP] Matched', matchCount, 'of', geojson.features.length, 'regions');
     }
 
-    // For layers 2 & 3, we need centroids
-    const centroids = this._calculateCentroids(geojson, dataMap, config.layer1_geojson_property);
+    // Centroids for layers 2 & 3
+    const centroids = [];
+    geojson.features.forEach(feature => {
+      const values = getDataForFeature(feature);
+      if (!values) return;
 
-    // Layer 2: Columns at centroids
+      let centroid;
+      if (feature.geometry.type === 'Polygon') {
+        centroid = this._polygonCentroid(feature.geometry.coordinates[0]);
+      } else if (feature.geometry.type === 'MultiPolygon') {
+        centroid = this._polygonCentroid(feature.geometry.coordinates[0][0]);
+      }
+
+      if (centroid) {
+        centroids.push({ position: centroid, values });
+      }
+    });
+
     if (config.layer2_enabled && centroids.length > 0) {
-      const idx = config.layer2_measure ?
-        measures.findIndex(m => m.name === config.layer2_measure) :
-        (measures.length > 1 ? 1 : 0);
-
+      const idx = measures.length > 1 ? 1 : 0;
       layers.push(new deck.ColumnLayer({
         id: 'columns',
         data: centroids,
@@ -562,12 +536,8 @@ looker.plugins.visualizations.add({
       }));
     }
 
-    // Layer 3: Points at centroids
     if (config.layer3_enabled && centroids.length > 0) {
-      const idx = config.layer3_measure ?
-        measures.findIndex(m => m.name === config.layer3_measure) :
-        (measures.length > 2 ? 2 : 0);
-
+      const idx = measures.length > 2 ? 2 : 0;
       layers.push(new deck.ScatterplotLayer({
         id: 'points',
         data: centroids,
@@ -579,36 +549,7 @@ looker.plugins.visualizations.add({
       }));
     }
 
-    console.log('[MAP] Built', layers.length, 'layers');
     return layers;
-  },
-
-  _calculateCentroids: function(geojson, dataMap, property) {
-    const centroids = [];
-
-    geojson.features.forEach(feature => {
-      const regionName = feature.properties[property || 'name'];
-      const values = dataMap[regionName];
-
-      if (!values) return;
-
-      let centroid;
-      if (feature.geometry.type === 'Polygon') {
-        centroid = this._polygonCentroid(feature.geometry.coordinates[0]);
-      } else if (feature.geometry.type === 'MultiPolygon') {
-        centroid = this._polygonCentroid(feature.geometry.coordinates[0][0]);
-      } else {
-        return;
-      }
-
-      centroids.push({
-        position: centroid,
-        values: values,
-        region: regionName
-      });
-    });
-
-    return centroids;
   },
 
   _polygonCentroid: function(coordinates) {
@@ -621,8 +562,6 @@ looker.plugins.visualizations.add({
   },
 
   _renderMap: function(layers, config, done) {
-    console.log('[MAP] Rendering', layers.length, 'layers');
-
     const viewState = {
       longitude: config.center_lng,
       latitude: config.center_lat,
@@ -637,7 +576,7 @@ looker.plugins.visualizations.add({
         mapStyle: config.map_style,
         initialViewState: viewState,
         controller: true,
-        layers: layers
+        layers
       });
     } else {
       this._deck.setProps({ layers, initialViewState: viewState });
@@ -647,11 +586,9 @@ looker.plugins.visualizations.add({
   },
 
   _getColorRange: function(start, end) {
-    const steps = 6;
     const range = [];
-    for (let i = 0; i < steps; i++) {
-      const ratio = i / (steps - 1);
-      range.push(this._interpolateColorRgb(start, end, ratio));
+    for (let i = 0; i < 6; i++) {
+      range.push(this._interpolateColorRgb(start, end, i / 5));
     }
     return range;
   },
@@ -678,7 +615,6 @@ looker.plugins.visualizations.add({
   destroy: function() {
     if (this._deck) {
       this._deck.finalize();
-      this._deck = null;
     }
   }
 });

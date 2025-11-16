@@ -50,9 +50,10 @@ visualization: {
   file: "04_OTHER_visuals/map_combo_3d_mapbox.js"
 
   dependencies: [
-    "https://unpkg.com/deck.gl@^8.9.0/dist.min.js",
+    "https://unpkg.com/deck.gl@latest/dist.min.js",
     "https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js",
-    "https://d3js.org/d3.v7.min.js"
+    "https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css",
+    "https://unpkg.com/topojson-client@3"
   ]
 }
 

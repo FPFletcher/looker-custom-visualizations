@@ -561,7 +561,9 @@ looker.plugins.visualizations.add({
 
   _renderMap: function(layers, config, done) {
     // Set Mapbox token BEFORE creating map
+    console.log('[MAP] Config mapbox_token:', config.mapbox_token ? 'Present (length: ' + config.mapbox_token.length + ')' : 'MISSING');
     mapboxgl.accessToken = config.mapbox_token;
+    console.log('[MAP] mapboxgl.accessToken set to:', mapboxgl.accessToken ? 'Present' : 'MISSING');
 
     const viewState = {
       longitude: config.center_lng,
@@ -570,6 +572,8 @@ looker.plugins.visualizations.add({
       pitch: config.pitch,
       bearing: 0
     };
+
+    console.log('[MAP] Creating Deck.gl with', layers.length, 'layers');
 
     if (!this._deck) {
       this._deck = new deck.DeckGL({

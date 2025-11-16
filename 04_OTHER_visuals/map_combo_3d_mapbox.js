@@ -560,10 +560,7 @@ looker.plugins.visualizations.add({
   },
 
   _renderMap: function(layers, config, done) {
-    // Set Mapbox token BEFORE creating map
     console.log('[MAP] Config mapbox_token:', config.mapbox_token ? 'Present (length: ' + config.mapbox_token.length + ')' : 'MISSING');
-    mapboxgl.accessToken = config.mapbox_token;
-    console.log('[MAP] mapboxgl.accessToken set to:', mapboxgl.accessToken ? 'Present' : 'MISSING');
 
     const viewState = {
       longitude: config.center_lng,
@@ -579,12 +576,19 @@ looker.plugins.visualizations.add({
       this._deck = new deck.DeckGL({
         container: this._container,
         mapStyle: config.map_style,
+        mapboxApiAccessToken: config.mapbox_token,  // Pass token directly to Deck.gl
         initialViewState: viewState,
         controller: true,
         layers
       });
+      console.log('[MAP] Deck.gl instance created');
     } else {
-      this._deck.setProps({ layers, initialViewState: viewState });
+      this._deck.setProps({
+        layers,
+        initialViewState: viewState,
+        mapboxApiAccessToken: config.mapbox_token  // Also on update
+      });
+      console.log('[MAP] Deck.gl instance updated');
     }
 
     done();

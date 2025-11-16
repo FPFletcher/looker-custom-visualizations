@@ -1,11 +1,19 @@
 /**
- * Multi-Layer 3D Map for Looker - Expanded & Combined Layers
- * WITH NAME MAPPING & ERROR HANDLING
+ * Multi-Layer 3D Map for Looker - Fixed URLs & 2D Mode
+ * * MANIFEST DEPENDENCIES:
+ * {
+ * "dependencies": {
+ * "deck.gl": "https://unpkg.com/deck.gl@latest/dist.min.js",
+ * "mapbox-gl": "https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js",
+ * "mapbox-gl-css": "https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css",
+ * "topojson": "https://unpkg.com/topojson-client@3"
+ * }
+ * }
  */
 
 looker.plugins.visualizations.add({
   id: "combo_map_3d",
-  label: "Combo Map 3D (Smart Match)",
+  label: "Combo Map 3D (v2 Fixed)",
   options: {
     // MAP SETTINGS
     mapbox_token: {
@@ -47,7 +55,7 @@ looker.plugins.visualizations.add({
     },
     pitch: {
       type: "number",
-      label: "3D Tilt (0-60)",
+      label: "3D Tilt (0 = 2D Mode)",
       default: 45,
       min: 0,
       max: 60,
@@ -67,7 +75,7 @@ looker.plugins.visualizations.add({
       section: "Data"
     },
 
-    // LAYER 1
+    // LAYER 1 (Base Regions/Grid)
     layer1_enabled: {
       type: "boolean",
       label: "Enable Layer 1",
@@ -113,7 +121,7 @@ looker.plugins.visualizations.add({
         {"Netherlands - Provinces": "netherlands_provinces"},
         {"Switzerland - Cantons": "switzerland_cantons"},
         {"Austria - States": "austria_states"},
-        {"Belgium - Regions": "belgium_regions"},
+        {"Belgium - Provinces": "belgium_provinces"},
         // Combined / Super Layers
         {"COMBINED: Europe Major (Fr/De/Uk/Es/It)": "combined_europe_major"},
         {"COMBINED: DACH (De/Au/Ch)": "combined_dach"},
@@ -165,16 +173,16 @@ looker.plugins.visualizations.add({
       section: "Layer 1"
     },
 
-    // LAYER 2
+    // LAYER 2 (3D Columns)
     layer2_enabled: {
       type: "boolean",
-      label: "Enable 3D Columns",
+      label: "Enable Columns",
       default: true,
       section: "Layer 2"
     },
     layer2_height_scale: {
       type: "number",
-      label: "Height Scale",
+      label: "Height Scale (3D Only)",
       default: 1000,
       section: "Layer 2"
     },
@@ -191,6 +199,27 @@ looker.plugins.visualizations.add({
       display: "color",
       section: "Layer 2"
     },
+
+    // LAYER 3 (Points/Scatterplot) - RESTORED
+    layer3_enabled: {
+      type: "boolean",
+      label: "Enable Points",
+      default: false,
+      section: "Layer 3"
+    },
+    layer3_radius: {
+      type: "number",
+      label: "Point Size",
+      default: 5000,
+      section: "Layer 3"
+    },
+    layer3_color: {
+      type: "string",
+      label: "Color",
+      default: "#EA4335",
+      display: "color",
+      section: "Layer 3"
+    }
   },
 
   create: function(element, config) {
@@ -236,10 +265,8 @@ looker.plugins.visualizations.add({
   //  DATA PREP & NORMALIZATION
   // -----------------------------------------------------------
 
-  // This dictionary maps your raw data values to common GeoJSON standards
-  // Based on the screenshot provided (Germany, Spain, Belgium, etc.)
   REGION_ALIASES: {
-      // Germany (Bundesländer)
+      // Germany
       'nordrhein-westfalen': 'north rhine-westphalia',
       'baden-württemberg': 'baden-wurttemberg',
       'bayern': 'bavaria',
@@ -251,7 +278,7 @@ looker.plugins.visualizations.add({
       'sachsen-anhalt': 'saxony-anhalt',
       'mecklenburg-vorpommern': 'mecklenburg-western pomerania',
 
-      // Spain (Comunidades Autónomas)
+      // Spain
       'cataluña': 'catalonia',
       'andalucía': 'andalusia',
       'comunidad valenciana': 'valencian community',
@@ -266,12 +293,12 @@ looker.plugins.visualizations.add({
       'principado de asturias': 'asturias',
       'navarra': 'navarre',
 
-      // Belgium
+      // Belgium (Note: Map layers are often Provinces, Data might be Regions)
       'vlaanderen': 'flanders',
       'wallonie': 'wallonia',
       'bruxelles': 'brussels',
 
-      // Countries (if mixing country/state levels)
+      // Countries
       'deutschland': 'germany',
       'españa': 'spain',
       'österreich': 'austria'
@@ -279,17 +306,11 @@ looker.plugins.visualizations.add({
 
   _normalizeName: function(name) {
       if (!name) return '';
-
-      // 1. Lowercase
       let clean = name.toString().toLowerCase().trim();
-
-      // 2. Check Aliases (Exact match on dirty name)
       if (this.REGION_ALIASES[clean]) {
           clean = this.REGION_ALIASES[clean];
       }
-
-      // 3. Remove Diacritics (accents) e.g., "Aragón" -> "aragon"
-      // This helps if the map is standard ASCII
+      // Remove accents: "Aragón" -> "aragon"
       return clean.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   },
 
@@ -299,7 +320,7 @@ looker.plugins.visualizations.add({
 
     let regionDim = config.layer1_region_dimension ?
       dims.find(d => d.name === config.layer1_region_dimension) :
-      dims.find(d => d.type === 'string'); // Default to first string dimension
+      dims.find(d => d.type === 'string');
 
     if (!regionDim) {
       this.addError({ title: "No Region Dimension", message: "Add a location dimension" });
@@ -311,8 +332,6 @@ looker.plugins.visualizations.add({
 
     this._loadGeoJSON(geojsonSource).then(geojson => {
       const layers = this._buildRegionLayers(data, geojson, config, queryResponse, regionDim, measures);
-
-      // RENDER
       this._renderMap(layers, config, done);
     }).catch(error => {
       this.addError({ title: "Load Error", message: error.message });
@@ -323,55 +342,38 @@ looker.plugins.visualizations.add({
   _buildRegionLayers: function(data, geojson, config, queryResponse, regionDim, measures) {
     const layers = [];
 
-    // 1. Pre-process Data: Normalize Keys for lookup
-    // We create a map where Keys are the "Cleaned" names
+    // 1. Pre-process Data
     const dataMap = {};
-
     data.forEach(row => {
       const rawName = row[regionDim.name].value;
       if(rawName) {
           const cleanName = this._normalizeName(rawName);
           const values = measures.map(m => parseFloat(row[m.name]?.value) || 0);
-
-          // Store by normalized name
           dataMap[cleanName] = values;
-
-          // ALSO Store by raw name (just in case map matches raw exactly)
-          dataMap[rawName.toLowerCase()] = values;
+          dataMap[rawName.toLowerCase()] = values; // Backup
       }
     });
 
-    console.log('[MAP] Normalized Data Keys (sample):', Object.keys(dataMap).slice(0, 5));
+    console.log('[MAP] Data Keys (sample):', Object.keys(dataMap).slice(0, 5));
 
     // 2. Feature Matcher
-    // We loop through GeoJSON properties and try to find a match in our dataMap
     let matchCount = 0;
     const measureIdx = 0;
 
-    // Helper to find data for a specific GeoJSON feature
     const getDataForFeature = (feature) => {
       const props = feature.properties;
       if (!props) return null;
-
-      // Iterate ALL properties in the GeoJSON feature (name, name_en, iso_code, etc.)
       for (let key in props) {
           const propValue = props[key];
           if(!propValue) continue;
-
-          // Normalize the property value from the map
           const cleanProp = this._normalizeName(propValue);
-
-          if (dataMap[cleanProp]) {
-              return dataMap[cleanProp];
-          }
+          if (dataMap[cleanProp]) return dataMap[cleanProp];
       }
       return null;
     };
 
-    // 3. Build Choropleth Layer
+    // 3. Layer 1: Choropleth
     if (config.layer1_enabled && config.layer1_type === 'geojson') {
-
-       // Determine Color Scale
        const allValues = Object.values(dataMap).map(v => v[measureIdx] || 0);
        const minValue = Math.min(...allValues);
        const maxValue = Math.max(...allValues);
@@ -387,18 +389,12 @@ looker.plugins.visualizations.add({
         getLineWidth: 1,
         getFillColor: f => {
           const values = getDataForFeature(f);
-
-          if (!values) return [220, 220, 220, 50]; // Grey for no match
+          if (!values) return [220, 220, 220, 50];
 
           matchCount++;
           const value = values[measureIdx] || 0;
           const ratio = maxValue > minValue ? (value - minValue) / (maxValue - minValue) : 0;
-
-          return this._interpolateColorRgb(
-            config.layer1_color_start,
-            config.layer1_color_end,
-            ratio
-          );
+          return this._interpolateColorRgb(config.layer1_color_start, config.layer1_color_end, ratio);
         },
         updateTriggers: {
             getFillColor: [config.layer1_color_start, config.layer1_color_end]
@@ -406,25 +402,27 @@ looker.plugins.visualizations.add({
       }));
     }
 
-    // 4. Build 3D Columns (Centroids)
+    // 4. Centroids for Layers 2 & 3
     const centroids = [];
     geojson.features.forEach(feature => {
       const values = getDataForFeature(feature);
       if (values) {
           let centroid;
-          if (feature.geometry && feature.geometry.type.includes('Polygon')) {
+          if (feature.geometry) {
              if (feature.geometry.type === 'Polygon') {
                 centroid = this._polygonCentroid(feature.geometry.coordinates[0]);
-             } else {
+             } else if (feature.geometry.type === 'MultiPolygon') {
                 centroid = this._polygonCentroid(feature.geometry.coordinates[0][0]);
              }
           }
-          if (centroid) {
-             centroids.push({ position: centroid, values });
-          }
+          if (centroid) centroids.push({ position: centroid, values });
       }
     });
 
+    // 2D vs 3D Logic
+    const is2D = config.pitch === 0;
+
+    // Layer 2: Columns
     if (config.layer2_enabled && centroids.length > 0) {
       const idx = measures.length > 1 ? 1 : 0;
       layers.push(new deck.ColumnLayer({
@@ -432,9 +430,10 @@ looker.plugins.visualizations.add({
         data: centroids,
         diskResolution: 12,
         radius: config.layer2_radius,
-        extruded: true,
+        // If 2D mode, disable extrusion so they look like flat circles
+        extruded: !is2D,
         pickable: true,
-        elevationScale: config.layer2_height_scale,
+        elevationScale: is2D ? 0 : config.layer2_height_scale,
         getPosition: d => d.position,
         getFillColor: this._hexToRgb(config.layer2_color),
         getLineColor: [255, 255, 255, 80],
@@ -443,28 +442,33 @@ looker.plugins.visualizations.add({
       }));
     }
 
-    // ------------------------------------------------------
-    // ERROR HANDLING: NO MATCHES
-    // ------------------------------------------------------
+    // Layer 3: Points (Scatterplot) - RESTORED
+    if (config.layer3_enabled && centroids.length > 0) {
+      const idx = measures.length > 2 ? 2 : 0; // Use 3rd measure if available
+      layers.push(new deck.ScatterplotLayer({
+        id: 'points',
+        data: centroids,
+        getPosition: d => d.position,
+        getRadius: config.layer3_radius,
+        getFillColor: this._hexToRgb(config.layer3_color),
+        opacity: 0.9,
+        stroked: true,
+        getLineColor: [255, 255, 255],
+        pickable: true
+      }));
+    }
+
     if (matchCount === 0 && data.length > 0) {
-        this.addError({
-            title: "No Map Matches Found",
-            message: `Loaded map with ${geojson.features.length} regions, but 0 matched your data.
-            Check if your Region names match standard English names (e.g. 'Bavaria' instead of 'Bayern').`
-        });
-    } else {
-        console.log(`[MAP] Successfully matched ${matchCount} regions.`);
+        this.addError({ title: "No Matches", message: `Map loaded but 0 regions matched. Check console for keys.` });
     }
 
     return layers;
   },
 
   _getGeoJSONUrl: function(config) {
-    if (config.layer1_map_layer === 'custom') {
-      return config.layer1_geojson_url;
-    }
+    if (config.layer1_map_layer === 'custom') return config.layer1_geojson_url;
 
-    // URL LIBRARY
+    // FIXED URLS
     const URLS = {
         world: 'https://unpkg.com/world-atlas@2/countries-110m.json',
         us_states: 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json',
@@ -483,24 +487,27 @@ looker.plugins.visualizations.add({
         uk_regions: 'https://martinjc.github.io/UK-GeoJSON/json/eng/topo_eer.json',
         uk_subunits: 'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/united-kingdom/uk-subunits.json',
         germany: 'https://raw.githubusercontent.com/isellsoap/deutschlandGeoJSON/main/2_bundeslaender/3_mittel.geo.json',
-        spain: 'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/spain/spain-comunidad-with-canary-islands.json',
+
+        // SPAIN FIXED: Using click_that_hood for Autonomous Communities
+        spain: 'https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/spain-communities.geojson',
+
         italy: 'https://raw.githubusercontent.com/openpolis/geojson-italy/master/geojson/limits_IT_regions.geojson',
         netherlands: 'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/netherlands/nl-provinces.json',
         switzerland: 'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/switzerland/switzerland-cantons.json',
         austria: 'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/austria/austria-states.json',
-        belgium: 'https://raw.githubusercontent.com/fbreton/be-geojson/master/be-regions.geojson', // Belgium
+
+        // BELGIUM FIXED: Using click_that_hood for Provinces
+        belgium: 'https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/belgium-provinces.geojson',
         ireland: 'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/ireland/ireland-counties.json'
     };
 
     const builtInMaps = {
       'world_countries': URLS.world,
-
       'us_states': URLS.us_states,
       'us_counties': URLS.us_counties,
       'canada_provinces': URLS.canada,
       'mexico_states': URLS.mexico,
       'brazil_states': URLS.brazil,
-
       'france_departments': URLS.fr_dept,
       'france_regions': URLS.fr_region,
       'uk_regions': URLS.uk_regions,
@@ -511,9 +518,9 @@ looker.plugins.visualizations.add({
       'netherlands_provinces': URLS.netherlands,
       'switzerland_cantons': URLS.switzerland,
       'austria_states': URLS.austria,
-      'belgium_regions': URLS.belgium,
+      'belgium_provinces': URLS.belgium,
 
-      // --- COMBINED GROUPS (Arrays) ---
+      // Combined
       'combined_europe_major': [URLS.fr_region, URLS.germany, URLS.uk_regions, URLS.spain, URLS.italy],
       'combined_dach': [URLS.germany, URLS.austria, URLS.switzerland],
       'combined_benelux': [URLS.belgium, URLS.netherlands]
@@ -522,10 +529,8 @@ looker.plugins.visualizations.add({
     return builtInMaps[config.layer1_map_layer] || config.layer1_geojson_url;
   },
 
-  // Helper to load single or array of URLs
   _loadGeoJSON: async function(urlOrList) {
     if (Array.isArray(urlOrList)) {
-      console.log('[MAP] Loading combined layer group...');
       const promises = urlOrList.map(url => this._loadGeoJSON(url));
       const results = await Promise.all(promises);
       const combinedFeatures = [];
@@ -555,7 +560,6 @@ looker.plugins.visualizations.add({
   },
 
   _updatePointMode: function(data, config, queryResponse, done) {
-      // (Kept same as previous version for brevity, ensures point mode still works)
       const dims = queryResponse.fields.dimension_like;
       const measures = queryResponse.fields.measure_like;
       const latF = dims.find(d => d.type === 'latitude' || d.name.toLowerCase().includes('lat'));
@@ -570,7 +574,6 @@ looker.plugins.visualizations.add({
   },
 
   _buildPointLayers: function(points, config, measures) {
-      // Standard point layer generation
       const layers = [];
       if (config.layer1_enabled && config.layer1_type !== 'geojson') {
         if (config.layer1_type === 'heatmap') {
@@ -579,6 +582,7 @@ looker.plugins.visualizations.add({
             layers.push(new deck.HexagonLayer({ id: 'hexagon', data: points, getPosition: d => d.position, getElevationWeight: d => d.values[0] || 1, elevationScale: 0, radius: 10000, colorRange: this._getColorRange(config.layer1_color_start, config.layer1_color_end), opacity: config.layer1_opacity, pickable: true }));
         }
       }
+      // Add Layer 3 logic for Point Mode if needed, currently simplistic
       return layers;
   },
 
@@ -590,13 +594,38 @@ looker.plugins.visualizations.add({
   },
 
   _renderMap: function(layers, config, done) {
-    const viewState = { longitude: config.center_lng, latitude: config.center_lat, zoom: config.zoom, pitch: config.pitch, bearing: 0 };
+    const is2D = config.pitch === 0;
+
+    const viewState = {
+        longitude: config.center_lng,
+        latitude: config.center_lat,
+        zoom: config.zoom,
+        pitch: config.pitch,
+        bearing: 0
+    };
+
+    // If pitch is 0, we disable dragRotate to keep it strictly 2D
+    const controllerSettings = {
+        dragRotate: !is2D,
+        touchRotate: !is2D
+    };
+
     if (!this._deck) {
       this._deck = new deck.DeckGL({
-        container: this._container, mapStyle: config.map_style, mapboxApiAccessToken: config.mapbox_token, initialViewState: viewState, controller: true, layers
+        container: this._container,
+        mapStyle: config.map_style,
+        mapboxApiAccessToken: config.mapbox_token,
+        initialViewState: viewState,
+        controller: controllerSettings,
+        layers
       });
     } else {
-      this._deck.setProps({ layers, initialViewState: viewState, mapboxApiAccessToken: config.mapbox_token });
+      this._deck.setProps({
+          layers,
+          initialViewState: viewState,
+          controller: controllerSettings,
+          mapboxApiAccessToken: config.mapbox_token
+      });
     }
     done();
   },

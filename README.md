@@ -8,16 +8,20 @@ For context, the end goal is to enable any Looker customers to benefit from most
 
 In terms of process used, a detailed guide can be found in our community platform [here](https://discuss.google.dev/t/create-a-custom-visualization-without-development-skills-using-generative-ai/163652).  
 
-**📢 You have a visualization request?** [Fill this form](https://forms.gle/5XfUnQsxpyVnBbBo8) to let the Google team know if you have a **true need for a visual you can't find** in this repository or in our Looker native portfolio/marketplace.
+**You have a visualization request?**  
+[Fill this form](https://forms.gle/5XfUnQsxpyVnBbBo8) to let the Google team know if you have a **true need for a visual you can't find** in this repository or in our Looker native portfolio/marketplace.
 
 ---
 
 # Set Up
-5min required to import 20+ production ready custom visuals 🎁    
+**5min required** to import 20+ production grade custom visualizations 🎁    
 
-**One-line step by step:** Fork this repo → Connect to Looker via Git → Disable some visuals as needed on `manifest.lkml` → Deploy  
+**One-line step by step:** Copy paste CDN Link in your Admin/ Visualization page OR Fork this repo → Connect to Looker via Git → Disable some visuals as needed on `manifest.lkml` → Deploy  
 
 **Detailed step by step:**  
+**To get a specific visual quickly**, simply **copy paste the CDN Links** of your chosen visuals (list [here](#01-studio-visuals)) to your Looker's "Admin"/ "Visualization" page.  
+
+**To import and fully own the visualization set up,** 
 1. **Fork or Clone the Repository**
    - Fork [this repository](https://github.com/FPFletcher/looker-custom-visualizations-picasso-project) to your GitHub account, OR clone it directly:
 ```bash
@@ -59,7 +63,6 @@ In terms of process used, a detailed guide can be found in our community platfor
    - Edit the manifest to **disable visualizations as needed** by commenting them out using `#` (shortcut: `Ctrl + /`)
 
 4. **Network Requirements** *(Optional)*
-   
    > <details>
    > <summary>⚠️ Only a few visualizations have external dependencies which may require <b>external libraries to be whitelisted</b> <i>(private IP, self-hosted, and restricted environments)</i></summary>
    > <br>
@@ -83,6 +86,8 @@ In terms of process used, a detailed guide can be found in our community platfor
 ## Scorecard with Sparkline
 ![STUDIO Scorecard visualization](./99_ASSETS/STUDIO_scorecard.gif)
 
+**🔗 CDN Link -** https://viz.mentoree.eu/single_value_picture.js  
+
 **📊 What it does**  
 Displays a primary metric with a secondary comparison value, percentage variance, and an inline sparkline trend chart. Perfect for executive dashboards and KPI monitoring.
 
@@ -103,6 +108,8 @@ Displays a primary metric with a secondary comparison value, percentage variance
 
 ## Treemap
 ![STUDIO Treemap visualization](./99_ASSETS/STUDIO_treemap.gif)
+
+**🔗 CDN Link -** https://viz.mentoree.eu/single_value_picture.js  
 
 **📊 What it does**  
 Hierarchical visualization that displays nested data as proportionally-sized rectangles. Supports multi-level drill-down navigation through dimension hierarchies with automatic grouping of small values into an "Others" category.
@@ -125,6 +132,8 @@ Hierarchical visualization that displays nested data as proportionally-sized rec
 
 ## Bar Chart (Conditional Formatting)
 ![STUDIO Bar Chart _Conditional_visualization](./99_ASSETS/STUDIO_bar_chart_conditional.gif)
+
+**🔗 CDN Link -** https://viz.mentoree.eu/single_value_picture.js  
 
 **📊 What it does**  
 Enhanced column/bar chart with advanced conditional formatting capabilities. Supports multiple chart types (column, bar, area, line) with comprehensive formatting rules and reference/trend lines.
@@ -164,6 +173,8 @@ Enhanced column/bar chart with advanced conditional formatting capabilities. Sup
 
 ## Single Value with Picture
 ![OTHER Value with Picture visualization](./99_ASSETS/OTHER_single_value_picture.gif)
+
+**🔗 CDN Link -** https://viz.mentoree.eu/single_value_picture.js  
 
 **📊 What it does**  
 Displays two key metrics overlaid on customizable water drop images with a percentage comparison indicator. Ideal for visual storytelling in executive dashboards where brand imagery matters.

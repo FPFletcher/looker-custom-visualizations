@@ -35,14 +35,14 @@ visualization: {
 # 04. OTHER visuals
 ########################################################################################
 
-visualization: {
-  id: "single_value_picture_background"
-  label: "Single Value (Picture)"
-  file: "04_OTHER_visuals/single_value_picture.js"
+# visualization: {
+#   id: "single_value_picture_background"
+#   label: "Single Value (Picture)"
+#   file: "04_OTHER_visuals/single_value_picture.js"
 
-  dependencies: [
-  ]
-}
+#   dependencies: [
+#   ]
+# }
 
 visualization: {
   id: "combo_map_3d"
